@@ -1,2 +1,0 @@
-/usr/bin/ar qc libstore.a CMakeFiles/store.dir/BufferManager.cpp.o
-/usr/bin/ranlib libstore.a
