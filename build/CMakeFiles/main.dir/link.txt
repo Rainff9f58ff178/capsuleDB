@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/main.dir/main.cpp.o -o main   -L/home/rain/stard/src/Storage/include  -Wl,-rpath,/home/rain/stard/src/Storage/include src/Storage/libstore.a src/libstard_db.a src/Storage/libstore.a thirdparty/libpg_query/libduckdb_pg_query.a 

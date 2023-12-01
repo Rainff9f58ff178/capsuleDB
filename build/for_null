@@ -1,0 +1,2 @@
+break CataLog::CreateTable
+break CataLog::LoadTableHeapInformation

@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/test_buffermanager.dir/test_buffermanager.cpp.o -o test_buffermanager   -L/home/rain/stard/src/Storage  -L/home/rain/stard/src/Storage/include  -Wl,-rpath,/home/rain/stard/src/Storage:/home/rain/stard/src/Storage/include src/Storage/libstore.a 
