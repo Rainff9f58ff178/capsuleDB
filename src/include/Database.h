@@ -27,6 +27,7 @@ public:
     }
     void WriteHeader(std::vector<ChunkRef>& chunks){
         // get the max size of a line ,stupid...
+        max_size.clear();
         max_size.resize(chunks[0]->columns(),0);
 
         for(auto& chunk:chunks){
