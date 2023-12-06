@@ -14,7 +14,11 @@
 class ResultWriter{
 public:
     std::stringstream ss;
+    
     void printAll(std::vector<ChunkRef> chunks){
+        for(uint32_t i=0;i<5;++i){
+            ss<<std::endl;
+        }
         WriteHeader(chunks);
         for(auto& chunk:chunks){
             WriteChunk(chunk);
@@ -23,11 +27,13 @@ public:
     }
     void WriteHeader(std::vector<ChunkRef>& chunks){
         // get the max size of a line ,stupid...
-        max_size_=0;
+        max_size.resize(chunks[0]->columns(),0);
+
         for(auto& chunk:chunks){
-            for(auto& col : chunk->columns_){
-                max_size_ = std::max((uint32_t)col->name_.size(),max_size_);
-                max_size_ = std::max(col->max_char_size(),max_size_);
+            for(uint32_t i=0;i<chunk->columns_.size();++i){
+                auto& col = chunk->columns_[i];
+                max_size[i] = std::max((uint32_t)col->name_.size(),max_size[i]);
+                max_size[i] = std::max(col->max_char_size(),max_size[i]);
             }
         }
         std::vector<std::string> names;
@@ -36,20 +42,20 @@ public:
         }
 
         PrintSomething("+",ss);
-        for(auto& col:names){
-            PrintSomething("-",ss,max_size_);
+        for(uint32_t i=0;i<names.size();++i){
+            PrintSomething("-",ss,max_size[i]);
             PrintSomething("+",ss);
         }
         ss<<std::endl;
         PrintSomething("|",ss);
-        for(auto& col:names){
-            ss<<std::setw(max_size_)<<col
+        for(uint32_t i=0;i<names.size();++i){
+            ss<<std::setw(max_size[i])<<names[i]
             <<"|";
         }
         ss<<std::endl;
         PrintSomething("+",ss);
-        for(auto& col:names){
-            PrintSomething("-",ss,max_size_);
+        for(uint32_t i=0; i<names.size();++i){
+            PrintSomething("-",ss,max_size[i]);
             PrintSomething("+",ss);
         }
         ss<<std::endl;
@@ -62,24 +68,25 @@ public:
     void WriteChunk(ChunkRef& chunk){
         for(uint32_t i=0;i<chunk->rows();++i){
             ss<<"|";
-            for(auto& col : chunk->columns_){
-                ss<<std::setw(max_size_);
-                ss<<col->toString(i)<<"|";
+            for(uint32_t j=0; j< chunk->columns_.size();++j){
+                ss<<std::setw(max_size[j]);
+                ss<<chunk->columns_[j]->toString(i)<<"|";
             }
             ss<<std::endl;
             PrintSomething("+",ss);
 
-            for(auto& col:chunk->columns_){
-                PrintSomething("-",ss,max_size_);
+            for(uint32_t j=0;j<chunk->columns_.size();++j){
+                PrintSomething("-",ss,max_size[j]);
                 PrintSomething("+",ss);
             }
             ss<<std::endl;
         }
     }
-    uint32_t max_size_;
+    std::vector<uint32_t> max_size;
 };
 class StardDataBase{
 public:
+    bool ignore_output_= true;
     constexpr static int VERSION =1;
     inline int GetVersion(){
             return VERSION;

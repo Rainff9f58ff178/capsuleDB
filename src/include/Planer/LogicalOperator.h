@@ -60,6 +60,9 @@ public:
     virtual LogicalOperatorRef 
     CopyWithChildren(std::vector<LogicalOperatorRef> children)=0;
     virtual void PrintDebug(){
+        if(!show_info)
+            return;;
+
         if(ouput_schema_){
             std::cout<<" | output_schema: ";
             for(auto& col :ouput_schema_->columns_){

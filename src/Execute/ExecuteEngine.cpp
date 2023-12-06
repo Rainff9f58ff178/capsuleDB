@@ -25,7 +25,7 @@ std::shared_ptr<ExecuteContext> context){
 
 
     context->Build(context->physical_plan_,nullptr);
-    context->ShowPipelines();
+    if(show_info) context->ShowPipelines();
 
     auto leaf_pipelines = GetAllNoChildPipelines(context);
 

@@ -78,7 +78,14 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
         }
         case SeqScanOperatorNode:{
             auto& node = op->Cast<SeqScanLogicalOperator>();
+            auto& col_name = node.GetInputSchema()->columns_[0].name_;
+            auto* tb_catalog = cata_log_->GetTable(node.table_name_);
+            auto* col_heap = tb_catalog->GetColumnHeapByName(col_name);
+
+            if(col_heap->get()->metadata.total_rows==0)
+                throw Exception("empty set");
             node.SetOutputSchema(node.GetInputSchema());
+
             // to the end .
             break;
         };
@@ -142,7 +149,7 @@ void
 Planer::CreatePlanAndShowPlanTree(std::unique_ptr<BoundStatement> stmt){
     CreatePlan(std::move(stmt));
     uint8_t depth=0;
-    PreOrderTraverse(plan_,depth);
+    if(show_info) PreOrderTraverse(plan_,depth);
 }
 void
 Planer::PreOrderTraverse(LogicalOperatorRef plan,int depth){

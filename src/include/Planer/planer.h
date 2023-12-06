@@ -90,10 +90,12 @@ public:
 
 private:
     inline void PrintSpace(uint32_t times){
+        if(!show_info) return;
         for(uint32_t i=0;i<times;++i)
             std::cout<<" ";
     }
     inline void PrintOperatorName(LogicalOperator* o){
+        if(!show_info) return;
         auto type = o->GetType();
         switch (type) {
             case LogicalOperatorNode:{

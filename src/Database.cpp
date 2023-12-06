@@ -17,6 +17,7 @@
 #include "Planer/planer.h"
 #include "Execute/core/ColumnFactory.h"
 #include "Execute/core/ColumnVector.h"
+extern bool show_info;
 StardDataBase::StardDataBase(const std::string& db_name):db_name_(db_name){
     file_manager_ = new FileManager();
     cata_log_ = new CataLog(file_manager_,db_name_);
@@ -46,7 +47,8 @@ void StardDataBase::ShowTables(){
     for(auto& tb_entry:cata_log_->tables_){
         ss<<"=============================="<<std::endl;
         ss<<"table_oid:"<<tb_entry.first<<std::endl
-        <<"table_name:"<<tb_entry.second->table_name_<<std::endl;
+        <<"table_name:"<<tb_entry.second->table_name_<<std::endl
+        <<"record:"<<tb_entry.second->table_heap_->columns_heap_[0]->metadata.total_rows<<std::endl;
 
         for(auto& col_heap:tb_entry.second->table_heap_->columns_heap_){
             ss<<col_heap->def_.column_name<<"-"
@@ -75,7 +77,8 @@ void StardDataBase::ExecuteSql(const std::string& query){
     
     std::chrono::time_point<std::chrono::system_clock> before = std::chrono::system_clock::now();
     auto print_result=[&,this](std::vector<ChunkRef>&& chunks){
-        
+        if(!show_info)
+            return;
         std::chrono::time_point<std::chrono::system_clock> later = std::chrono::system_clock::now();
         auto second = std::chrono::duration_cast<std::chrono::microseconds>(later - before);
         writer_.ss.str("");
@@ -138,7 +141,7 @@ bool StardDataBase::ExecuteCreateStatement(std::unique_ptr<BoundStatement> stmt)
 bool StardDataBase::ExecuteInsertStatement(std::unique_ptr<BoundStatement> stmt,
 std::vector<ChunkRef>& result_set,SchemaRef& schema){
     Planer planer(cata_log_);
-    std::cout<<"==== Plan   Later ===="<<std::endl;
+    if(show_info) std::cout<<"==== Plan   Later ===="<<std::endl;
     planer.CreatePlanAndShowPlanTree(std::move(stmt));
 
     //optimer .
@@ -147,7 +150,7 @@ std::vector<ChunkRef>& result_set,SchemaRef& schema){
     //     optimizer.OptimizerInsert(planer.plan_);
 
     auto optimerzed_plan =  planer.plan_;
-    std::cout<<"==== Optimer Later ===="<<std::endl;
+    if(show_info) std::cout<<"==== Optimer Later ===="<<std::endl;
 
     planer.PreOrderTraverse(optimerzed_plan,0);
 

@@ -10,6 +10,7 @@
 
 using namespace std;
 
+bool show_info= false;
 int
 main() {
 
@@ -23,10 +24,25 @@ main() {
         ss<<"-- input \\st to show tables" <<std::endl;
         ss<<"-- input \\q to quit"<<std::endl;
         ss<<"-- only support varchar and int column"<<std::endl;
+        ss<<"-- execute 'select * from database_info;' show more infomation  "<<std::endl;
         ss<<std::endl<<std::endl;
         std::cout<<ss.str()<<std::endl;
         
         std::string query;
+
+        try{
+            db.ExecuteSql("create table database_info(database_name varchar(50),author varchar(50),github_addr varchar(50),description varchar(100))");
+            std::string database_name = "capsuleDB";
+            std::string author = "Rainff9f58ff178";
+            std::string github_addr = "https://github.com/Rainff9f58ff178/capsuleDB";
+            std::string description= "nice to meet you !";
+            std::string god_sql = std::format("insert into database_info values('{}','{}','{}','{}');",database_name,author,github_addr,description);
+            db.ExecuteSql( god_sql);
+        }catch(Exception e){
+            // return.
+        }
+
+        show_info= true;
         while (true) {
             try {
 
@@ -41,14 +57,16 @@ main() {
                 }
                 db.ExecuteSql(query);
             } catch (Exception e) {
-                std::cout << e.what() << std::endl;
+                    std::cout << e.what() << std::endl;
             } catch (char const *c) {
                 std::cout << c << std::endl;
             } catch (...) {
                 std::cout << "unknown type exception" << std::endl;
             }
         }
-    } catch (char const *c) {
+    } catch(Exception e){
+        //do nothing
+    }catch (char const *c) {
         std::cout << c << std::endl;
     } catch (...) {
         std::cout << "Unknowned errror" << std::endl;

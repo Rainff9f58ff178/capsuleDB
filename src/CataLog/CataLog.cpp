@@ -16,7 +16,7 @@ file_manager_(file_manager),database_name_(std::move(database_name)){
     auto [column_handle,is_first_load] =
         file_manager_->open
         <DB_COLUMN_HEAP_PAGE_SIZE>(database_name_+".columnHeap",
-         std::ios::in | std::ios::out | std::ios::binary,80);
+         std::ios::in | std::ios::out | std::ios::binary,1000);
     
     column_heap_handle_= column_handle;
     // column_heap hasn't meta infomation .
@@ -29,7 +29,7 @@ CataLog::InitTableMetaInfo(){
      auto [db_handle,is_first_load] =
          file_manager_->open<DB_INFO_FILE_PAGE_SIZE>(database_name_+"db",
         std::ios::in | std::ios::out | std::ios::binary,
-    10);
+    10000);
     db_handle_ = db_handle;
     page_id_t page_id;
     if(is_first_load){
@@ -69,7 +69,7 @@ void CataLog::CreateTable(const std::string& table_name,const std::vector<Column
     char tb_name_buf[128];
     memset(tb_name_buf,0,sizeof(tb_name_buf));
     memcpy(tb_name_buf,table_name.c_str(),
-    (uint32_t)sizeof(table_name.c_str()));
+    table_name.size());
 
     writer.Write<128>(tb_name_buf);
     writer.Write<page_id_t>(page_id);
@@ -81,7 +81,7 @@ void CataLog::CreateTable(const std::string& table_name,const std::vector<Column
         auto& column = columns[i];
         assert(i==column.col_idx_);
         auto t_col_name = column.column_name;
-        memcpy(buf,t_col_name.c_str(),(uint32_t)sizeof(column.column_name.c_str()));
+        memcpy(buf,t_col_name.c_str(),column.column_name.size());
         *(uint32_t*)(buf+64) = column.col_type_;  //column type
         *(uint32_t*)(buf+68) = column.col_length_; // ColumnLeng
         *(uint32_t*)(buf+72)=NULL_PAGE_ID; //ColumnHeap

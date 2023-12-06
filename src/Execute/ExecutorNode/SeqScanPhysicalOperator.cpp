@@ -7,6 +7,9 @@
 
 SourceResult
 SeqScanPhysicaloperator::Source(ChunkRef& chunk){
+    auto& plan = GetPlan()->Cast<SeqScanLogicalOperator&>();
+    
+
     if(  ( (*column_iterators_[0]->col_heap_->end()) == *column_iterators_[0])){
 #ifndef  NDEBUG
         for(auto& it : column_iterators_){
@@ -17,7 +20,6 @@ SeqScanPhysicaloperator::Source(ChunkRef& chunk){
     }
 
     ChunkRef new_chunk = std::make_shared<Chunk>();
-    auto& plan = GetPlan()->Cast<SeqScanLogicalOperator&>();
     DASSERT(column_iterators_.size() == plan.input_schema_->columns_.size());
 
     auto _columns = plan.input_schema_->columns_;

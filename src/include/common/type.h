@@ -10,7 +10,7 @@ using column_type = int32_t;
 using   Value = int32_t;
 
 #define down_cast dynamic_cast
-
+extern bool show_info;
 using   String = std::string;
 
 static constexpr const char* const UNKNOWNED_NAME  
