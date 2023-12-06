@@ -10,8 +10,8 @@ class ColumnValueExpression:public LogicalExpression{
         LogicalExpressionType::ColumnValueExpr;
 public:
    
-    explicit ColumnValueExpression(uint32_t col_id,int left_or_right)
-        :LogicalExpression({}),col_idx_(col_id),
+    explicit ColumnValueExpression(uint32_t col_id,std::string col_name,int left_or_right)
+        :LogicalExpression({}),col_idx_(col_id),col_name_(std::move(col_name)),
         left_or_right_(left_or_right){}
     
     virtual ValueUnion Evalute(DataChunk* chunk, uint32_t data_idx_in_this_chunk) override{
@@ -42,6 +42,7 @@ private:
     select colA,colB from test_1 where colC=1;
     */
     uint32_t col_idx_;
+    std::string col_name_;
     bool first_evalute_{true};
     std::vector<ValueUnion> cache_;
     uint32_t offset_{0};

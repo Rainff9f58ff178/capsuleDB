@@ -18,7 +18,9 @@ public:
     }
     ~BoundConstant()=default;
 
-
+    std::unique_ptr<BoundExpression> Copy()override{
+        return std::make_unique<BoundConstant>(std::move(value_.clone()));
+    }
 
     ValueUnion value_;
 };

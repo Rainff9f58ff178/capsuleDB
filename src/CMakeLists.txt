@@ -9,7 +9,10 @@ set(SRC Database.cpp
         CataLog/Column.cpp
         CataLog/Schema.cpp
         CataLog/CataLog.cpp
+        CataLog/TableHeap.cpp
         CataLog/TableCataLog.cpp
+        CataLog/PageIterator/ColumnNumIterator.cpp
+        CataLog/PageIterator/ColumnStringIterator.cpp 
         Table/Tuple.cpp
         Expressions/ColumnValueExpression.cpp
         Expressions/ConstantValueExpression.cpp

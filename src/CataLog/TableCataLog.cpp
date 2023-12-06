@@ -19,6 +19,15 @@ ColumnHeapStaticPage* TableCataLog::CreateNewColumnStaticPage(ColumnType type){
     return reinterpret_cast<ColumnHeapStaticPage*>(heap_handle_.GetPage(pid));
 }
 
+std::unique_ptr<ColumnHeap>* TableCataLog::GetColumnHeapByName(const std::string& name){
+    for(auto& col : table_heap_->columns_heap_){
+        if (col->def_.column_name == name){
+            return &col;
+        }
+    }
+    return nullptr;
+}
+
 void TableCataLog::InsertString(String& val,ColumnHeapStringPage* page,uint32_t row_idx){
     auto* current_page = page;
     while(!current_page->HasSpace(val.size())){
@@ -55,8 +64,8 @@ void TableCataLog::Insert(uint32_t col_idx,String& val){
 
         col_heap->heap_page_id_ = string_page->page_id;
         col_heap->heap_static_page_id_ = static_page->page_id;
-
-        heap_handle_.Unpin(table_page->page_id,true);
+        
+        SafeUnpin(cata_log_->db_handle_,table_page,true);
     }else {
         string_page  = reinterpret_cast<ColumnHeapStringPage*>(
             heap_handle_.GetPage(col_heap->heap_page_id_));
@@ -150,10 +159,11 @@ TableCataLog::CreateNewColumnHeapPage(){
         page->SetLSN(NULL_LSN_NUM);
         page->SetPageIdToData(page->page_id);
         page->SetPrevPageId(NULL_PAGE_ID);
+        page->SetNextPageId(NULL_PAGE_ID);
         page->SetColumnType(ColumnType::STRING);
         page->SetColumnLength(UINT32_MAX);
         page->SetTotalObj(0);
-        page->SetLocalMaxValue(INT32_MAX);
+        page->SetLocalMaxValue(INT32_MIN);
         page->SetLocalSumValue(0);
         page->SetLocalMinValue(INT32_MAX);
         page->SetSlotPointerOffset(ColumnHeapStringPage::FIRST_SLOT_OFFSET);

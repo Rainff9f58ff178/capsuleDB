@@ -24,6 +24,7 @@
 #include "common/Exception.h"
 #include "Binder/Expression/BoundBinaryOp.h"
 #include "Binder/Expression/BoundUnaryOp.h"
+#include "Planer/PlanContext.h"
 #include <iostream>
 #include <memory>
 class Planer{
@@ -75,10 +76,8 @@ public:
     LogicalExpressionRef 
     PlanBinaryOp(const BoundBinaryOp& binary_op,std::vector<LogicalOperatorRef> child);
 
-    void SetInputOutputSchema(SelectStatement& stmt,LogicalOperatorRef plan_);
-    void SetInputOutputSchema(InsertStatement& stmt,LogicalOperatorRef plan);
-    void SetInputOutputSchemaInternal(SchemaRef last_input,
-    LogicalOperatorRef op,SelectStatement& expr);
+    void SetInputOutputSchema(LogicalOperatorRef plan_);
+    void SetInputOutputSchemaInternal(LogicalOperatorRef op);
 
 
     void AddColumnFromExpression(BoundExpression& expr,SchemaRef& schema);
@@ -147,15 +146,13 @@ private:
 
 
     CataLog* cata_log_;
-
-
-    std::map<std::string,Schema> table_schema_;
+    PlanContext context_;
     void GetAllColNameFromTableRef(const BoundTabRef& table_ref,std::map<std::string,Schema>& map);
 
     SchemaRef
     GetSelectListSchema(const std::vector<std::unique_ptr<BoundExpression>>& stmt);
 
-    std::vector<std::string>
+    std::vector<Column>
     GetSelectListSchemaInternal(const std::unique_ptr<BoundExpression>& expr);
     SchemaRef scope_select_col_names_;
 };

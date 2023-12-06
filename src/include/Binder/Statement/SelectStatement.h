@@ -25,23 +25,22 @@ public:
             group_by_(std::move(group_by)),
             having_(std::move(having)),
             limit_(std::move(limit)),
-            is_distinct_(is_distinct){}
+            is_distinct_(is_distinct){
+                for(auto& expr : select_list){
+                    original_select_list_.push_back(expr->Copy());
+                }
+            }
 
 
         SelectStatement()=default;
         ~SelectStatement()=default;
 
 
-    
-
-
-
-
-
     std::unique_ptr<BoundTabRef> from_;
 
-    std::vector<std::unique_ptr<BoundExpression>> select_list_;
-
+    
+    std::vector<std::unique_ptr<BoundExpression>> original_select_list_; // this use for final ouput 
+    std::vector<std::unique_ptr<BoundExpression>> select_list_; // this use for table scan,
     std::unique_ptr<BoundExpression> where_;
     
     std::vector<std::unique_ptr<BoundExpression>> group_by_;

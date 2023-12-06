@@ -15,6 +15,11 @@
 #endif
 
 
+#define SafeUnpin(handle,page,dirty)              \
+    DASSERT((handle).GetPageSize() == page->GetPageSize()); \
+    (handle).Unpin(page->page_id,dirty);                     \
+
+
 constexpr const uint32_t NULL_PAGE_ID = UINT32_MAX;
 constexpr const uint32_t NULL_LSN_NUM = UINT32_MAX;
 
@@ -147,7 +152,7 @@ GERNAL_HEADER(8byte)|PREV_PAGE_ID(4byte)|NEXT_PAGE_ID(4bte)    |
 ----------------------------------------------------------------
 TABLE_NAME(128byte)|TABLE_OID|               |COLUMN_NUMS(4BYTE)|
 ----------------------------------------------------------------
-COLUMN_NAME(64byte)|COLUMN_TYPE(4byte)|CONSTRAINT_TYPE(4byte)|COLUMN_HEAP(4byte)
+COLUMN_NAME(64byte)|COLUMN_TYPE(4byte)|ColumnLength(4byte)|COLUMN_HEAP(4byte)
 ----------------------------------------------------------------
 STATIC_PAGE(4byte)|...
 ----------------------------------------------------------------
@@ -191,10 +196,7 @@ public:
     
 };
 
-enum ColumnType:uint32_t{
-        INT=0,
-        STRING,
-};
+
 /*
 ----------------------------------------------------------------
 LINKED_PAGE_HEADER(16byte)
@@ -261,29 +263,6 @@ public:
     }
     
 };
-
-/*
-----------------------------------------------------------------
-LINKED_PAGE_HEADER(16byte)
-----------------------------------------------------------------
-COLUMN_TYPE(INT OR STRING(4Byte))|COLUMN_LENGTH(4byte)|
-----------------------------------------------------------------
-BEGIN_ROW_ID(4byte)|END_ROW_ID(4byte)|TOTAL_OBJ(4byte)|
-----------------------------------------------------------------
-LOCAL_MAX_VALUE(4byte)|LOCAL_SUM_VALUE(4byte)|LOCAL_MIN_VALUE(4byte)
-----------------------------------------------------------------
-----------------------------------------------------------------
-........................
-.......................................META_INFORMATION(512byte)
-FREE_SPACE_OFFSET(4byte)|(1byte flag)VALUE1(column_length).....
-----------------------------------------------------------------
-...(1byte flag)VALUE_n(column_length)|
-----------------------------------------------------------------
-
-----------------------------------------------------------------
-
-----------------------------------------------------------------
-*/
 
 class ColumnHeapPage:public LinkPage<DB_COLUMN_HEAP_PAGE_SIZE>{
 public:
@@ -352,6 +331,52 @@ SLOT(8byte(4byte offset | 4 byte others )) .................
 
 class ColumnHeapStringPage:public  ColumnHeapPage{
 public:
+    class ColumnHeapStringPageIterator{
+    public:
+        ColumnHeapStringPageIterator(){
+            page_ = 0;
+            offset_=0;
+        }
+        ColumnHeapStringPageIterator(ColumnHeapStringPage* page):page_(page){
+            if(page){
+                offset_ = FIRST_SLOT_OFFSET;
+                operator++();
+            }
+        }
+        void operator++(){
+            if(page_==nullptr || offset_==0){
+                throw Exception("You ++ a end ColumnheapStringIterator ");
+            }
+            page_->ReadLock();
+            if(offset_ == page_->GetSlotPointerOffset()){
+                //to end 
+                page_=nullptr;
+                offset_=0;
+                return;
+            }
+            auto* slot = page_->data+offset_;
+            auto offset = *(uint32_t*)slot;
+            auto other = *(uint32_t*)(slot+4);
+            auto string_size = *(uint32_t*)(page_->data+ offset);
+            current_value_ = std::string_view(page_->data+offset+4,string_size);
+            offset_+=8;
+            page_->ReadUnlock();
+        }
+        bool operator!=(const ColumnHeapStringPageIterator& other){
+            return ! (*this==other);
+        }
+        const std::string operator*(){
+            return current_value_;
+        }
+        bool operator==(const ColumnHeapStringPageIterator& other){
+            if(page_ == other.page_ && offset_ == other.offset_)
+                return true;
+            return false;
+        }
+        std::string current_value_;
+        ColumnHeapStringPage* page_;
+        uint32_t offset_=0;
+    };
     static constexpr const uint32_t META_INFORMATION = 512;
     static constexpr const uint32_t SLOT_POINTER_OFFSET = 516;
     static constexpr const uint32_t FREE_SPACE_POINTER_OFFSET = 520;
@@ -366,6 +391,12 @@ public:
     GETTER_AND_SETTER_UINT32(SlotPointerOffset,SLOT_POINTER_OFFSET);
     GETTER_AND_SETTER_UINT32(FreeSpacePointerOffset,FREE_SPACE_POINTER_OFFSET);
     GETTER_AND_SETTER_UINT32(SlotNum,SLOT_NUM);
+    ColumnHeapStringPageIterator begin(){
+        return ColumnHeapStringPageIterator(this);
+    }
+    ColumnHeapStringPageIterator end(){
+        return ColumnHeapStringPageIterator(nullptr);
+    }
     void SetSlot(uint32_t slow_idx,uint32_t offset,uint32_t mask){
         D_assert(slow_idx <GetSlotNum());
         auto* dst=data+FIRST_SLOT_OFFSET+(slow_idx*SLOT_SIZE);
@@ -429,13 +460,86 @@ public:
 
 
 };
+
+
+
+/*
+----------------------------------------------------------------
+LINKED_PAGE_HEADER(16byte)
+----------------------------------------------------------------
+COLUMN_TYPE(INT OR STRING(4Byte))|COLUMN_LENGTH(4byte)|
+----------------------------------------------------------------
+BEGIN_ROW_ID(4byte)|END_ROW_ID(4byte)|TOTAL_OBJ(4byte)|
+----------------------------------------------------------------
+LOCAL_MAX_VALUE(4byte)|LOCAL_SUM_VALUE(4byte)|LOCAL_MIN_VALUE(4byte)
+----------------------------------------------------------------
+----------------------------------------------------------------
+........................
+.......................................META_INFORMATION(516byte)
+FREE_SPACE_OFFSET(4byte)|(1byte flag)VALUE1(4).....
+----------------------------------------------------------------
+...(1byte flag)VALUE_n(4)|
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+*/
+
 class ColumnHeapNumPage:public ColumnHeapPage{
 public:
+    class ColumnNumPageIterator{
+    public:
+        ColumnNumPageIterator(){
+            page_=nullptr;
+            offset_=0;
+        }
+        ColumnNumPageIterator(ColumnHeapNumPage* page):page_(page){
+            if(page){
+                offset_=VALUE_BEGIN;
+                operator++();
+            }else {
+                offset_=0;
+            }
+        }
+        ColumnNumPageIterator(ColumnNumPageIterator& other)=default;
+        void operator++(){
+            if( page_==nullptr || offset_==0 ){
+                throw Exception("You ++ a end ColumnNumPageiterator");
+            }
+            page_->ReadLock();
+            DASSERT(page_->GetFreeSpaceOffset() <= DB_COLUMN_HEAP_PAGE_SIZE);
+            if(offset_==page_->GetFreeSpaceOffset()){
+                //to end
+                page_=nullptr;
+                offset_=0;
+                return;
+            }
+            current_value_ = *(uint32_t*)(page_->data+offset_+1);                
+            page_->ReadUnlock();
+            offset_+=5;
+        }
+        
+        bool operator==(const ColumnNumPageIterator& other){
+            if(other.page_ == page_ && offset_ == other.offset_)
+                return true;
+            return false;
+        }
+        bool operator!=(const ColumnNumPageIterator& other){
+            return ! (*this==other);
+        }
+        Value operator*(){
+            return current_value_;
+        }
+        Value current_value_;
+        ColumnHeapNumPage* page_;
+        uint32_t offset_=0;
+    };
+
     static constexpr const uint32_t FREE_SPACE_OFFSET = 516;
     static constexpr const uint32_t VALUE_BEGIN = 520;
     SETTER_UINT32(SetFreeSpaceOffset,FREE_SPACE_OFFSET)
     GETTER_UINT32(GetFreeSpaceOffset,FREE_SPACE_OFFSET)
-
     inline std::tuple<uint8_t,Value> GetObj(uint32_t row_id){
         if(!(row_id>=GetBeginRowId() && row_id<=GetEndRowId())){
             throw Exception("row_id not in this page");
@@ -451,6 +555,13 @@ public:
     /*
         append this value to the page,return row_id.
     */
+
+    ColumnNumPageIterator begin(){
+        return ColumnNumPageIterator(this);
+    }
+    ColumnNumPageIterator end(){
+        return ColumnNumPageIterator(nullptr);
+    }
     void Append(Value val,uint32_t row_id){
         
         //only support int for now.

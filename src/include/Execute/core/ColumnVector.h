@@ -15,7 +15,7 @@ public:
     ColumnVector(const std::string& name){
         name_ = name;
         max_width_ = sizeof(T);
-        col_type_ = ExecString;
+        col_type_ = ExecInt;
     }
     uint32_t rows()override{
         return data_.size();
@@ -45,6 +45,14 @@ public:
         return max_size;
     }
     
+    ColumnRef clone(uint32_t rows=0) override{
+       auto new_col =
+        std::make_shared< ColumnVector>(name_);
+        for(uint32_t i=0;i<rows;++i){
+            new_col->data_[i] = data_[i];
+        }
+        return new_col;
+    }
 
     std::vector<T> data_;
 };

@@ -1,6 +1,6 @@
 #pragma once
 #include "Execute/ExecutorNode/PhysicalOperator.h"
-
+#include "CataLog/PageIterator/PageIterator.h"
 
 class SeqScanPhysicaloperator:public PhysicalOperator{
     static constexpr const OperatorType type_ =
@@ -15,6 +15,8 @@ public:
         PhysicalOperator(std::move(plan),context,
         std::move(children)){}
 
+    virtual void source_init() override;
+    virtual void source_uninit() override;
     virtual SourceResult Source(ChunkRef& bits) override;
     virtual SinkResult Sink(ChunkRef& bits) override;
     virtual OperatorResult Execute(ChunkRef& bits) override;
@@ -26,7 +28,5 @@ public:
         return false;
     }
 private:
-    void LoadData();
-    std::vector<bool> bitmap_;
-    bool first_{true};
+    std::vector<std::unique_ptr<ColumnIterator>> column_iterators_; 
 };

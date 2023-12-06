@@ -71,14 +71,16 @@ public:
             std::cout<<" "<<col.name_<<" ";
         }
     }
-    void SetOutputSchema(SchemaRef schema){
+
+    virtual void SetOutputSchema(SchemaRef schema){
         ouput_schema_ = std::move(schema);
     }
-    void SetInputSchema(SchemaRef schema){
+    virtual void SetInputSchema(SchemaRef schema){
         input_schema_ = std::move(schema);
     }
     SchemaRef ouput_schema_;
     //every node has table_schame .
     SchemaRef input_schema_{nullptr};
     std::vector<LogicalOperatorRef> children_;
+
 };

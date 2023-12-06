@@ -50,80 +50,89 @@ void Planer::AddColumnFromExpression(BoundExpression& expr,SchemaRef& schema){
         }
         COLUMN_REF:{
             auto& col_expr = down_cast<BoundColumnRef&>(expr);
-            schema->AddColumn(col_expr.ToString());
+            schema->AddColumn(col_expr.ToString(),col_expr.col_type_);
         }
 
         default:
             break;
     }
 }
-void Planer::SetInputOutputSchemaInternal(SchemaRef last_input,LogicalOperatorRef op
-,SelectStatement& expr){
+void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
     switch(op->GetType()){
         case MaterilizeOperatorNode:{
-            auto& materialzie = op->Cast<MaterilizeLogicaloperator&>();
-            auto select_list = GetSelectListSchema(expr.select_list_);
-            materialzie.SetInputSchema(select_list);
-            materialzie.SetOutputSchema(select_list);
-            SetInputOutputSchemaInternal(select_list,op->children_[0],expr);
+            SetInputOutputSchemaInternal(op->children_[0]);
+            auto& node = op->Cast<MaterilizeLogicaloperator>();
+            node.SetInputSchema(op->children_[0]->GetOutPutSchema());
+            node.SetOutputSchema(op->children_[0]->GetInputSchema());
+            // materlialize node input / output schema should same.
             break;
         }
         case FilterOperatorNode:{
-            auto& filter = op->Cast<FilterLogicalOperator&>();
-            auto input = std::make_shared<Schema>(*last_input);
-            AddColumnFromExpression(*expr.where_,input);
-            filter.SetOutputSchema(last_input);
-            filter.SetInputSchema(input);
-            SetInputOutputSchemaInternal(last_input, filter.children_[0],expr);
             break;
         }
         case ValuesOperatorNode:{
-            op->SetOutputSchema(last_input);
-            op->SetInputSchema(last_input);
+            // to the end . input schema already seted.
+            auto& node = op->Cast<ValuesLogicalOperator>();
+            node.SetOutputSchema(node.GetInputSchema());
             break;
         }
         case SeqScanOperatorNode:{
-            op->SetInputSchema(last_input);
-            op->SetOutputSchema(last_input);
+            auto& node = op->Cast<SeqScanLogicalOperator>();
+            node.SetOutputSchema(node.GetInputSchema());
+            // to the end .
             break;
         };
-        default:
-            throw Exception("Not Impl yet");
+        case InsertOperatorNode:{
+            SetInputOutputSchemaInternal(op->children_[0]);
+            auto& node = op->Cast<InsertLogicalOperator>();
+            auto child_schema = op->children_[0]->GetOutPutSchema();
+            auto* tb  = cata_log_->GetTable (node.inserted_table_);
+            auto& table_schema = tb->schema_;
+            if(table_schema.columns_.size() != child_schema->columns_.size()){
+                throw Exception(std::format("insert values mismatch,actuclly {},need {}",child_schema->columns_.size(),table_schema.columns_.size()));
+            }
+            for(uint32_t i=0;i<table_schema.columns_.size();++i){
+                auto& a = table_schema.columns_[i];
+                auto& b = child_schema->columns_[i];
+                if(a.type_!= b.type_){
+                    throw Exception(
+                        std::format(
+                            "insert values type mismatch in {} nd values. Should be {},actuclly {}," 
+                            ,i,ColumnTypeToString(a.type_),ColumnTypeToString(b.type_) ) );
+                }
+            }
+
+            node.SetInputSchema(op->children_[0]->GetOutPutSchema());
+            auto output_schema = std::make_shared<Schema>();
+            output_schema->AddColumn("__capsule_db_insert_",ColumnType::STRING);
+            node.SetOutputSchema(output_schema);
+            break;
+        }
+        default:{
+            NOT_IMP                
+        }
     }
 }
-void Planer::SetInputOutputSchema(SelectStatement& stmt,
+void Planer::SetInputOutputSchema(
 LogicalOperatorRef plan_){
-    SetInputOutputSchemaInternal(nullptr,plan_,stmt);
+    SetInputOutputSchemaInternal(plan_);
 }
 
 
-void Planer::SetInputOutputSchema(InsertStatement& stmt,LogicalOperatorRef plan){
-    DASSERT(plan->GetType() == InsertOperatorNode);
-    auto& insert = plan->Cast<InsertLogicalOperator&>();
-    auto select_list = GetSelectListSchema(stmt.values_inserted_->select_list_);
-    insert.SetInputSchema(std::make_shared<Schema>(*select_list));
-    auto insert_sc = std::make_shared<Schema>();
-    insert_sc->AddColumn("__capsule_db_insert__");
-    insert.SetOutputSchema(insert_sc);
-
-    SetInputOutputSchema(*stmt.values_inserted_,plan->children_[0]);
-
-
-}
 void Planer::CreatePlan(std::unique_ptr<BoundStatement> stmt){
     switch (stmt->type_) {
         case StatementType::INSERT_STATEMENT:{
             auto& insert_stmt =
                  dynamic_cast<InsertStatement&>(*stmt);
             plan_ = PlanInsert(insert_stmt);
-            SetInputOutputSchema(insert_stmt,plan_);
+            SetInputOutputSchema(plan_);
             break;
         }
         case StatementType::SELECT_STATEMENT:{
             auto& select_stmt = 
                 dynamic_cast<SelectStatement&>(*stmt);
             plan_ = PlanSelect(select_stmt);
-            SetInputOutputSchema(select_stmt,plan_);
+            SetInputOutputSchema(plan_);
         }
         default:
             break;
@@ -150,19 +159,19 @@ Planer::PreOrderTraverse(LogicalOperatorRef plan,int depth){
 */
 SchemaRef 
 Planer::GetSelectListSchema(const std::vector<std::unique_ptr<BoundExpression>>& stmt){
-    std::vector<std::string> cols_names;
+    std::vector<Column> cols_names;
     for(auto& v:stmt){
         auto cols = GetSelectListSchemaInternal(v);
-        cols_names.insert(cols_names.end(),cols.begin(),cols.end());
+        cols_names.insert(cols_names.end(), cols.begin(),cols.end());
     }
-    return std::shared_ptr<Schema>(
-        new Schema(cols_names)
-    );
+    
+
+    return std::make_shared<Schema>(std::move(cols_names));
 }
 
-std::vector<std::string>
+std::vector<Column>
 Planer::GetSelectListSchemaInternal(const std::unique_ptr<BoundExpression>& expr){
-    std::vector<std::string> v;
+    std::vector<Column> v;
     switch(expr->GetType()){
         case ExpressionType::CONSTANT:{
             return v;
@@ -170,7 +179,13 @@ Planer::GetSelectListSchemaInternal(const std::unique_ptr<BoundExpression>& expr
         case ExpressionType::COLUMN_REF:{
             auto& col_ref = dynamic_cast<BoundColumnRef&>(*expr);
             auto s = join(col_ref.column_,".");
-            v.push_back(std::move(s));
+            auto* tb = cata_log_->GetTable(col_ref.table_name());
+            auto col = tb->GetColumnFromSchema(s);
+            if(col.has_value()){
+                v.push_back(col.value());
+            }else {
+                throw Exception("Not found this column in table");
+            }
             return v;
         }
         case ExpressionType::TYPE_CAST:{
@@ -220,7 +235,7 @@ std::map<std::string,Schema>& map ){
             auto size = expr_list.values_.size();
             for(uint32_t i=0;i<size;++i){
                 auto s = std::format("{}.{}","__values#{}",i);
-                map["__values_insert#"].AddColumn(s);
+                map["__values_insert#"].AddColumn(s,UNKOWN);
             }
             break;
         }
@@ -236,12 +251,7 @@ std::map<std::string,Schema>& map ){
 }
 LogicalOperatorRef
 Planer::PlanSelect(const SelectStatement& stmt){   
-    //bind CTE:step>
     LogicalOperatorRef plan = nullptr;
-
-    scope_select_col_names_ = GetSelectListSchema(stmt.select_list_);
-
-    //Bind table 
     switch (stmt.from_->type_) {
         case TableReferenceType::EMPTY:{
             plan =  std::shared_ptr<ValuesLogicalOperator>(
@@ -252,16 +262,17 @@ Planer::PlanSelect(const SelectStatement& stmt){
             plan = PlanTableRef(*stmt.from_);
             break;
     }
-    
-    GetAllColNameFromTableRef(*stmt.from_,table_schema_);
-    
-    // plan where 
+    auto final_select_list_exprs = std::vector<LogicalExpressionRef>();
+    for(auto& expr : stmt.select_list_){
+        auto [_1,pr] =  PlanExpression(*expr,{plan});
+        final_select_list_exprs.push_back(std::move(pr));
+    }
     if(!stmt.where_->isInvalid()){
-        // plan 
-        auto [_1,where_expr] = PlanExpression(*stmt.where_,{plan});
-        plan = std::shared_ptr<FilterLogicalOperator>(
-            new FilterLogicalOperator({plan},std::move(where_expr))
-        );
+        NOT_IMP
+        // auto [_1,where_expr] = PlanExpression(*stmt.where_,{plan});
+        // plan = std::shared_ptr<FilterLogicalOperator>(
+        //     new FilterLogicalOperator({plan},std::move(where_expr))
+        // );
     }
 
     // plan Agg
@@ -281,6 +292,8 @@ Planer::PlanSelect(const SelectStatement& stmt){
     plan = std::shared_ptr<MaterilizeLogicaloperator>(
         new MaterilizeLogicaloperator({plan})
     );
+    
+    plan->Cast<MaterilizeLogicaloperator>().final_select_list_expr_ = std::move(final_select_list_exprs);
     return plan;
 }
 
@@ -295,6 +308,7 @@ Planer::PlanInsert(const InsertStatement& stmt){
     
     auto insert_schema = std::shared_ptr<Schema>(
             new Schema({Column("star_db.inserted",0)}));
+                
     auto insert_plan = std::shared_ptr<InsertLogicalOperator>(
         new InsertLogicalOperator({select},stmt.insert_type_,
             stmt.table_inserted_->table_id_)
@@ -384,24 +398,22 @@ const std::vector<LogicalOperatorRef>& children){
         //All the output Schema except materilze 
         // if children is Value node ,his schema should be :
         // "__values...,__values.."
+        auto& names = context_.planings_[col_ref.table_name()]->column_names_;
         
-        auto& schema = table_schema_[col_ref.table_name()];
-
         auto col_name = col_ref.ToString();
         bool found=false;
-
-        for(auto& col :schema.columns_){
+        for(auto& col: names->columns_){
             if(col.name_ == col_name){
                 if(found)
                     throw Exception("found same col_name");
                 found=true;
             }
         }
-        uint32_t idx = schema.GetColumnIdx(col_name);
-        if(idx==UINT32_MAX)
-            throw Exception("Not Found This col when PlanColumn");
+
+        auto idx = context_.planings_[col_ref.table_name()]->TryGetColumnidx(col_ref.ToString());
+        context_.planings_[col_ref.table_name()]->AddInterestedColumn(col_ref.ToString());
         return {col_name,std::shared_ptr<ColumnValueExpression>(
-            new ColumnValueExpression(idx,0)
+            new ColumnValueExpression(idx,col_ref.ToString(),0)
         )};
     }
     throw NotImplementedException("Not support in PlanColumn");
@@ -433,10 +445,18 @@ Planer::PlanTableRef(const BoundTabRef& expr){
 }
 LogicalOperatorRef
 Planer::PlanBaseTable(const BoundBaseTableRef& base_table){
-    return std::shared_ptr<SeqScanLogicalOperator>(
+    
+    auto table = std::shared_ptr<SeqScanLogicalOperator>(
         new SeqScanLogicalOperator(base_table.table_name_,
         base_table.table_id_,{})
     );
+
+    table->SetInputSchema(std::make_shared<Schema>());
+    context_.planings_[base_table.table_name_] =
+        std::make_unique<TablePlan>(
+            base_table.table_name_,cata_log_->GetTable(base_table.table_name_)->GetSchemaRef(),table->input_schema_);
+
+    return table;
 }
 
 LogicalOperatorRef
@@ -451,16 +471,46 @@ Planer::PlanExpressionList(const BoundExpressionList& expr_list){
         }
         all_values.push_back(std::move(values));
     }
+
+    // check if all_values type equal;
+    std::vector<ValueType> example;
+    for(uint32_t y = 0;y<all_values[0].size();++y){
+        example.push_back(all_values[0][y]->Evalute(nullptr,0).type_);
+    }
+    for(uint32_t row = 1;row<all_values.size();++row){
+        for(uint32_t y = 0;y<all_values[0].size();++y){
+            if(all_values[row][y]->Evalute(nullptr,0).type_!=example[y]){
+                throw  Exception(std::format(
+        "Type mismatch in {} row {} col ",row,y 
+                ));
+            }
+        }
+    }
+
+
+
     std::vector<Column> cols;
-    const auto& row = all_values[0].size();
-    for(uint32_t i=0;i<row;++i){
+    const auto size = all_values[0].size();
+    for(uint32_t i=0;i<size;++i){
         auto col_name = std::format("{}.{}",expr_list.identifier_,i);
-        cols.push_back(Column(col_name,i*4));
+        auto&& col = Column(col_name,i*4);
+        auto val = all_values[0][i]->Evalute(nullptr,0);
+        if(val.type_ == TypeInt){
+            col.type_ = ColumnType::INT;
+        }else {
+            col.type_ = ColumnType::STRING;
+        }
+        cols.push_back(col);
     }
     auto schema = 
         std::shared_ptr<Schema>(new Schema(std::move(cols)));
 
-    return std::shared_ptr<ValuesLogicalOperator>(new  
+    auto values = std::shared_ptr<ValuesLogicalOperator>(new  
         ValuesLogicalOperator(std::move(all_values)));
+
+    values->SetInputSchema(schema);
+    
+    context_.planings_["__values#0"] = std::make_unique<TablePlan>("__values#0",schema,std::make_shared<Schema>());
+    return values;
 
 }

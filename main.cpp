@@ -22,6 +22,7 @@ main() {
         ss<<std::endl;
         ss<<"-- input \\st to show tables" <<std::endl;
         ss<<"-- input \\q to quit"<<std::endl;
+        ss<<"-- only support varchar and int column"<<std::endl;
         ss<<std::endl<<std::endl;
         std::cout<<ss.str()<<std::endl;
         

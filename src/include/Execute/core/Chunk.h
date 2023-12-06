@@ -3,6 +3,11 @@
 #include"Column.h"
 #include<cstring>
 
+
+class Chunk;
+
+using ChunkRef = std::shared_ptr<Chunk>;
+
 class Chunk{
 
     struct __metadata{
@@ -21,10 +26,10 @@ public:
     uint32_t columns(){
         return columns_.size();
     }
+    ChunkRef cloneEmpty();
     
 
     __metadata metadata;
     ColumnRefs columns_;
 };
 
-using ChunkRef = std::shared_ptr<Chunk>;

@@ -18,6 +18,9 @@ public:
     BoundUnaryOp()=default;
     ~BoundUnaryOp()=default;
 
+    std::unique_ptr<BoundExpression> Copy()override{
+        return std::make_unique<BoundUnaryOp>(operator_name_,args_->Copy());
+    }
 
     std::string operator_name_;
     std::unique_ptr<BoundExpression> args_;

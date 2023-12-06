@@ -8,6 +8,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include<format>
 
 
 
@@ -122,3 +123,10 @@ class ExecutionException : public Exception {
 
 #define NOT_IMP throw NotImplementedException("Not Impl yet");
 #define UNREACHABLE throw Exception("Unreachable");
+#define THROW_IF_NULL(x)      \
+    if(!x)                    \
+        throw Exception(std::format("Couldn't null in {},{},{}",__FILE__,__LINE__,__FUNCTION__));
+
+#define CHEKC_THORW(x)         \
+    if(!(x))                      \
+        throw Exception(std::format("chekc failed int {},{},{}",__FILE__,__LINE__,__FUNCTION__));

@@ -6,7 +6,7 @@
 #include"CataLog/Column.h"
 #include<vector>
 #include "Tableheap/TableHeap.h"
-
+#include<optional>
 class Schema{
 public:
 
@@ -15,12 +15,22 @@ public:
     Schema(const Schema& schema);
     Schema(const TableHeap* table_heap);
     Schema(const std::vector<ColumnDef>& cols);
-    Schema(const std::vector<std::string>& cols);
     Schema() = default;
-        
+    
+    std::optional<Column> getColumnByname(const std::string& name){
+        for(auto& col : columns_){
+            if(col.name_ == name)
+                return col;
+        }
+        return Column();
+    }
+
 
     void Merge(const Schema& other_schema);
-    void AddColumn(const std::string& col_name);
+    void AddColumn(const std::string& col_name,ColumnType type);
+    void AddColumn(Column&& col);
+
+    void AddColumns(std::vector<Column>& cols );
     uint32_t GetColumnIdx(const std::string& name);
     std::vector<Column> columns_;
 };

@@ -1,21 +1,5 @@
 
-/*
-设计思路，分成ghi和ghd文件，ghd文件使用页式管理保存bucket 页
-ghi文件作为目录文件，格式应该是
 
-            --------------------------------------------
-header      |BUCKET_NUM|GLOBAL_DEPTH|                  |
-            --------------------------------------------
-            --------------------------------------------
-h0          | page_id                                  | 4byte
-            --------------------------------------------
-            --------------------------------------------
-h1          |page_id                                   | 4 byte
-            --------------------------------------------
-...
-
-
-*/
 
 #ifndef BUFFER_MANAGER_H
 #define BUFFER_MANAGER_H
@@ -108,6 +92,7 @@ SCN|
 template<uint32_t PAGE_SIZE>
 class Page{
 private:
+    static constexpr uint32_t _PAGE_SIZE  = PAGE_SIZE;
     std::shared_mutex rw_lock_;
 public:
     int page_id=-1;
@@ -116,6 +101,7 @@ public:
     bool is_dirty=false;
     char data[PAGE_SIZE];
 public:
+
 
     Page();
     ~Page();
@@ -126,6 +112,9 @@ public:
     void ReadUnlock();
     void WriteLock();
     void WriteUnlock();
+    uint32_t GetPageSize(){
+        return _PAGE_SIZE;
+    }
 
     void ResetMemory();
 };
@@ -377,7 +366,10 @@ public:
     FileHandle(const FileHandle& other);
     FileHandle& operator=(const FileHandle& other);
     ~FileHandle();
-
+    
+    uint32_t GetPageSize(){
+        return PAGE_SIZE;
+    }
     inline const std::string& GetFileName(){return path_;}
     inline int GetPageNum(){
         return file_manager_->page_counts_[path_];

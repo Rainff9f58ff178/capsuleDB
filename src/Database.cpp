@@ -28,18 +28,33 @@ StardDataBase::~StardDataBase(){
 }
 
 void StardDataBase::ShowTables(){
-    std::cout<<std::setw(20)<<"table_oid"
-        <<std::setw(20)<<"table_name"
-        <<std::setw(20)<<"column"<<std::endl;
-    for(auto& tb_entry:cata_log_->tables_){
-        std::cout<<std::setw(20)<<tb_entry.first;
-        auto& tb_catalog = tb_entry.second;
-        std::cout<<std::setw(20)<<tb_catalog->table_name_;
-        for(auto& col:tb_catalog->schema_.columns_){
-            std::cout<<std::setw(20)<<col.name_;
+
+    auto get_type_string=[](ColumnType type){
+        switch(type){
+            case  ColumnType::INT:{
+                return "int";
+            }
+            case ColumnType::STRING:{
+                return "varchar";
+            }
+            default:
+                NOT_IMP
         }
-        std::cout<<std::endl;
+    };
+
+    std::stringstream ss;
+    for(auto& tb_entry:cata_log_->tables_){
+        ss<<"=============================="<<std::endl;
+        ss<<"table_oid:"<<tb_entry.first<<std::endl
+        <<"table_name:"<<tb_entry.second->table_name_<<std::endl;
+
+        for(auto& col_heap:tb_entry.second->table_heap_->columns_heap_){
+            ss<<col_heap->def_.column_name<<"-"
+            <<get_type_string(col_heap->def_.col_type_)<<"-"
+            <<col_heap->def_.col_length_<<std::endl;
+        }
     }
+    std::cout<<ss.str();
 }
 void StardDataBase::ExecuteSql(const std::string& query){
     if(query == "\\st"){
@@ -166,9 +181,18 @@ SchemaRef& schema){
     auto op_p =optimizer.FilterPridicatorDownPushToSeqScanNode(planer.plan_);
     planer.PreOrderTraverse(op_p,0);
 
+    auto context = std::make_shared<ExecuteContext>(cata_log_);
     execute_engine_->Execute(op_p,
-        std::make_shared<ExecuteContext>(cata_log_));
+        context);
 
-    schema = planer.plan_->GetOutPutSchema();
+    ChunkRef chunk;
+    while(true){
+        auto result = context->physical_plan_->Source(chunk);
+        if(result == SourceResult::FINISHED)
+            break;
+        DASSERT(chunk);
+        result_set.push_back(std::move(chunk));
+    }
+
     return true;
 }

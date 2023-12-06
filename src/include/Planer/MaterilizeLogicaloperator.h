@@ -22,6 +22,6 @@ public:
     }        
     COPY_PLAN_WITH_CHILDREN(MaterilizeLogicaloperator);
 
-
+    std::vector<LogicalExpressionRef> final_select_list_expr_;
 
 };

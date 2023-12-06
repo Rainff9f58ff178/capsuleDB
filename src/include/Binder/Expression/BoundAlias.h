@@ -19,7 +19,9 @@ public:
     ~BoundAlias()=default;
 
 
-
+    std::unique_ptr<BoundExpression> Copy() override{
+        return std::make_unique<BoundAlias>(child_expression_->Copy(),alias_);
+    }
 
 
 

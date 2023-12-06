@@ -29,3 +29,13 @@ void Chunk::updateMetadata(){
         metadata.colums_++;
     }
 }
+
+ChunkRef Chunk::cloneEmpty(){
+    std::vector<ColumnRef> cols;
+    for(auto& col : columns_){
+        cols.push_back(col->clone());
+    }
+    ChunkRef new_chunk = std::make_shared<Chunk>();
+    new_chunk->appendColumns(std::move(cols));
+    return new_chunk;
+}

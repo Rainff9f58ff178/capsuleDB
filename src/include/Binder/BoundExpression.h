@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include<memory>
+#include "common/Exception.h"
 
 enum class ExpressionType : uint8_t {
   INVALID = 0,    /**< Invalid expression type. */
@@ -29,6 +30,9 @@ public:
     virtual inline bool isInvalid(){return type_ == ExpressionType::INVALID;}
 
     virtual inline ExpressionType GetType(){return type_;}
+    virtual std::unique_ptr<BoundExpression> Copy(){
+        UNREACHABLE
+    }
 
     ExpressionType type_{ExpressionType::INVALID};
 };

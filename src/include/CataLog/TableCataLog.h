@@ -2,6 +2,7 @@
 #include "Schema.h"
 #include "common/type.h"
 #include "common/Value.h"
+#include <optional>
 
 class CataLog;
 class TableCataLog{
@@ -21,6 +22,9 @@ public:
     
     inline Schema GetSchema(){
         return schema_;   
+    }
+    inline SchemaRef GetSchemaRef(){
+        return std::make_shared<Schema>(schema_);
     }
     
     /*
@@ -43,6 +47,16 @@ public:
     */
     std::vector<ValueUnion>
     GetDataChunk(uint32_t col_idx);
+
+    std::optional<Column> GetColumnFromSchema(const std::string& col_name){
+        for(auto& col : schema_.columns_){
+            if(col.name_ == col_name)
+                return col;
+        }
+        return std::nullopt;
+    }
+    std::unique_ptr<ColumnHeap>* GetColumnHeapByName(const std::string& name);
+    
     
 
     void Insert(uint32_t col_idx,Value val);

@@ -80,15 +80,16 @@ void CataLog::CreateTable(const std::string& table_name,const std::vector<Column
         memset(buf,0,sizeof(buf));
         auto& column = columns[i];
         assert(i==column.col_idx_);
-        auto t_col_name = table_name+"."+column.column_name;
+        auto t_col_name = column.column_name;
         memcpy(buf,t_col_name.c_str(),(uint32_t)sizeof(column.column_name.c_str()));
-        memset(buf+64,0,4);
-        memset(buf+68,0,4);
-        *(uint32_t*)(buf+72)=NULL_PAGE_ID;
-        *(uint32_t*)(buf+76)=NULL_PAGE_ID;
+        *(uint32_t*)(buf+64) = column.col_type_;  //column type
+        *(uint32_t*)(buf+68) = column.col_length_; // ColumnLeng
+        *(uint32_t*)(buf+72)=NULL_PAGE_ID; //ColumnHeap
+        *(uint32_t*)(buf+76)=NULL_PAGE_ID;  //ColumnStaticHeap
         writer.Write<TableCataLogPage::COLUMN_DEF_LENGTH>(buf);
         v.push_back(std::make_unique<ColumnHeap>(column,*(uint32_t*)(buf+72),
             *(uint32_t*)(buf+76)));
+        v.back()->log_ = this;
     }
 
     Schema schema(columns);
@@ -145,8 +146,8 @@ std::unique_ptr<TableHeap> CataLog::LoadTableHeapInformation(PageReader<DB_INFO_
     for(uint32_t i =0;i<column_nums ; ++i){
         char buf[TableCataLogPage::COLUMN_DEF_LENGTH];
         reader.Read<TableCataLogPage::COLUMN_DEF_LENGTH>(buf);
-        auto type = (ColumnType)(*(buf+16));
-        auto col_heap = std::make_unique<ColumnHeap>(ColumnDef(std::string(buf),i,type),*(uint32_t*)(buf+72),*(uint32_t*)(buf+76));
+        auto type = (ColumnType)(*(buf+64));
+        auto col_heap = std::make_unique<ColumnHeap>(ColumnDef(std::string(buf),i,type,*(uint32_t*)(buf+68)),*(uint32_t*)(buf+72),*(uint32_t*)(buf+76));
         if(col_heap->heap_static_page_id_ != NULL_PAGE_ID){
             auto* static_page = reinterpret_cast<ColumnHeapStaticPage*>(column_heap_handle_.GetPage(col_heap->heap_static_page_id_));
             col_heap->metadata.total_rows = static_page->GetTotalObj();
@@ -154,6 +155,7 @@ std::unique_ptr<TableHeap> CataLog::LoadTableHeapInformation(PageReader<DB_INFO_
         }else {
             col_heap->metadata.total_rows=0;
         }
+        col_heap->log_ = this;
         vec.emplace_back(std::move(col_heap));
     }
     return std::make_unique<TableHeap>(std::move(vec));

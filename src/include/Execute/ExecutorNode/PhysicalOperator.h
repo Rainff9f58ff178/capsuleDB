@@ -44,7 +44,24 @@ public:
 
     virtual OperatorType GetType(){return type_;}
 
+    virtual void sink_init(){
 
+    }
+    virtual void sink_uninit(){
+
+    }
+    virtual void exceute_init(){
+
+    }
+    virtual void execute_uninit(){
+
+    }
+    virtual void source_init(){
+        // do nothing 
+    }
+    virtual void source_uninit(){
+        //do nothing 
+    }
     // this function called by source node
     virtual SourceResult Source(ChunkRef& chunk);
     //this function called by sink node.

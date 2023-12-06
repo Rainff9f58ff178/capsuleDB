@@ -4,9 +4,11 @@
 #include <string>
 #include <vector>
 #include <memory>
-
+#include<ranges>
 static std::string 
-join(const std::vector<std::string> arr,std::string s){
+join(const std::vector<std::string>& arr,std::string s){
+    if(arr.size()==1)
+        return arr[0];
     std::string result;
     for(uint32_t i=0;i<arr.size();++i){
         result.append(arr[i]);
@@ -15,6 +17,17 @@ join(const std::vector<std::string> arr,std::string s){
     }
     return result;
 }
+
+static std::vector<std::string>
+split(const std::string& string, const std::string& key_word){
+    std::vector<std::string> _result;
+    for(auto const s:  string | std::views::split(key_word)){
+        _result.emplace_back(s.begin(),s.end());
+    }
+    return _result;
+}
+
+
 static SchemaRef
 InferSchemaFromCols(const std::vector<std::string> cols){
     std::vector<Column> columns;
@@ -22,4 +35,16 @@ InferSchemaFromCols(const std::vector<std::string> cols){
         columns.push_back(Column(cols[i],i*4));
     }
     return std::shared_ptr<Schema>(new Schema(columns));
+}
+static std::string ColumnTypeToString(ColumnType type){
+    switch(type){
+        case  ColumnType::INT:{
+            return "int";
+        }
+        case   ColumnType::STRING:{
+            return "String";
+        }
+        default:
+            return "Unkowned";
+    }
 }

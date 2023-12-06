@@ -29,6 +29,7 @@ public:
     std::string table_name_;
     table_oid_t table_oid_;
 
+    std::vector<column_idx_t> interested_columns_;
 
     // TODO(wxy) :make  filter in Seq sacn node.
     LogicalExpressionRef filter_pridicater_{nullptr};

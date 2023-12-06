@@ -65,6 +65,14 @@ ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
         return;
     
     DASSERT(!pipeline->runed_);
+
+    // first execute init function.
+    pipeline->source_->source_init();
+    for(auto* o:pipeline->operators_){
+        o->exceute_init();
+    }
+    if( pipeline->sink_ ) pipeline->sink_ ->sink_init();
+
     SourceResult source_result;
     bool exhausted_source = false;
     while(1){
@@ -81,6 +89,16 @@ ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
         if(result==OperatorResult::FINISHED)
             break;
     }
+
+    // execute uninit function .
+
+    pipeline->source_->source_uninit();
+    for(auto* o:pipeline->operators_){
+        o->execute_uninit();
+    }
+    if ( pipeline->sink_)  pipeline->sink_ ->sink_uninit();
+
+
 
     auto parent = pipeline->Complete();
     if(parent!=nullptr)

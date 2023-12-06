@@ -10,7 +10,9 @@
 
 class TableCataLog;
 
-
+class ExecColumn;
+using ColumnRef  =  std::shared_ptr<ExecColumn>;
+using ColumnRefs =  std::vector<ColumnRef>;
 enum ExecColumnType{
     ExecInt,
     ExecString
@@ -29,19 +31,19 @@ public:
         COLUMN_IMPOSSBLE;
     }
 
-    virtual void insertToTable(TableCataLog* table,uint32_t col_idx){
+    virtual void insertToTable(TableCataLog* table,column_idx_t col_idx){
         COLUMN_IMPOSSBLE;
     }
     virtual std::string toString(uint32_t row_idx){
         COLUMN_IMPOSSBLE;
     }
 
-
     //find the max size of chars, stupid;
     virtual uint32_t max_char_size(){
         COLUMN_IMPOSSBLE;
     }
+    virtual ColumnRef clone(uint32_t row = 0){
+        COLUMN_IMPOSSBLE
+    }
 };
 
-using ColumnRef  =  std::shared_ptr<ExecColumn>;
-using ColumnRefs =  std::vector<ColumnRef>;

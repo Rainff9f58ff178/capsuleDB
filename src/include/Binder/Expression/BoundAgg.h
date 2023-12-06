@@ -20,7 +20,9 @@ public:
     BoundAgg()=default;
     ~BoundAgg()=default;
 
-
+    std::unique_ptr<BoundExpression> Copy()override{
+        return std::make_unique<BoundAgg>(agg_name_,is_distinct_,args_->Copy());
+    }
     std::string agg_name_;
     bool is_distinct_;
     std::unique_ptr<BoundExpression> args_;

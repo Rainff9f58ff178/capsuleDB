@@ -15,6 +15,8 @@
 #include "Binder/Statement/InsertStatement.h"
 #include "Binder/Statement/SelectStatement.h"
 
+#include "common/commonfunc.h"
+
 Binder::Binder(duckdb_libpgquery::PGList* parsed_tree,CataLog* cata_log){
     for(auto entry=parsed_tree->head;entry!=nullptr;entry=entry->next){
         statments_.push_back(
@@ -56,11 +58,23 @@ std::unique_ptr<BoundStatement> Binder::BindStatement(duckdb_libpgquery::PGNode*
 
 ColumnDef
 Binder::BindColumnDef(duckdb_libpgquery::PGColumnDef* col_def){
-    std::string name;
-    if(col_def->colname!=nullptr){
-        return ColumnDef(col_def->colname,0,ColumnType::INT);
+    if(col_def->colname == nullptr)
+        throw Exception("Column name couldnt be empty");
+
+    auto s = std::string(
+        (reinterpret_cast<duckdb_libpgquery::PGValue *>(
+            col_def->typeName->names->tail->data.ptr_value)->val.str));
+    
+    if(s == "int4"){
+        return ColumnDef(col_def->colname,0,ColumnType::INT,4);
+    }else if(s == "varchar"){
+        auto exprs = BindExpressionLists(col_def->typeName->typmods);
+        const auto &varchar_max_length_val =
+             dynamic_cast<const BoundConstant &>(*exprs[0]);
+        return ColumnDef(col_def->colname,0,ColumnType::STRING,varchar_max_length_val.value_.num_);
     }
-    throw Exception("Bi`nd columnDef failed");
+
+    throw Exception("Not support column type");
 }
 std::unique_ptr<CreateStatement> Binder::BindCreate(duckdb_libpgquery::PGCreateStmt* stmt){
     std::string table_name = stmt->relation->relname;
@@ -75,6 +89,7 @@ std::unique_ptr<CreateStatement> Binder::BindCreate(duckdb_libpgquery::PGCreateS
                     reinterpret_cast<duckdb_libpgquery::PGColumnDef*>(entry->data.ptr_value);
                 auto column = BindColumnDef(column_ref);
                 column.col_idx_ = idx;
+                column.column_name = table_name +"."+column.column_name;
                 columns.push_back(std::move(column));
                 break;
             }
@@ -89,7 +104,7 @@ std::unique_ptr<CreateStatement> Binder::BindCreate(duckdb_libpgquery::PGCreateS
     if(columns.empty()){
         throw Exception("Columns empty");
     }
-    return std::make_unique<CreateStatement>(std::move(table_name),columns);
+    return std::make_unique<CreateStatement>(std::move(table_name),std::move(columns));
 }
 
 
@@ -120,6 +135,7 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
     
     if(stmt->valuesLists!=nullptr){
         auto all_values  = BindValueList(stmt->valuesLists);
+
         auto value_list_name = std::format("__values#{}",universe_id_++);
         all_values->identifier_ =value_list_name;
         
@@ -127,7 +143,7 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
         for(uint32_t i = 0;i<all_values->values_[0].size();++i){
             std::vector<std::string> col
                 {value_list_name,std::format("{}",i)};
-            col_exprs_.push_back(std::make_unique<BoundColumnRef>(std::move(col)));
+            col_exprs_.push_back(std::make_unique<BoundColumnRef>(std::move(col),ColumnType::UNKOWN));
         }
         return std::unique_ptr<SelectStatement>(new SelectStatement(std::move(all_values), 
             std::move(col_exprs_),
@@ -243,7 +259,7 @@ Binder::GetAllColumnExpr(BoundTabRef* table){
             auto* t_c = cata_log_->GetTable(base_table->table_id_);
             for(auto& col :t_c->schema_.columns_){
                 v.push_back(std::unique_ptr<BoundColumnRef>(
-                    new BoundColumnRef({base_table->table_name_,col.name_})));
+                    new BoundColumnRef(  split(col.name_,".") ,col.type_)));
             }
             return v;
         }
@@ -466,9 +482,14 @@ std::vector<std::string>& col_names){
             auto& base =
                  dynamic_cast<const BoundBaseTableRef&>(scope);
             if(col_names.size()==1){
+                auto col_name = base.table_name_+"."+col_names[0];
+                auto* tb = cata_log_->GetTable(base.table_id_);
+                auto _column_ = tb->GetColumnFromSchema(col_name);
+                if(!_column_.has_value())
+                    throw  Exception("Not func this"+col_name+"  in table");
                 col_names.insert(col_names.begin(),base.table_name_);
                 return std::unique_ptr<BoundColumnRef>(
-                    new BoundColumnRef(col_names)
+                    new BoundColumnRef(col_names,_column_->type_)
                 );
             }
         }

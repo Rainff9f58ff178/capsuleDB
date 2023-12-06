@@ -10,9 +10,9 @@
 class BoundColumnRef:public BoundExpression{
 
 public:
-    explicit BoundColumnRef(std::vector<std::string> column):
+    explicit BoundColumnRef(std::vector<std::string> column,ColumnType type):
         BoundExpression(ExpressionType::COLUMN_REF),
-        column_(std::move(column)){
+        column_(std::move(column)),col_type_(type){
             DASSERT(column_.size() >=2);
         };
     BoundColumnRef()=default;
@@ -25,5 +25,9 @@ public:
         return column_[0];
     }
 
+    std::unique_ptr<BoundExpression> Copy()override{
+        return std::make_unique<BoundColumnRef>(column_,col_type_);
+    }
     std::vector<std::string> column_;
+    ColumnType col_type_;
 };

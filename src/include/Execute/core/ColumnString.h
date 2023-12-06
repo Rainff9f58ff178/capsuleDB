@@ -25,6 +25,14 @@ public:
     //find the max size of chars, stupid;
     uint32_t max_char_size() override;
     
+    ColumnRef clone(uint32_t row = 0) override{
+        auto new_col = std::make_shared<ColumnString>(name_);
+        new_col->max_width_ = max_width_;
+        for(uint32_t i=0;i<row;++i){
+            new_col->data_[i] = data_[i];
+        }
+        return new_col;
+    }
     std::vector<std::string> data_;
 };
 
