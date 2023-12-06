@@ -7,8 +7,11 @@ This is my database as graduation project.
     - 3.column store engine. page base.
 
 -- input \st to show tables
+
 -- input \q to quit
+
 -- only support varchar and int column
+
 -- execute 'select * from database_info;' show more infomation
 
 
