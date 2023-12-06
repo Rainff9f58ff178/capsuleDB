@@ -1,4 +1,4 @@
-./build/
-./.cache/ 
-./.ccls-cache/ 
-./.vscode/ 
+./build/*
+./.cache/* 
+./.ccls-cache/* 
+./.vscode/* 
