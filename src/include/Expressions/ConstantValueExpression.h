@@ -14,7 +14,7 @@ public:
 
     ~ConstantValueExpression() = default;
   
-    virtual ValueUnion Evalute(Chunk* chunk,Chunk* new_chunk) override{
+    virtual ValueUnion Evalute(ChunkRef* chunk,uint32_t idx) override{
         return val_;
     }
 

@@ -10,7 +10,7 @@ public:
     explicit Column(std::string name,uint32_t index);
     Column(std::string name,ColumnType type_);
     Column(std::string name,ColumnType type_,column_idx_t idx);
-
+    
     Column() = default;
     ~Column()=default;
     

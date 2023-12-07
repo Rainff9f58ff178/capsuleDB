@@ -7,7 +7,8 @@
 
 template<class T>
 class ColumnVector : public ExecColumn{
-    friend class ColumnFactory;
+    friend class ColumnFactory; 
+    using Self = ColumnVector<T>;
 public:
     ColumnVector(){
         col_type_ = ExecInt;
@@ -26,7 +27,8 @@ public:
             data_.push_back(value[i].num_);
         }
     }
-
+   
+   
     void insertToTable(TableCataLog* table,uint32_t col_idx) override{
         for(uint32_t i=0;i<data_.size();++i){
             table->Insert(col_idx,data_[i]);

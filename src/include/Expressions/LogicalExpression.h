@@ -5,7 +5,6 @@
 #include "common/Exception.h"
 #include "common/type.h"
 #include "common/Value.h"
-#include "Execute/BitMap.h"
 #include "Execute/core/Chunk.h"
 class LogicalExpression;
 using LogicalExpressionRef = std::shared_ptr<LogicalExpression>;
@@ -17,6 +16,7 @@ enum  LogicalExpressionType{
     ComparsionExpr,
     ConstantExpr,
 };
+
 class LogicalExpression{
     static constexpr const LogicalExpressionType type_=
         LogicalExpr;
@@ -45,7 +45,7 @@ public:
     virtual LogicalExpressionType GetType(){
         UNREACHABLE
     }
-    virtual ValueUnion Evalute(Chunk* chunk,Chunk* new_chunk){
+    virtual ValueUnion Evalute(ChunkRef* chunk,uint32_t idx){
         throw Exception("Unreachable call LogicalExpression 's Evalute");
     }
 

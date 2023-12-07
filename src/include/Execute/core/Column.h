@@ -17,11 +17,22 @@ enum ExecColumnType{
     ExecInt,
     ExecString
 };
+#define  is(s) return col_type_==ExecColumnType::ExecInt && max_width_ == s;
 class ExecColumn{
 public:
     uint32_t max_width_{0};
     std::string name_;
     ExecColumnType col_type_;
+
+    bool isInt8(){is(8);}
+    bool isInt32(){ is(32);}
+    bool isInt16(){ is(16);}
+
+    bool sameAs(ExecColumn* other){
+        if(col_type_== other->col_type_ && col_type_== ExecString)
+            return true;
+        return col_type_ == other->col_type_ && max_width_ == other->max_width_;
+    }
 
     virtual uint32_t rows(){
         COLUMN_IMPOSSBLE;
@@ -38,6 +49,7 @@ public:
         COLUMN_IMPOSSBLE;
     }
 
+    
     //find the max size of chars, stupid;
     virtual uint32_t max_char_size(){
         COLUMN_IMPOSSBLE;

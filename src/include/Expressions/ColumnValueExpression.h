@@ -23,8 +23,11 @@ public:
     ColumnType GetReturnType() override{
         return column_info_.type_;
     }
-    virtual ValueUnion Evalute(Chunk* chunk, Chunk* new_chunk) override{
-        
+
+
+    // select ... where colA <coC = colB+ 1;
+    virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
+
     }
 
 

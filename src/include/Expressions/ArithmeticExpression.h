@@ -9,7 +9,7 @@ class ArithmeticExpression:public LogicalExpression{
         LogicalExpressionType::ArithmeticExpr;
 public:
    
-    virtual ValueUnion Evalute(Chunk* chunk,Chunk* new_chunk) override{
+    virtual ValueUnion Evalute(ChunkRef* chunk,uint32_t idx) override{
 
     }
 

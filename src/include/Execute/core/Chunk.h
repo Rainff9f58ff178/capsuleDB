@@ -22,6 +22,13 @@ public:
     void appendColumn(ColumnRef&& col);
     void appendColumns(ColumnRefs&& cols);
     void updateMetadata();
+    ColumnRef getColumnByname(const std::string& col_name){
+        for(auto& col : columns_){
+            if(col->name_ == col_name)
+                return col;
+        }
+        return nullptr;
+    }
     uint32_t rows();
     uint32_t columns(){
         return columns_.size();
