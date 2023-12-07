@@ -5,6 +5,11 @@ enum ValueType{
     TypeInt =0,
     TypeString 
 };
+enum class ValueId{
+    SignedNumeric=0,
+    UnSignedNumeric,
+    String
+};
 
 class ValueUnion{
 public:
@@ -12,6 +17,11 @@ public:
     ValueUnion(Value num);
     ValueUnion(const std::string& value);
 
+    ValueUnion(char* data,uint32_t len){
+        type_ = ValueType::TypeString;
+        data_ = data;
+        value_len_ = len;
+    }
     ValueUnion(const ValueUnion& other);
     ValueUnion(ValueUnion&& other);
     ~ValueUnion();
@@ -23,7 +33,13 @@ public:
         }
     }
     bool operator==(const ValueUnion& other);
+    bool operator!=(const ValueUnion& other);
+    bool operator>=(const ValueUnion& other);
+    bool operator<=(const ValueUnion& other);
+    bool operator> (const ValueUnion& other);
+    bool operator< (const ValueUnion& other);
     ValueType type_;
+    ValueId id_;
     union{
         char* data_;
         Value num_;

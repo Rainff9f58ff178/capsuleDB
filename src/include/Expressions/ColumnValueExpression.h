@@ -27,7 +27,8 @@ public:
 
     // select ... where colA <coC = colB+ 1;
     virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
-
+        auto col = chunk->get()->getColumnByname(column_info_.name_);
+        return col->ValueAt(idx);
     }
 
 
@@ -41,5 +42,4 @@ private:
     Column column_info_;
     bool first_evalute_{true};
     std::vector<ValueUnion> cache_;
-    uint32_t offset_{0};
 };

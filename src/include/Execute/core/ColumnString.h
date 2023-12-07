@@ -18,6 +18,10 @@ public:
         return data_.size();
     }
 
+    ValueUnion ValueAt(uint32_t row_id) override{
+        CHEKC_THORW(row_id < data_.size());
+        return ValueUnion(data_[row_id].data(),data_[row_id].size());
+    }
     void insertFrom(const ValueUnionView& value) override;
     void insertToTable(TableCataLog* table,uint32_t col_idx) override;
     std::string toString(uint32_t row_idx) override;

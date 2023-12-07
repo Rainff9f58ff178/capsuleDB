@@ -38,6 +38,10 @@ public:
         COLUMN_IMPOSSBLE;
     }
 
+    virtual ValueUnion ValueAt(uint32_t row_id){
+        COLUMN_IMPOSSBLE;
+    }
+
     virtual void insertFrom(const ValueUnionView& value){
         COLUMN_IMPOSSBLE;
     }

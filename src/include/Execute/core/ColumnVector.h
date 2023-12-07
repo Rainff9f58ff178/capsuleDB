@@ -21,6 +21,10 @@ public:
     uint32_t rows()override{
         return data_.size();
     }
+    ValueUnion ValueAt(uint32_t idx) override{
+        CHEKC_THORW(idx<data_.size());
+        return ValueUnion(data_[idx]);
+    }
     void insertFrom(const ValueUnionView& value) override{
         for(uint32_t i=0;i<value.size();++i){
             DASSERT(value[i].type_ == TypeInt);
@@ -28,7 +32,7 @@ public:
         }
     }
    
-   
+
     void insertToTable(TableCataLog* table,uint32_t col_idx) override{
         for(uint32_t i=0;i<data_.size();++i){
             table->Insert(col_idx,data_[i]);
