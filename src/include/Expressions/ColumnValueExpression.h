@@ -10,39 +10,31 @@ class ColumnValueExpression:public LogicalExpression{
         LogicalExpressionType::ColumnValueExpr;
 public:
    
-    explicit ColumnValueExpression(uint32_t col_id,std::string col_name,int left_or_right)
-        :LogicalExpression({}),col_idx_(col_id),col_name_(std::move(col_name)),
+
+
+   void collect_column(std::vector<Column>& cols)override{
+        cols.push_back(column_info_);
+   }
+    explicit ColumnValueExpression(uint32_t col_id,Column col,int left_or_right)
+        :LogicalExpression({}),col_idx_(col_id),column_info_(std::move(col)),
         left_or_right_(left_or_right){}
     
-    virtual ValueUnion Evalute(DataChunk* chunk, uint32_t data_idx_in_this_chunk) override{
 
+    ColumnType GetReturnType() override{
+        return column_info_.type_;
     }
-    virtual bool EvaluteJoin(DataChunk* left_chunk, DataChunk* right_chunk, uint32_t data_idx_in_this_chun) override{
-
+    virtual ValueUnion Evalute(Chunk* chunk, Chunk* new_chunk) override{
+            
     }
 
 
-    virtual ValueUnion Evalute(std::vector<bool>& bitmap, TableCataLog *table) override{
-        if(first_evalute_){
-            cache_ = table->GetDataChunk(col_idx_);
-            assert(bitmap.size() == cache_.size());
-            first_evalute_=false;
-        }
-
-        return cache_[offset_++];
-    }
     virtual void PrintDebug() override{
         std::cout<<"ColunmValueExpr ";
     }
 private:
-    //use in join node. 0 left,1 right
-    int left_or_right_;
-    /*
-        this is the idx in targetlist
-    select colA,colB from test_1 where colC=1;
-    */
-    uint32_t col_idx_;
-    std::string col_name_;
+
+    uint32_t col_idx_; // idx in table schema.
+    Column column_info_;
     bool first_evalute_{true};
     std::vector<ValueUnion> cache_;
     uint32_t offset_{0};

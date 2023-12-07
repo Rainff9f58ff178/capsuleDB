@@ -18,15 +18,6 @@ public:
         return type_;
     }
 
-    void SetOutputSchema(SchemaRef schema) override{
-        LogicalOperator::SetOutputSchema(schema);
-
-        for(uint32_t i=0;i<all_values_[0].size();++i){
-            
-        }
-
-    }
-
 
     COPY_PLAN_WITH_CHILDREN(ValuesLogicalOperator);
     std::vector<std::vector<LogicalExpressionRef>> all_values_;

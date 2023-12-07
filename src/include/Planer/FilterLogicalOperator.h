@@ -11,7 +11,7 @@ public:
     std::vector<LogicalOperatorRef> child,
     LogicalExpressionRef pridicator):
     LogicalOperator(std::move(child)),
-    pridicator_(std::move(pridicator)){}
+    pridicator_({pridicator}){}
 
     
     COPY_PLAN_WITH_CHILDREN(FilterLogicalOperator)
@@ -19,5 +19,6 @@ public:
     virtual OperatorType GetType() override{
         return type_;
     }
-    LogicalExpressionRef pridicator_;
+     
+    std::vector<LogicalExpressionRef> pridicator_;
 };

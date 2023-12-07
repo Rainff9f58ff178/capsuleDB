@@ -16,9 +16,11 @@ public:
     }   
     virtual void PrintDebug() override{
         LogicalOperator::PrintDebug();
-        if(filter_pridicater_){
+        if(!pridicator_.empty()){
             std::cout<<" | filter(preorder) : ";
-            filter_pridicater_->PrintDebug();
+            for(auto& f : pridicator_){
+                f->PrintDebug();
+            }
         }else 
             std::cout<<" | filter(NONE) ";
     }
@@ -30,7 +32,5 @@ public:
     table_oid_t table_oid_;
 
     std::vector<column_idx_t> interested_columns_;
-
-    // TODO(wxy) :make  filter in Seq sacn node.
-    LogicalExpressionRef filter_pridicater_{nullptr};
+    std::vector<LogicalExpressionRef> pridicator_;
 };

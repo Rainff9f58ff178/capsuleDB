@@ -6,6 +6,7 @@
 #include "common/type.h"
 #include "common/Value.h"
 #include "Execute/BitMap.h"
+#include "Execute/core/Chunk.h"
 class LogicalExpression;
 using LogicalExpressionRef = std::shared_ptr<LogicalExpression>;
 enum  LogicalExpressionType{
@@ -28,20 +29,27 @@ public:
 
     inline LogicalExpressionRef GetChild(uint32_t idx){return  children_[idx];}
 
+    virtual std::string toString(){
+        return "not imp yet";
+    }
 
-    virtual ValueUnion Evalute(DataChunk* chunk,uint32_t data_idx_in_this_chunk){
+    virtual void collect_column(std::vector<Column>& col){
+        // collect all column appear in this exprsiion.
+        for(auto& child : children_){
+            child->collect_column(col);
+        }
+    }
+    virtual ColumnType GetReturnType(){
+        UNREACHABLE;
+    }
+    virtual LogicalExpressionType GetType(){
+        UNREACHABLE
+    }
+    virtual ValueUnion Evalute(Chunk* chunk,Chunk* new_chunk){
         throw Exception("Unreachable call LogicalExpression 's Evalute");
     }
 
-    // thsi function used in Evalute two value if equal.
-    virtual bool EvaluteJoin(DataChunk* left_chunk,DataChunk* right_chunk,
-    uint32_t data_idx_in_this_chun){
-        throw Exception("Unreachable call LogicalExpression 's Evalutejoin");
-    }
-    
-    virtual ValueUnion Evalute(std::vector<bool>& bitmap,TableCataLog* table){
-        throw Exception("Unraechable call LogicalExpression's Evalute");
-    }
+
     
     virtual void PrintDebug(){
         for(auto& r :children_){

@@ -85,9 +85,18 @@ public:
 
     void PreOrderTraverse(LogicalOperatorRef plan,int depth);
         
-
+    // check if op output this column,if not ,load 
+    void LoadColumn(const Column& col,LogicalOperatorRef op);
     
-
+    SchemaRef eraseSurplusColumn(SchemaRef select_schema,LogicalOperatorRef op){
+        auto output_schema = op->GetInputSchema()->Copy();
+        for(auto& col:op->GetInputSchema()->columns_){
+            if(!select_schema->exist(col)){
+                output_schema->erase(col);
+            }
+        }
+        return output_schema;
+    }
 private:
     inline void PrintSpace(uint32_t times){
         if(!show_info) return;
@@ -146,7 +155,7 @@ private:
     }
 
 
-
+    std::list<SchemaRef> select_list_queue_;
     CataLog* cata_log_;
     PlanContext context_;
     void GetAllColNameFromTableRef(const BoundTabRef& table_ref,std::map<std::string,Schema>& map);

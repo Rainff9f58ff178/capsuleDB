@@ -9,16 +9,12 @@ class AndOrExpression:public LogicalExpression{
 public:
 
 
-    virtual ValueUnion Evalute(DataChunk* chunk, uint32_t data_idx_in_this_chunk) override{
-
-    }
-    virtual bool EvaluteJoin(DataChunk* left_chunk, DataChunk* right_chunk, uint32_t data_idx_in_this_chun) override{
+    virtual ValueUnion Evalute(Chunk* chunk, Chunk* new_chunk) override{
 
     }
 
-    virtual ValueUnion Evalute(std::vector<bool>& bitmap, TableCataLog *table) override{
-        throw NotImplementedException("Not imp");
-    }
+
+
 
     virtual void PrintDebug() override{
         std::cout<<"AndOr Expr ";

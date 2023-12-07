@@ -31,13 +31,16 @@ main() {
         std::string query;
 
         try{
-            db.ExecuteSql("create table database_info(database_name varchar(50),author varchar(50),github_addr varchar(50),description varchar(100))");
-            std::string database_name = "capsuleDB";
-            std::string author = "Rainff9f58ff178";
-            std::string github_addr = "https://github.com/Rainff9f58ff178/capsuleDB";
-            std::string description= "nice to meet you !";
-            std::string god_sql = std::format("insert into database_info values('{}','{}','{}','{}');",database_name,author,github_addr,description);
-            db.ExecuteSql( god_sql);
+            if(!db.hasTable("database_info")){
+
+                db.ExecuteSql("create table database_info(database_name varchar(50),author varchar(50),github_addr varchar(50),description varchar(100))");
+                std::string database_name = "capsuleDB";
+                std::string author = "Rainff9f58ff178";
+                std::string github_addr = "https://github.com/Rainff9f58ff178/capsuleDB";
+                std::string description= "nice to meet you !";
+                std::string god_sql = std::format("insert into database_info values('{}','{}','{}','{}');",database_name,author,github_addr,description);
+                db.ExecuteSql( god_sql);
+            }
         }catch(Exception e){
             // return.
         }

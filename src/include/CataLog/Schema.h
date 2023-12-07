@@ -7,6 +7,10 @@
 #include<vector>
 #include "Tableheap/TableHeap.h"
 #include<optional>
+
+class Schema;
+using SchemaRef = std::shared_ptr<Schema>;
+
 class Schema{
 public:
 
@@ -25,13 +29,16 @@ public:
         return Column();
     }
 
-
+    SchemaRef Copy(){
+        return std::make_shared<Schema>(*this);
+    }
+    bool exist(const Column& col);
+    void erase(const Column& col);
     void Merge(const Schema& other_schema);
     void AddColumn(const std::string& col_name,ColumnType type);
     void AddColumn(Column&& col);
-
-    void AddColumns(std::vector<Column>& cols );
+    void AddColumn(const Column& col);
+    void AddColumns(const std::vector<Column>& cols );
     uint32_t GetColumnIdx(const std::string& name);
     std::vector<Column> columns_;
 };
-using SchemaRef = std::shared_ptr<Schema>;

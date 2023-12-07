@@ -37,21 +37,26 @@ Optimizer::OptimizerInsertInternal(LogicalOperatorRef plan){
 
 
 LogicalOperatorRef 
-Optimizer::FilterPridicatorDownPushToSeqScanNode(
+Optimizer::FilterPushDown(
 LogicalOperatorRef plan){
+    // push filter to SeqScan node or hash join node.
+
     std::vector<LogicalOperatorRef> children;
     for(auto& child:plan->children_){
-        children.push_back(FilterPridicatorDownPushToSeqScanNode(child));
+        children.push_back(FilterPushDown(child));
     }
+
     if(plan->GetType()== OperatorType::FilterOperatorNode 
     && plan->children_[0]->GetType()==
     OperatorType::SeqScanOperatorNode){
         auto& fp = plan->Cast<FilterLogicalOperator>();
         auto& sp = plan->children_[0]->Cast<SeqScanLogicalOperator>();
-        auto p = fp.pridicator_;
-        sp.filter_pridicater_ = p;
+        auto p = std::move(fp.pridicator_);
+        sp.pridicator_ = p;
+        sp.SetOutputSchema(fp.GetOutPutSchema());
         return plan->children_[0];
     }
+    //todo push to hash join
     auto op_p = plan->CopyWithChildren(std::move(children));
     return op_p;
 }

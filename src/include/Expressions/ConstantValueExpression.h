@@ -14,16 +14,11 @@ public:
 
     ~ConstantValueExpression() = default;
   
-    virtual ValueUnion Evalute(DataChunk* chunk, uint32_t data_idx_in_this_chunk) override{
+    virtual ValueUnion Evalute(Chunk* chunk,Chunk* new_chunk) override{
         return val_;
-    }
-    virtual bool EvaluteJoin(DataChunk* left_chunk, DataChunk* right_chunk, uint32_t data_idx_in_this_chun) override{
-        return false;
     }
 
-    virtual ValueUnion Evalute(std::vector<bool>& bitmap, TableCataLog *table) override{
-        return val_;
-    }
+
     virtual void PrintDebug() override{
         std::cout<<"ConstantvalueExpr ";
     }

@@ -13,5 +13,6 @@
 class PlanContext{
 public:
     PlanContext(){}
+    std::vector<std::string> table_name_queue_;
     std::unordered_map<std::string,std::unique_ptr<TablePlan>> planings_;
 };

@@ -97,6 +97,13 @@ public:
 
     void ExecuteSql(const std::string& query);
     
+    bool hasTable(const std::string& table_name){
+        for(auto& it :cata_log_->tables_){
+            if(it.second->table_name_ ==table_name)
+                return true;
+        }
+        return false;
+    }
 private:
     bool ExecuteCreateStatement(std::unique_ptr<BoundStatement> stmt);
     bool ExecuteInsertStatement(std::unique_ptr<BoundStatement> stmt,

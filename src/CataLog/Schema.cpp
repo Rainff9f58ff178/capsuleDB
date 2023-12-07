@@ -27,7 +27,7 @@ void Schema::Merge(const Schema& other_schema){
         columns_.begin(),other_schema.columns_.begin(),
         other_schema.columns_.end());
 }
-void Schema::AddColumns(std::vector<Column>& cols ){
+void Schema::AddColumns(const std::vector<Column>& cols ){
     for(auto& col:cols){
         AddColumn(col.name_,col.type_);
     }
@@ -43,8 +43,26 @@ void Schema::AddColumn(const std::string& col_name,ColumnType type){
 void Schema::AddColumn(Column&& column){
     columns_.push_back(column);
 }
+void Schema::AddColumn(const Column& col){
+    columns_.push_back(col);
+}
+bool Schema::exist(const Column& col){
+    for(auto& c : columns_){
+        if(c.name_ == col.name_){
+            return true;
+        }
+    }
+    return false;
+}
 
-
+void Schema::erase(const Column& col){
+    for(auto it = columns_.begin();it!=columns_.end();++it){
+        if(it->name_ == col.name_)    {
+            columns_.erase(it);
+            return;
+        }
+    }
+}
 
 Schema::Schema(const std::vector<ColumnDef>& cols){
     for(auto& col : cols){

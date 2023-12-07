@@ -157,7 +157,6 @@ std::vector<ChunkRef>& result_set,SchemaRef& schema){
     auto context = std::make_shared<ExecuteContext>(cata_log_);
     execute_engine_->Execute(optimerzed_plan,
         context);
-
     DASSERT(context->physical_plan_->GetType() == ResultOperatorNode);
 
     // pull from result Operator
@@ -181,7 +180,7 @@ SchemaRef& schema){
     planer.CreatePlanAndShowPlanTree(std::move(stmt));
     Optimizer optimizer;
     std::cout<<"==== Optimer Later ===="<<std::endl;
-    auto op_p =optimizer.FilterPridicatorDownPushToSeqScanNode(planer.plan_);
+    auto op_p =optimizer.RegularOptimize(planer.plan_);
     planer.PreOrderTraverse(op_p,0);
 
     auto context = std::make_shared<ExecuteContext>(cata_log_);
