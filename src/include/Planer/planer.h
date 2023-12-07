@@ -160,10 +160,5 @@ private:
     PlanContext context_;
     void GetAllColNameFromTableRef(const BoundTabRef& table_ref,std::map<std::string,Schema>& map);
 
-    SchemaRef
-    GetSelectListSchema(const std::vector<std::unique_ptr<BoundExpression>>& stmt);
-
-    std::vector<Column>
-    GetSelectListSchemaInternal(const std::unique_ptr<BoundExpression>& expr);
     SchemaRef scope_select_col_names_;
 };

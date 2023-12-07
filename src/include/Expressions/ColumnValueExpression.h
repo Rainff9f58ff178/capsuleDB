@@ -24,7 +24,7 @@ public:
         return column_info_.type_;
     }
     virtual ValueUnion Evalute(Chunk* chunk, Chunk* new_chunk) override{
-            
+        
     }
 
 
@@ -32,7 +32,8 @@ public:
         std::cout<<"ColunmValueExpr ";
     }
 private:
-
+    //use in join node. 0 left,1 right
+    int left_or_right_;
     uint32_t col_idx_; // idx in table schema.
     Column column_info_;
     bool first_evalute_{true};
