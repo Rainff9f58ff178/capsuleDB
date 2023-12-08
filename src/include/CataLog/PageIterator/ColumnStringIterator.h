@@ -12,7 +12,6 @@ public:
     bool operator!=(const ColumnIterator& other) override;
     void operator++() override;
     std::vector<String>& operator*(){
-        acumulate_rows_+=cache_.size();
         return cache_;
     }
     ColumnHeapStringPage* page_;

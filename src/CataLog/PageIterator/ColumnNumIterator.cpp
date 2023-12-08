@@ -35,13 +35,19 @@ ColumnNumIterator::~ColumnNumIterator(){
     SafeUnpin(*heap_handle,page_,false);
 }
 void ColumnNumIterator::operator++(){
+    if(acumulate_rows_ == total_rows_){
+        page_ = nullptr;
+        return;
+    }
+
     if(current_page_iterator_ == page_->end() && page_->GetNextPageId() == NULL_PAGE_ID){
         page_ = nullptr;
         return;
     }
 
     uint32_t chunk_num=0;
-    for(; chunk_num< col_heap_->DATA_CHUNK_SIZE && (current_page_iterator_!=page_->end()|| page_->GetNextPageId()!=NULL_PAGE_ID ); chunk_num++, ++current_page_iterator_){
+    for(; chunk_num< col_heap_->DATA_CHUNK_SIZE && acumulate_rows_ < total_rows_ &&
+     (current_page_iterator_!=page_->end()|| page_->GetNextPageId()!=NULL_PAGE_ID ); chunk_num++, ++current_page_iterator_){
         if(current_page_iterator_==page_->end()){
             // current page to the end.
             auto* heap_handle = &col_heap_->log_->column_heap_handle_;
@@ -54,5 +60,6 @@ void ColumnNumIterator::operator++(){
         }
         Value val = *current_page_iterator_;
         cache_.push_back(val);
+        acumulate_rows_++;
     }
 }

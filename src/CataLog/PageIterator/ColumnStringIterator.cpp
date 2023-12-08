@@ -31,6 +31,12 @@ bool ColumnStringIterator::operator==(const ColumnIterator& other){
 }
 
 void ColumnStringIterator::operator++(){
+    if(acumulate_rows_ == total_rows_){
+        page_= nullptr;
+        return;   
+    }
+    
+    
     if(current_page_iterator_ == page_->end() && page_->GetNextPageId() == NULL_PAGE_ID){
         //to the end .
         page_ =nullptr;
@@ -38,7 +44,7 @@ void ColumnStringIterator::operator++(){
     }
 
     uint32_t chunk_size=0;
-    for(;chunk_size<col_heap_->DATA_CHUNK_SIZE && 
+    for(;chunk_size<col_heap_->DATA_CHUNK_SIZE && acumulate_rows_ < total_rows_ &&
         (current_page_iterator_!=page_->end() || page_->GetNextPageId() != NULL_PAGE_ID)
         ;++chunk_size,++current_page_iterator_){
         
@@ -52,6 +58,7 @@ void ColumnStringIterator::operator++(){
         }
         std::string val = *current_page_iterator_;
         cache_.push_back(std::move(val));
+        acumulate_rows_ ++;
     }
     
 

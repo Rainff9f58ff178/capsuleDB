@@ -13,6 +13,7 @@ set(SRC Database.cpp
         CataLog/TableCataLog.cpp
         CataLog/PageIterator/ColumnNumIterator.cpp
         CataLog/PageIterator/ColumnStringIterator.cpp 
+        CataLog/PageIterator/ColumnIterator.cpp
         Table/Tuple.cpp
         Expressions/ColumnValueExpression.cpp
         Expressions/ConstantValueExpression.cpp

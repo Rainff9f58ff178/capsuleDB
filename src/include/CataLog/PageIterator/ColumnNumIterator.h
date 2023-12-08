@@ -14,7 +14,6 @@ public:
     void operator++() override;
 
     std::vector<Value>& operator*(){
-        acumulate_rows_+=cache_.size();
         return cache_;
     }
     

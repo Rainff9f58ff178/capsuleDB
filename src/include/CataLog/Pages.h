@@ -508,7 +508,6 @@ public:
                 throw Exception("You ++ a end ColumnNumPageiterator");
             }
             page_->ReadLock();
-            DASSERT(page_->GetFreeSpaceOffset() <= DB_COLUMN_HEAP_PAGE_SIZE);
             if(offset_==page_->GetFreeSpaceOffset()){
                 //to end
                 page_=nullptr;

@@ -35,10 +35,12 @@ void TableCataLog::InsertString(String& val,ColumnHeapStringPage* page,uint32_t 
         ColumnHeapStringPage* next_page =nullptr;
         if(next_page_id == NULL_PAGE_ID){
             next_page  = reinterpret_cast<ColumnHeapStringPage*>(CreateNewColumnHeapPage<ColumnType::STRING>());
+            current_page->SetNextPageId(next_page->page_id);
+            heap_handle_.Unpin(current_page->page_id,true);
         }else {
             next_page = reinterpret_cast<ColumnHeapStringPage*>(heap_handle_.GetPage(next_page_id));
+            heap_handle_.Unpin(current_page->page_id,false);
         }
-        heap_handle_.Unpin(current_page->page_id,false);
         current_page = next_page;
         
     }
@@ -180,16 +182,19 @@ TableCataLog::InsertNum(Value val,ColumnHeapNumPage* page,uint32_t row_idx){
     uint32_t total_obj=0;
     while(current_page->GetFreeSpaceOffset()+current_page->GetColumnLength()
         >DB_COLUMN_HEAP_PAGE_SIZE){
+
         auto next_page_id  = current_page->GetNextPageId();
-        //event here Unpin a new Create Page that Alright,
-        // We Unpin (true) before
-        heap_handle_.Unpin(current_page->page_id,false);
+
         if(next_page_id == NULL_PAGE_ID){
-            auto* current_page = 
+            auto* next_page = 
             reinterpret_cast<ColumnHeapNumPage*>
             (CreateNewColumnHeapPage<ColumnType::INT>());
+            current_page->SetNextPageId(next_page->page_id);
+            heap_handle_.Unpin(current_page->page_id,true);
+            current_page = next_page;
             
         }else{
+            heap_handle_.Unpin(current_page->page_id,false);
             current_page = reinterpret_cast<ColumnHeapNumPage*>(
             heap_handle_.GetPage(next_page_id));
             total_obj+=current_page->GetTotalObj();
