@@ -32,6 +32,9 @@ public:
         }
         UNREACHABLE
     }
+    ColumnType GetReturnType() override{
+        return ColumnType::INT;
+    }
 
     std::string toString() override{
         auto left = children_[0]->toString();

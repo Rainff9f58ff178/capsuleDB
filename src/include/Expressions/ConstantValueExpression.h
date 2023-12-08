@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Expressions/LogicalExpression.h"
-
+#include "common/commonfunc.h"
 
 
 class ConstantValueExpression:public LogicalExpression{
@@ -18,6 +18,9 @@ public:
         return val_;
     }
 
+    virtual ColumnType GetReturnType() override{
+        return ValueTypeConvertToColumnType(val_.type_);
+    }
     std::string toString() override{
         if(val_.type_==ValueType::TypeString){
             return std::string(val_.data_,val_.value_len_);

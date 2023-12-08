@@ -86,20 +86,16 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
         case MaterilizeOperatorNode:{
             SetInputOutputSchemaInternal(op->children_[0]);
             auto& node = op->Cast<MaterilizeLogicaloperator>();            
-            std::vector<Column> cols;
             node.SetInputSchema(op->children_[0]->GetOutPutSchema());
             std::vector<Column> final_output_cols;
             for(auto& expr : node.final_select_list_expr_){
-                std::vector<Column> _cols;
                 auto final_col_name = expr->toString();
                 // select colA+1 ,colB > colC from test_1 . 
                 auto type = expr->GetReturnType();
                 final_output_cols.push_back(Column(final_col_name,type));
-                expr->collect_column(_cols);
-                cols.insert(cols.begin(),_cols.begin(),_cols.end());
             }
             auto output_schema = std::make_shared<Schema>();
-            output_schema->AddColumns(cols);
+            output_schema->AddColumns(final_output_cols);
 
             node.SetOutputSchema(output_schema);
 

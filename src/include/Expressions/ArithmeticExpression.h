@@ -10,7 +10,7 @@ class ArithmeticExpression:public LogicalExpression{
 public:
    
     virtual ValueUnion Evalute(ChunkRef* chunk,uint32_t idx) override{
-
+        NOT_IMP
     }
 
 
@@ -27,6 +27,9 @@ public:
         return left.append(op).append(right);
     }
 
+    ColumnType GetReturnType() override{
+        return ColumnType::INT;
+    }
 
 private:
     ArithmeticType a_type_{Invalid};

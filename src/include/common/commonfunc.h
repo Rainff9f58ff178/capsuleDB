@@ -48,3 +48,31 @@ static std::string ColumnTypeToString(ColumnType type){
             return "Unkowned";
     }
 }
+
+static ColumnType ValueTypeConvertToColumnType(ValueType type){
+    switch(type){
+        case ValueType::TypeInt:{
+            return ColumnType::INT;
+        }
+        case ValueType::TypeString:{
+            return ColumnType::STRING;
+        }
+        default:{
+            return  ColumnType::UNKOWN;
+        }
+    }
+    UNREACHABLE;
+}
+static ValueType ColumnTypeConverToValueType(ColumnType type){
+    switch(type){
+        case ColumnType::INT:{
+            return ValueType::TypeInt;
+        }
+        case ColumnType::STRING:{
+            return ValueType::TypeString;
+        }
+        default:
+            NOT_IMP
+    }
+    UNREACHABLE
+}

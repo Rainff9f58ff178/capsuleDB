@@ -20,6 +20,7 @@ set(SRC Database.cpp
         Planer/Planer.cpp 
         Planer/ValuesLogicalOperator.cpp 
         Optimizer/Optimizer.cpp
+        Execute/ExecutorNode/ExprExecutor.cpp
         Execute/ExecutorNode/InsertPhysicalOperator.cpp 
         Execute/ExecutorNode/PhysicalOperator.cpp 
         Execute/ExecutorNode/ValuesPhysicalOperator.cpp 

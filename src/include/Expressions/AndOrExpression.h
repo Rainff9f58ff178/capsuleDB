@@ -10,7 +10,7 @@ public:
 
 
     virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
-
+        NOT_IMP;
     }
 
 
@@ -26,7 +26,9 @@ public:
         return  left.append(op).append(right);
     }
 
-
+    ColumnType GetReturnType() override{
+        return ColumnType::INT;
+    }
 private:
     LogicType l_type_{Invalied};
 };
