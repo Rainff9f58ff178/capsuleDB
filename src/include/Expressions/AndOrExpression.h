@@ -8,9 +8,23 @@ class AndOrExpression:public LogicalExpression{
         LogicalExpressionType::AndOrExpr;
 public:
 
+    AndOrExpression(std::vector<LogicalExpressionRef> children,LogicType type):LogicalExpression(std::move(children)),l_type_(type){}
+
+    LogicalExpressionType GetType() override{
+        return type_;
+    }
 
     virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
-        NOT_IMP;
+        auto l_val =  children_[0]->Evalute(chunk,idx);
+        auto r_val =  children_[0]->Evalute(chunk,idx);
+        if(l_type_ ==LogicType::And){
+            bool r  =  static_cast<bool>((l_val.num_ | r_val.num_));
+            return ValueUnion(static_cast<int32_t>(r));
+        }else if (l_type_ ==LogicType::Or){
+            bool r  =  static_cast<bool>((l_val.num_ & r_val.num_));
+            return ValueUnion(static_cast<int32_t>(r));
+        }
+        UNREACHABLE;
     }
 
 

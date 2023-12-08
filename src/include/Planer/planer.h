@@ -75,6 +75,10 @@ public:
 
     LogicalExpressionRef 
     PlanBinaryOp(const BoundBinaryOp& binary_op,std::vector<LogicalOperatorRef> child);
+    LogicalExpressionRef 
+    PlanBinaryOpInternal(const std::string& op_name,
+    LogicalExpressionRef& left_child,LogicalExpressionRef& right_child);
+
 
     void SetInputOutputSchema(LogicalOperatorRef plan_);
     void SetInputOutputSchemaInternal(LogicalOperatorRef op);

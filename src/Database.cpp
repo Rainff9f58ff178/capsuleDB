@@ -77,18 +77,21 @@ void StardDataBase::ExecuteSql(const std::string& query){
     
     std::chrono::time_point<std::chrono::system_clock> before = std::chrono::system_clock::now();
     auto print_result=[&,this](std::vector<ChunkRef>&& chunks){
+        std::chrono::time_point<std::chrono::system_clock> later = std::chrono::system_clock::now();
+        auto second = std::chrono::duration_cast<std::chrono::microseconds>(later - before);
         if(chunks.empty()){
             std::cout<<"empty set"<<std::endl;
+            std::cout<<" waste time: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second "<<std::endl;
             return ;
         }
         if(chunks[0]->rows()==0){
             std::cout<<"empty set"<<std::endl;
+            std::cout<<" waste time: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second "<<std::endl;
             return;
         }
         if(!show_info)
             return;
-        std::chrono::time_point<std::chrono::system_clock> later = std::chrono::system_clock::now();
-        auto second = std::chrono::duration_cast<std::chrono::microseconds>(later - before);
+        
         writer_.ss.str("");
         writer_.printAll(std::move(chunks));
         chunks.clear();

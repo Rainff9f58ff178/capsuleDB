@@ -39,6 +39,9 @@ public:
     bool operator<=(const ValueUnion& other);
     bool operator> (const ValueUnion& other);
     bool operator< (const ValueUnion& other);
+
+    ValueUnion operator+ (const ValueUnion& other);
+    ValueUnion operator- (const ValueUnion& other);
     ValueType type_;
     ValueId id_;
     union{

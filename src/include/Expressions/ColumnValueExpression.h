@@ -11,9 +11,12 @@ class ColumnValueExpression:public LogicalExpression{
 public:
    
 
-
+    LogicalExpressionType GetType() override{
+        return type_;
+    }
    void collect_column(std::vector<Column>& cols)override{
-        cols.push_back(column_info_);
+        if(std::find(cols.begin(),cols.end(),column_info_)==cols.end())
+            cols.push_back(column_info_);
    }
     explicit ColumnValueExpression(uint32_t col_id,Column col,int left_or_right)
         :LogicalExpression({}),col_idx_(col_id),column_info_(std::move(col)),
@@ -35,6 +38,9 @@ public:
         return  column_info_.name_;
     }
 
+    const Column& column_info(){
+        return  column_info_;
+    }
 private:
     //use in join node. 0 left,1 right
     int left_or_right_;

@@ -357,26 +357,37 @@ Planer::PlanBinaryOp(const BoundBinaryOp& binary_op,
 std::vector<LogicalOperatorRef> child){
     auto [_1,lexpr] = PlanExpression(*binary_op.larg_,child);
     auto [_2,rexpr] = PlanExpression(*binary_op.rarg_,child);
-
-    ComparisonType type_;
-    auto get_compare_type = [&](){
-        if(binary_op.operator_name_=="=")
-            {type_ = ComparisonType::Equal; return;}
-        else if(binary_op.operator_name_==">=")
-            { type_ = ComparisonType::GreaterEqualThan; return;}
-        else if(binary_op.operator_name_==">")
-            {type_ = ComparisonType::GreaterThan; return;}
-        else if(binary_op.operator_name_=="<=")
-            {type_ = ComparisonType::LesserEquanThan;return;}
-        else if(binary_op.operator_name_=="<")
-            {type_ = ComparisonType::LesserThan;return;}
-        throw NotImplementedException("Not Support this comparator type");
-    };
-    get_compare_type();
-    return std::shared_ptr<ComparisonExpression>(
-        new ComparisonExpression({lexpr,rexpr},type_)
-    );
+    auto op_name = binary_op.operator_name_;
+    return PlanBinaryOpInternal(op_name,lexpr,rexpr);
 }
+
+LogicalExpressionRef 
+Planer::PlanBinaryOpInternal(const std::string& op_name,
+LogicalExpressionRef& lexpr,LogicalExpressionRef& rexpr){
+    
+    if(op_name== "="){
+        return  std::shared_ptr<ComparisonExpression>(new ComparisonExpression({lexpr,rexpr},ComparisonType::Equal));
+    }else if(op_name == ">="){
+        return  std::shared_ptr<ComparisonExpression>(new ComparisonExpression({lexpr,rexpr},ComparisonType::GreaterEqualThan));
+    }else if(op_name =="<="){
+        return  std::shared_ptr<ComparisonExpression>(new ComparisonExpression({lexpr,rexpr},ComparisonType::LesserEquanThan));
+    }else if(op_name == ">"){
+        return  std::shared_ptr<ComparisonExpression>(new ComparisonExpression({lexpr,rexpr},ComparisonType::GreaterThan));
+    }else if(op_name == "<"){
+        return  std::shared_ptr<ComparisonExpression>(new ComparisonExpression({lexpr,rexpr},ComparisonType::LesserThan));
+    }else if(op_name == "+"){
+        return  std::shared_ptr<ArithmeticExpression>(new ArithmeticExpression({lexpr,rexpr},ArithmeticType::Add));
+    }else if(op_name == "-"){
+        return  std::shared_ptr<ArithmeticExpression>(new ArithmeticExpression({lexpr,rexpr},ArithmeticType::Minus));
+    }else if(op_name =="and"){
+        return  std::shared_ptr<AndOrExpression>(new AndOrExpression({lexpr,rexpr},LogicType::And));
+    }else if(op_name == "or"){
+        return  std::shared_ptr<AndOrExpression>(new AndOrExpression({lexpr,rexpr},LogicType::Or));
+    }
+    NOT_IMP;
+}
+
+
 std::tuple<std::string,LogicalExpressionRef>
 Planer::PlanColumn(const BoundColumnRef& col_ref,
 const std::vector<LogicalOperatorRef>& children){

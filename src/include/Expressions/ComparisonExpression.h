@@ -16,6 +16,9 @@ public:
 
         }
     
+    LogicalExpressionType GetType(){
+        return  LogicalExpressionType::ComparsionExpr;
+    }
     virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
         auto l_val = children_[0]->Evalute(chunk,idx);
         auto r_val = children_[1]->Evalute(chunk,idx);

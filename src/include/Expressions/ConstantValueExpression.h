@@ -18,6 +18,10 @@ public:
         return val_;
     }
 
+    LogicalExpressionType GetType() override{
+        return LogicalExpressionType::ConstantExpr;
+    }
+
     virtual ColumnType GetReturnType() override{
         return ValueTypeConvertToColumnType(val_.type_);
     }
