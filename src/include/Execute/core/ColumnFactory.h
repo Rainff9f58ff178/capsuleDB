@@ -29,4 +29,6 @@ public:
                 UNREACHABLE;
         }
     }
+
+    static ColumnRef CreateColumn(const ValueUnionView& view);
 };

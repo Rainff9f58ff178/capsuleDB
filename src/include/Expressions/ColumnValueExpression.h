@@ -31,10 +31,10 @@ public:
         return col->ValueAt(idx);
     }
 
-
-    virtual void PrintDebug() override{
-        std::cout<<"ColunmValueExpr ";
+    std::string toString()override{
+        return  column_info_.name_;
     }
+
 private:
     //use in join node. 0 left,1 right
     int left_or_right_;

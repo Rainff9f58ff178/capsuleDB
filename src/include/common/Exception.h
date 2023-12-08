@@ -120,9 +120,13 @@ class ExecutionException : public Exception {
 };
 
 
+#define PPCAT_NX(A, B) A B
 
-#define NOT_IMP throw NotImplementedException("Not Impl yet");
-#define UNREACHABLE throw Exception("Unreachable");
+#define PPCAT(A,B) PPCAT_NX(A,B)
+
+#define _error_msg(x) std::format( PPCAT (x," n {},{},{}") ,__FILE__,__LINE__,__FUNCTION__)
+#define NOT_IMP throw NotImplementedException( _error_msg( "Not Impl yet"));
+#define UNREACHABLE throw Exception(_error_msg("Unreachable"));
 #define THROW_IF_NULL(x)      \
     if(!x)                    \
         throw Exception(std::format("Couldn't null in {},{},{}",__FILE__,__LINE__,__FUNCTION__));

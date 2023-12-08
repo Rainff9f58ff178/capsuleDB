@@ -16,9 +16,7 @@ public:
     std::stringstream ss;
     
     void printAll(std::vector<ChunkRef> chunks){
-        for(uint32_t i=0;i<5;++i){
-            ss<<std::endl;
-        }
+
         WriteHeader(chunks);
         for(auto& chunk:chunks){
             WriteChunk(chunk);

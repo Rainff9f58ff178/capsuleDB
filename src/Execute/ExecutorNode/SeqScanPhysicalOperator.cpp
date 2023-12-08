@@ -41,7 +41,39 @@ SeqScanPhysicaloperator::Source(ChunkRef& chunk){
             UNREACHABLE
         }
     }
-    chunk = std::move(new_chunk);
+    // filter new_chunk
+    if(plan.pridicator_.size()>1)
+        throw Exception("Filter pridicator num > 2 ");
+
+    if(!plan.pridicator_.empty()){
+        auto p = plan.pridicator_[0];
+        std::vector<ValueUnion> new_value;
+        for(uint32_t i=0;i<new_chunk->rows();++i){
+            new_value.push_back(p->Evalute(&new_chunk,i).clone());
+        }
+        if(new_value.empty()){
+            throw Exception("filter empty ,what is it?");
+        }
+        if(new_value[0].type_== ValueType::TypeString){
+            // if expr result is string /
+            new_value.clear();
+            for(uint32_t i=0;i<new_chunk->rows();++i){
+                new_value.emplace_back(1);
+            }
+        }
+        auto filter = std::dynamic_pointer_cast<ColumnVector<int32_t>>(ColumnFactory::CreateColumn(new_value));
+        auto& data = filter->data_;
+        CHEKC_THORW(data.size() == new_chunk->rows());
+        auto filterd_chunk = new_chunk->cloneEmpty();
+        for(uint32_t i=0;i<data.size();++i){
+            if(static_cast<bool>(data[i])){
+                filterd_chunk->insertFrom(new_chunk.get(),i);
+            }
+        }
+        chunk = std::move(filterd_chunk);
+    }else{
+        chunk = std::move(new_chunk);
+    }
     return SourceResult::HAVE_MORE;
 }
 

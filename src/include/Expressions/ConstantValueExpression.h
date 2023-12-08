@@ -18,9 +18,13 @@ public:
         return val_;
     }
 
-
-    virtual void PrintDebug() override{
-        std::cout<<"ConstantvalueExpr ";
+    std::string toString() override{
+        if(val_.type_==ValueType::TypeString){
+            return std::string(val_.data_,val_.value_len_);
+        }else {
+            return std::to_string(val_.num_);
+        }
+        return  "";
     }
 private:
     ValueUnion val_;

@@ -20,6 +20,7 @@ public:
     ValueUnion(char* data,uint32_t len){
         type_ = ValueType::TypeString;
         data_ = data;
+        id_ = ValueId::String;
         value_len_ = len;
     }
     ValueUnion(const ValueUnion& other);

@@ -109,7 +109,13 @@ ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
 SourceResult
 ExecuteEngine::FetchFromSource(PhysicalOperator* source_node,
 ChunkRef& chunk){
-    return source_node->Source(chunk);
+    while(1){
+        auto result =  source_node->Source(chunk);
+        if(result == SourceResult::HAVE_MORE && chunk->rows()==0)
+            continue;
+        
+        return result;
+    }
 }
 
 std::vector<PipelineRef>

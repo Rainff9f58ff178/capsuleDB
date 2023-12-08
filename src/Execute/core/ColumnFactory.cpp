@@ -42,5 +42,21 @@ ColumnFactory::CreateColumnFrom(ValueUnion& value,const std::string& name){
         return CreateColumnVector<int32_t>(name);
     }
 
+    UNREACHABLE;
+}
 
+ColumnRef ColumnFactory::CreateColumn(const ValueUnionView& view){
+    if(view.empty()){
+        throw Exception(_error_msg("CreateEmpty"));
+    }
+    if(view[0].type_ == ValueType::TypeInt){
+        auto col = CreateColumnVector<int32_t>();
+        col->insertFrom(view);
+        return col;
+    }else if(view[0].type_== ValueType::TypeString){
+        auto col = CreateColumnString();
+        col->insertFrom(view);
+        return col;
+    }
+    UNREACHABLE;
 }

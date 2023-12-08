@@ -28,14 +28,31 @@ public:
         }else if(cp_type_==ComparisonType::LesserEquanThan){
             return ValueUnion(static_cast<int>( l_val<=r_val));
         }else if(cp_type_== ComparisonType::LesserThan){
-            return ValueUnion(static_cast<int>( l_val< r_val));
+            return ValueUnion(static_cast<int>( l_val < r_val));
         }
+        UNREACHABLE
     }
 
-    virtual void PrintDebug() override{
-        std::cout<<"ComparisonExpr ";
-        LogicalExpression::PrintDebug();
+    std::string toString() override{
+        auto left = children_[0]->toString();
+        auto op = "";
+        
+        if(cp_type_==ComparisonType::Equal){
+            op= " = ";
+        }else if(cp_type_ == ComparisonType::GreaterEqualThan){
+            op= " >= ";
+        }else if(cp_type_==ComparisonType::GreaterThan){
+            op= " > ";
+        }else if(cp_type_==ComparisonType::LesserEquanThan){
+            op= " <= ";
+        }else if(cp_type_== ComparisonType::LesserThan){
+            op= " < ";
+        }
+        auto right = children_[1]->toString();
+        return left.append(op).append(right);
     }
+
+ 
 private:
     ComparisonType cp_type_;
 

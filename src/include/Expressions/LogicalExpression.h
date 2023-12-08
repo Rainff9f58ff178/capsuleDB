@@ -30,7 +30,7 @@ public:
     inline LogicalExpressionRef GetChild(uint32_t idx){return  children_[idx];}
 
     virtual std::string toString(){
-        return "not imp yet";
+        UNREACHABLE
     }
 
     virtual void collect_column(std::vector<Column>& col){
@@ -51,11 +51,7 @@ public:
 
 
     
-    virtual void PrintDebug(){
-        for(auto& r :children_){
-            r->PrintDebug();
-        }
-    }
+ 
 
     //max size of children is 2;
     std::vector<LogicalExpressionRef> children_;

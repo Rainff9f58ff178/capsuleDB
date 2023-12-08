@@ -19,6 +19,12 @@ insertToTable(TableCataLog* table,uint32_t col_idx){
 std::string ColumnString::toString(uint32_t row_idx){
     return data_[row_idx];
 }
+void ColumnString::insertFrom(ExecColumn* other,uint32_t idx){
+    auto* o = down_cast<ColumnString*>(other);
+    CHEKC_THORW(o->data_.size()> idx);
+    data_.push_back(o->data_[idx]);
+}   
+
 
 uint32_t ColumnString::max_char_size() {
     uint32_t max_size = 0;

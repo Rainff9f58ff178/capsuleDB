@@ -31,14 +31,18 @@ public:
             data_.push_back(value[i].num_);
         }
     }
-   
+
 
     void insertToTable(TableCataLog* table,uint32_t col_idx) override{
         for(uint32_t i=0;i<data_.size();++i){
             table->Insert(col_idx,data_[i]);
         }
     }
-
+    void insertFrom(ExecColumn* other,uint32_t idx) override{
+        auto* o = down_cast<Self*>(other);
+        CHEKC_THORW(o->data_.size()>idx);
+        data_.push_back(o->data_[idx]);
+    }
     std::string toString(uint32_t row_idx) override{
         return std::to_string(data_[row_idx]);
     }

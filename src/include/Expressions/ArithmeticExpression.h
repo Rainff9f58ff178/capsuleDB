@@ -13,10 +13,21 @@ public:
 
     }
 
-    virtual void PrintDebug() override{
-        std::cout<<"Aritehmetic Expr ";
-        LogicalExpression::PrintDebug();
+
+    std::string toString() override{
+        auto left = children_[0]->toString();
+        auto op =" ";
+        if(a_type_ == ArithmeticType::Add){
+            op = " + ";
+        }else if(a_type_ == ArithmeticType::Minus){
+            op = " - ";
+        }
+        auto right = children_[0]->toString();
+
+        return left.append(op).append(right);
     }
+
+
 private:
     ArithmeticType a_type_{Invalid};
 };

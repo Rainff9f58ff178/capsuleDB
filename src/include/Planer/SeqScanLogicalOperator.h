@@ -19,7 +19,7 @@ public:
         if(!pridicator_.empty()){
             std::cout<<" | filter(preorder) : ";
             for(auto& f : pridicator_){
-                f->PrintDebug();
+                std::cout<<f->toString();
             }
         }else 
             std::cout<<" | filter(NONE) ";

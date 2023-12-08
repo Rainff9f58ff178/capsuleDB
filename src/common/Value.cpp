@@ -44,15 +44,16 @@ ValueUnion::ValueUnion(ValueUnion&& other){
 
 bool ValueUnion::operator==(const ValueUnion& other){
     //to do 
-    if( (id_!=other.id_) || (value_len_ != other.value_len_))
+    if(id_ != other.id_)
         return false;
-
+    
     if(id_==ValueId::SignedNumeric){
         return (int64_t)(num_) == (int64_t)(other.num_);
     }else if(id_ == ValueId::UnSignedNumeric){
         return (uint64_t)(num_) == (uint64_t)(other.num_);
     }else if(id_==ValueId::String){
-        return memcmp(data_,other.data_,value_len_);
+        if(value_len_ != other.value_len_) return  false;
+        return memcmp(data_,other.data_,value_len_) == 0;
     }
 
     throw Exception("Logical Error");
@@ -69,7 +70,7 @@ bool ValueUnion::operator<=(const ValueUnion& other){
     return  !(*this > other);
 }
 bool ValueUnion::operator> (const ValueUnion& other){
-    if( (id_!=other.id_) || (value_len_ != other.value_len_))
+    if(id_ != other.id_)
         return false;
 
     if(id_==ValueId::SignedNumeric){
@@ -77,11 +78,13 @@ bool ValueUnion::operator> (const ValueUnion& other){
     }else if(id_ == ValueId::UnSignedNumeric){
         return (uint64_t)(num_) > (uint64_t)(other.num_);
     }else if(id_==ValueId::String){
-        return memcmp(data_,other.data_,value_len_);
+        if(value_len_ != other.value_len_) return  false;
+        return memcmp(data_,other.data_,value_len_) > 0;
     }
 }
 bool ValueUnion::operator< (const ValueUnion& other){
-    if( (id_!=other.id_) || (value_len_ != other.value_len_))
+
+    if(id_ != other.id_)
         return false;
 
     if(id_==ValueId::SignedNumeric){
@@ -89,7 +92,8 @@ bool ValueUnion::operator< (const ValueUnion& other){
     }else if(id_ == ValueId::UnSignedNumeric){
         return (uint64_t)(num_) < (uint64_t)(other.num_);
     }else if(id_==ValueId::String){
-        return memcmp(data_,other.data_,value_len_);
+        if(value_len_ != other.value_len_) return  false;
+        return memcmp(data_,other.data_,value_len_) < 0;
     }
 }
 

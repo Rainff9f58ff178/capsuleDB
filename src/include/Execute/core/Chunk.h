@@ -29,6 +29,7 @@ public:
         }
         return nullptr;
     }
+    void insertFrom(Chunk* otherchunk,uint32_t idx);
     uint32_t rows();
     uint32_t columns(){
         return columns_.size();
