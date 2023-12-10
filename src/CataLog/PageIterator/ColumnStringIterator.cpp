@@ -17,6 +17,10 @@ page_(page){
         operator++();
     }
 }
+ColumnStringIterator::~ColumnStringIterator(){
+
+
+}
 
 bool ColumnStringIterator::operator!=(const ColumnIterator& other){
     return !(*this == other);
@@ -32,13 +36,16 @@ bool ColumnStringIterator::operator==(const ColumnIterator& other){
 
 void ColumnStringIterator::operator++(){
     if(acumulate_rows_ == total_rows_){
+        auto& heap_handle= col_heap_->log_->column_heap_handle_;
+        SafeUnpin(heap_handle,page_,false);
         page_= nullptr;
         return;   
     }
     
     
     if(current_page_iterator_ == page_->end() && page_->GetNextPageId() == NULL_PAGE_ID){
-        //to the end .
+        auto& heap_handle= col_heap_->log_->column_heap_handle_;
+        SafeUnpin(heap_handle,page_,false);
         page_ =nullptr;
         return;
     }
@@ -50,7 +57,9 @@ void ColumnStringIterator::operator++(){
         
         if(current_page_iterator_== page_->end()){
             auto& heap_handle  = col_heap_->log_->column_heap_handle_;
+            page_->ReadLock();
             auto next_page_id = page_->GetNextPageId();
+            page_->ReadUnlock();
             heap_handle.Unpin(page_->page_id,false);
             page_ = reinterpret_cast<ColumnHeapStringPage*>(heap_handle.GetPage(next_page_id));
             DASSERT(page_->GetColumnType() == ColumnType::STRING);

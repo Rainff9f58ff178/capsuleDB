@@ -27,6 +27,9 @@
 #include "Planer/PlanContext.h"
 #include <iostream>
 #include <memory>
+
+
+class BoundJoinTable;
 class Planer{
 public:
     
@@ -60,6 +63,9 @@ public:
     LogicalOperatorRef
     PlanBaseTable(const BoundBaseTableRef& base_table);
 
+    LogicalOperatorRef 
+    PlanJoinTable(const BoundJoinTable& join_table);
+    
 
     LogicalOperatorRef
     PlanExpressionList(const BoundExpressionList& expr_list);

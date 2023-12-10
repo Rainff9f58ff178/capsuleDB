@@ -350,6 +350,7 @@ public:
             page_->ReadLock();
             if(offset_ == page_->GetSlotPointerOffset()){
                 //to end 
+                page_->ReadUnlock();
                 page_=nullptr;
                 offset_=0;
                 return;
@@ -510,6 +511,7 @@ public:
             page_->ReadLock();
             if(offset_==page_->GetFreeSpaceOffset()){
                 //to end
+                page_->ReadUnlock();
                 page_=nullptr;
                 offset_=0;
                 return;

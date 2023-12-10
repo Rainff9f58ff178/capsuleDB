@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.20)
 set(CXX_STANDARD 23)
 
 add_subdirectory(Storage)
+add_subdirectory(logger)
 set(SRC Database.cpp
         Binder/Binder.cpp
         CataLog/Column.cpp
@@ -51,5 +52,8 @@ add_library(stard_db ${SRC})
 target_include_directories(stard_db
             PUBLIC 
             ${CMAKE_CURRENT_SOURCE_DIR}/include
-            ${CMAKE_CURRENT_SOURCE_DIR}/Storage)
-target_link_libraries(stard_db ${THIRD_PARTY_LIBS} store)
+            ${CMAKE_CURRENT_SOURCE_DIR}/Storage
+            ${CMAKE_CURRENT_SOURCE_DIR}/logger
+            )
+
+target_link_libraries(stard_db ${THIRD_PARTY_LIBS} store log)

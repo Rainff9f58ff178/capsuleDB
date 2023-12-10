@@ -10,3 +10,6 @@ add_library(store STATIC ${SRCS})
 
 target_link_directories(store PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+
+
+target_link_libraries(store log)

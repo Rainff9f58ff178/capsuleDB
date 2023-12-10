@@ -359,8 +359,25 @@ Binder::BindRangeVar(duckdb_libpgquery::PGRangeVar* range_var){
 
 std::unique_ptr<BoundTabRef>
 Binder::BindJoinExpr(duckdb_libpgquery::PGJoinExpr* join_exrp){
-    
-    throw NotImplementedException("Not Support Join Expre");
+    JoinType join_type;
+    switch (join_exrp->jointype){
+        case duckdb_libpgquery::PGJoinType::PG_JOIN_INNER:{
+            join_type = JoinType::INNER;
+            break;
+        }
+        // case duckdb_libpgquery::PGJoinType::PG_JOIN_LEFT:{
+        //     join_type = JoinType::LEFT;
+        // }
+        default:{
+            throw Exception("Not Support Join Type");
+        }
+    }
+
+    auto left_table = BindTable(join_exrp->larg);
+    auto right_table = BindTable(join_exrp->rarg);
+    auto expr = BindExpression(join_exrp->quals);
+
+    return std::make_unique<BoundJoinTable>(join_type,std::move(left_table),std::move(right_table),std::move(expr));
 }
 
 
@@ -451,7 +468,10 @@ Binder::BindColumnRef(duckdb_libpgquery::PGColumnRef* col_ref){
                     reinterpret_cast<duckdb_libpgquery::PGValue*>(entry->data.ptr_value)->val.str);
             }
             
-            return ResolveColumn(*scope_,col_name);
+            auto col =  ResolveColumn(*scope_,col_name);
+            if(!col)
+                throw Exception(std::format("{} not found in this table",col_name[0]));
+            return col;
         }
         case duckdb_libpgquery::T_PGAStar:{
             auto* star = reinterpret_cast
@@ -492,6 +512,21 @@ std::vector<std::string>& col_names){
                     new BoundColumnRef(col_names,_column_->type_)
                 );
             }
+        }
+        case TableReferenceType::JOIN:{
+            // select t1.colA ,colB from t1 inner join t2 on t1.colA = t2.colB;
+            // ambiguous
+            auto& join_table = dynamic_cast<const BoundJoinTable&>(scope);
+            
+            auto left_expr = ResolveColumnInternal(*join_table.l_table_,col_names);
+            auto right_expr = ResolveColumnInternal(*join_table.r_table_,col_names);
+
+            if(left_expr && right_expr){
+                throw Exception( std::format("{} is ambiguous",col_names[0]));
+            }
+            if(!left_expr)
+                return  right_expr;
+            return left_expr;
         }
         default:
             break;

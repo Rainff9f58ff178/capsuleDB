@@ -36,6 +36,7 @@ CataLog::InitTableMetaInfo(){
         // the second page is use for CatalogMetaPage
         auto* page = db_handle.GetNewPage(&page_id);
         assert(page->page_id==1);
+        CataLogMetaPage* db_meta_header_page_=nullptr;
         db_meta_header_page_ = reinterpret_cast<CataLogMetaPage*>(page);
         db_meta_header_page_->SetLSN(-1);
         db_meta_header_page_->SetPageIdToData(db_meta_header_page_->page_id);
@@ -43,9 +44,8 @@ CataLog::InitTableMetaInfo(){
         db_meta_header_page_->SetNextPageId(NULL_PAGE_ID);
         db_meta_header_page_->SetOffset(CataLogMetaPage::TABLE_NUMS+4);
         db_meta_header_page_->SetTableNum(0);
+        db_handle.Unpin(page->page_id,true);
     }else{
-        auto* page = db_handle.GetPage(1);
-        db_meta_header_page_ = reinterpret_cast<CataLogMetaPage*>(page);
         LoadAllTablesInformation();
     }
 }
@@ -98,11 +98,16 @@ void CataLog::CreateTable(const std::string& table_name,const std::vector<Column
       std::make_unique<TableHeap>(std::move(v)),column_heap_handle_,this);
 
     tables_.insert({table_page->page_id,std::move(tca_log)});
+
+    
+    CataLogMetaPage* db_meta_header_page_=reinterpret_cast<CataLogMetaPage*>(db_handle_.GetPage(META_PAGE_ID));
     db_meta_header_page_->AddTable(table_page->page_id);
+    db_handle_.Unpin(db_meta_header_page_->page_id,true);
     db_handle_.Unpin(table_page->page_id, true);
 }
 
 void CataLog::LoadAllTablesInformation(){
+    CataLogMetaPage* db_meta_header_page_=reinterpret_cast<CataLogMetaPage*>(db_handle_.GetPage(META_PAGE_ID));
     PageReader<DB_INFO_FILE_PAGE_SIZE> reader(db_meta_header_page_->GetData());
     reader.Read<8>(nullptr); //needn't for now;
     char buf[4];
@@ -119,6 +124,7 @@ void CataLog::LoadAllTablesInformation(){
         auto table_catalog  = std::move(LoadTableInformation(table_page_id));
         tables_.insert({table_catalog->table_oid_,std::move(table_catalog)});
     }
+    db_handle_.Unpin(db_meta_header_page_->page_id,false);
 }
 
 std::unique_ptr<TableCataLog> CataLog::LoadTableInformation(uint32_t table_page_id){
@@ -136,7 +142,7 @@ std::unique_ptr<TableCataLog> CataLog::LoadTableInformation(uint32_t table_page_
     assert(table_oid == table_page->page_id);
     auto table_heap = LoadTableHeapInformation(reader);
     Schema schema(table_heap.get());
-
+    db_handle_.Unpin(table_page->page_id,false);
     return std::make_unique<TableCataLog>(table_oid,std::move(schema),std::string(table_name),
         std::move(table_heap),column_heap_handle_,this);
 }
@@ -162,7 +168,7 @@ std::unique_ptr<TableHeap> CataLog::LoadTableHeapInformation(PageReader<DB_INFO_
 }
 
 CataLog::~CataLog(){
-    db_handle_.Unpin(db_meta_header_page_->page_id,true);
+    
 }
 TableCataLog*
 CataLog::GetTable(std::string table_name){

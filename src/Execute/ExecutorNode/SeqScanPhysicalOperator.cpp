@@ -89,10 +89,10 @@ void SeqScanPhysicaloperator::source_init(){
     }
 }
 void SeqScanPhysicaloperator::source_uninit(){
-
 }
 
-
+SeqScanPhysicaloperator::~SeqScanPhysicaloperator(){
+}
 
 SinkResult
 SeqScanPhysicaloperator::Sink(ChunkRef& chunk){

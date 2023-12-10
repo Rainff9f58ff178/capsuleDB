@@ -19,12 +19,12 @@ enum JoinType{
 class BoundJoinTable:public BoundTabRef{
 public:
 
-    explicit BoundJoinTable(JoinType type,
+    explicit BoundJoinTable(JoinType jtype,
         std::unique_ptr<BoundTabRef> l_table,
         std::unique_ptr<BoundTabRef> r_table,
         std::unique_ptr<BoundExpression> condition):
             BoundTabRef(TableReferenceType::JOIN),
-            type_(type),
+            j_type_(jtype),
             l_table_(std::move(l_table)),
             r_table_(std::move(r_table)),
             condition_(std::move(condition)){}
@@ -33,7 +33,7 @@ public:
     ~BoundJoinTable()=default;
 
 
-    JoinType type_{INVALID};
+    JoinType j_type_{INVALID};
     std::unique_ptr<BoundTabRef> l_table_;
     std::unique_ptr<BoundTabRef> r_table_;
     std::unique_ptr<BoundExpression> condition_;

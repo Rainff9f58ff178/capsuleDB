@@ -7,9 +7,11 @@
 #include <iostream>
 #include <string>
 #include <stack>
+#include "./src/logger/Logger.h"
 
 using namespace std;
 
+Logger g_logger("global.log");
 bool show_info= false;
 int
 main() {

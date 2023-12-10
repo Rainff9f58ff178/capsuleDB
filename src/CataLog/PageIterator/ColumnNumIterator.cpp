@@ -30,17 +30,20 @@ bool ColumnNumIterator::operator==(const ColumnIterator& other){
     return true;
 }
 ColumnNumIterator::~ColumnNumIterator(){
-    DASSERT(page_);
-    auto* heap_handle = &col_heap_->log_->column_heap_handle_;
-    SafeUnpin(*heap_handle,page_,false);
+
+
 }
 void ColumnNumIterator::operator++(){
     if(acumulate_rows_ == total_rows_){
+        auto* heap_handle = &col_heap_->log_->column_heap_handle_;
+        SafeUnpin(*heap_handle,page_,false);
         page_ = nullptr;
         return;
     }
 
     if(current_page_iterator_ == page_->end() && page_->GetNextPageId() == NULL_PAGE_ID){
+        auto* heap_handle = &col_heap_->log_->column_heap_handle_;
+        SafeUnpin(*heap_handle,page_,false);
         page_ = nullptr;
         return;
     }

@@ -15,6 +15,8 @@ public:
         PhysicalOperator(std::move(plan),context,
         std::move(children)){}
 
+    ~SeqScanPhysicaloperator();
+
     virtual void source_init() override;
     virtual void source_uninit() override;
     virtual SourceResult Source(ChunkRef& bits) override;
@@ -30,3 +32,4 @@ public:
 private:
     std::vector<std::unique_ptr<ColumnIterator>> column_iterators_; 
 };
+

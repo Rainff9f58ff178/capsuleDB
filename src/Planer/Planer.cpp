@@ -12,12 +12,14 @@
 #include "Binder/Statement/SelectStatement.h"
 #include "Binder/TableRef/BoundBaseTable.h"
 #include "Binder/TableRef/BoundExpressionList.h"
+#include "Binder/TableRef/BoundJoinTable.h"
 #include "CataLog/Schema.h"
 #include "Expressions/LogicalExpression.h"
 #include "Planer/LogicalOperator.h"
 #include "Planer/ValuesLogicalOperator.h"
 #include "Planer/SeqScanLogicalOperator.h"
 #include "Planer/FilterLogicalOperator.h"
+#include "Planer/HashJoinLogicalOperator.h"
 #include "common/Exception.h"
 #include "common/commonfunc.h"
 #include <format>
@@ -344,7 +346,7 @@ std::vector<LogicalOperatorRef> children){
             return {UNKNOWNED_NAME,PlanBinaryOp(binary_op,children)};
         }
         case ExpressionType::UNARY_OP:{
-
+            
         }
         default:
             break;
@@ -391,47 +393,45 @@ LogicalExpressionRef& lexpr,LogicalExpressionRef& rexpr){
 std::tuple<std::string,LogicalExpressionRef>
 Planer::PlanColumn(const BoundColumnRef& col_ref,
 const std::vector<LogicalOperatorRef>& children){
-    /*
-        this funtion will return a ColumnValueExpression,
-    which is uesd to get a value that some column in row_id 
-    (evalute function),FIlter Node , Materilize Node ,Join Node,
-    Filter Node: Filter some row that not satisfy,it should be a 
-    ComparisionExpression,which has two child , if "colA > 1",
-    left child is ColumnVlaueExpression,right child is 
-    ConstantValueExpression.
-    Materilize Node :use to Materilize and ouput tuples to result_set
-
-    */
-    if(children.size()==1){
-        //Filter Node ,Materilize Node take this branch
-        //All the output Schema except materilze 
-        // if children is Value node ,his schema should be :
-        // "__values...,__values.."
-        auto& names = context_.planings_[col_ref.table_name()]->column_names_;
-        
-        auto col_name = col_ref.ToString();
-        bool found=false;
-        for(auto& col: names->columns_){
-            if(col.name_ == col_name){
-                if(found)
-                    throw Exception("found same col_name");
-                found=true;
-            }
+ 
+    auto& names = context_.planings_[col_ref.table_name()]->column_names_;
+    
+    auto col_name = col_ref.ToString();
+    bool found=false;
+    for(auto& col: names->columns_){
+        if(col.name_ == col_name){
+            if(found)
+                throw Exception("found same col_name");
+            found=true;
         }
-
-        auto idx = context_.planings_[col_ref.table_name()]->TryGetColumnidx(col_ref.ToString());
-        context_.planings_[col_ref.table_name()]->AddInterestedColumn(col_ref.ToString());
-        auto col_info = context_.planings_[col_ref.table_name()]->column_names_->getColumnByname(col_ref.ToString());
-
-        if(!col_info.has_value())
-            throw Exception("Not found this column");
-
-        return {col_name,std::shared_ptr<ColumnValueExpression>(
-            new ColumnValueExpression(idx,col_info.value(),0)
-        )};
     }
-    throw NotImplementedException("Not support in PlanColumn");
+
+    auto idx = context_.planings_[col_ref.table_name()]->TryGetColumnidx(col_ref.ToString());
+    context_.planings_[col_ref.table_name()]->AddInterestedColumn(col_ref.ToString());
+    auto col_info = context_.planings_[col_ref.table_name()]->column_names_->getColumnByname(col_ref.ToString());
+
+    if(!col_info.has_value())
+        throw Exception("Not found this column");
+
+    return {col_name,std::shared_ptr<ColumnValueExpression>(
+        new ColumnValueExpression(idx,col_info.value(),0)
+    )};
 }
+
+LogicalOperatorRef 
+Planer::PlanJoinTable(const BoundJoinTable& join_table){
+    auto l_node = PlanTableRef(*join_table.l_table_);
+    auto r_node = PlanTableRef(*join_table.l_table_);
+    auto [_1,condition] = PlanExpression(*join_table.condition_,{l_node,r_node});
+    auto hash_join = 
+        std::shared_ptr<HashJoinLogicalOperator>(
+            new HashJoinLogicalOperator({l_node,r_node},
+                condition,join_table.j_type_)
+        );
+
+    return hash_join;
+}
+    
 
 
 LogicalOperatorRef
@@ -444,6 +444,8 @@ Planer::PlanTableRef(const BoundTabRef& expr){
             break;
         }
         case TableReferenceType::JOIN:{
+            auto& bound_join = dynamic_cast<const BoundJoinTable&>(expr);
+            return PlanJoinTable(bound_join);
             break;
         }
         case TableReferenceType::EXPRESSION_LIST:{

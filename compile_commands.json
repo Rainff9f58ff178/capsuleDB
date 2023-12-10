@@ -6,29 +6,12 @@
       "-std=gnu++20",
       "-c",
       "-o",
-      "CMakeFiles/store.dir/BufferManager.cpp.o",
-      "/home/rain/stard/src/Storage/BufferManager.cpp"
+      "CMakeFiles/log.dir/Logger.cpp.o",
+      "/home/rain/stard/src/logger/Logger.cpp"
     ],
-    "directory": "/home/rain/stard/build/src/Storage",
-    "file": "/home/rain/stard/src/Storage/BufferManager.cpp",
-    "output": "/home/rain/stard/build/src/Storage/CMakeFiles/store.dir/BufferManager.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++23",
-      "-fPIC",
-      "-fvisibility=hidden",
-      "-c",
-      "-o",
-      "CMakeFiles/duckdb_pg_query.dir/pg_functions.cpp.o",
-      "/home/rain/stard/thirdparty/libpg_query/pg_functions.cpp"
-    ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
-    "file": "/home/rain/stard/thirdparty/libpg_query/pg_functions.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/pg_functions.cpp.o"
+    "directory": "/home/rain/stard/bu/src/logger",
+    "file": "/home/rain/stard/src/logger/Logger.cpp",
+    "output": "/home/rain/stard/bu/src/logger/CMakeFiles/log.dir/Logger.cpp.o"
   },
   {
     "arguments": [
@@ -43,9 +26,9 @@
       "CMakeFiles/duckdb_pg_query.dir/src_backend_parser_parser.cpp.o",
       "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_parser.cpp"
     ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
     "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_parser.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_parser.cpp.o"
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_parser.cpp.o"
   },
   {
     "arguments": [
@@ -60,43 +43,9 @@
       "CMakeFiles/duckdb_pg_query.dir/src_backend_parser_gram.cpp.o",
       "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_gram.cpp"
     ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
     "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_gram.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_gram.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++23",
-      "-fPIC",
-      "-fvisibility=hidden",
-      "-c",
-      "-o",
-      "CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_list.cpp.o",
-      "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_list.cpp"
-    ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
-    "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_list.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_list.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++23",
-      "-fPIC",
-      "-fvisibility=hidden",
-      "-c",
-      "-o",
-      "CMakeFiles/duckdb_pg_query.dir/postgres_parser.cpp.o",
-      "/home/rain/stard/thirdparty/libpg_query/postgres_parser.cpp"
-    ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
-    "file": "/home/rain/stard/thirdparty/libpg_query/postgres_parser.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/postgres_parser.cpp.o"
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_gram.cpp.o"
   },
   {
     "arguments": [
@@ -111,9 +60,60 @@
       "CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scansup.cpp.o",
       "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_scansup.cpp"
     ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
     "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_scansup.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scansup.cpp.o"
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scansup.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++23",
+      "-fPIC",
+      "-fvisibility=hidden",
+      "-c",
+      "-o",
+      "CMakeFiles/duckdb_pg_query.dir/postgres_parser.cpp.o",
+      "/home/rain/stard/thirdparty/libpg_query/postgres_parser.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
+    "file": "/home/rain/stard/thirdparty/libpg_query/postgres_parser.cpp",
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/postgres_parser.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++23",
+      "-fPIC",
+      "-fvisibility=hidden",
+      "-c",
+      "-o",
+      "CMakeFiles/duckdb_pg_query.dir/pg_functions.cpp.o",
+      "/home/rain/stard/thirdparty/libpg_query/pg_functions.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
+    "file": "/home/rain/stard/thirdparty/libpg_query/pg_functions.cpp",
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/pg_functions.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++23",
+      "-fPIC",
+      "-fvisibility=hidden",
+      "-c",
+      "-o",
+      "CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_list.cpp.o",
+      "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_list.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
+    "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_list.cpp",
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_list.cpp.o"
   },
   {
     "arguments": [
@@ -128,43 +128,9 @@
       "CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_makefuncs.cpp.o",
       "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_makefuncs.cpp"
     ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
     "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_makefuncs.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_makefuncs.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++23",
-      "-fPIC",
-      "-fvisibility=hidden",
-      "-c",
-      "-o",
-      "CMakeFiles/duckdb_pg_query.dir/src_common_keywords.cpp.o",
-      "/home/rain/stard/thirdparty/libpg_query/src_common_keywords.cpp"
-    ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
-    "file": "/home/rain/stard/thirdparty/libpg_query/src_common_keywords.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_common_keywords.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++23",
-      "-fPIC",
-      "-fvisibility=hidden",
-      "-c",
-      "-o",
-      "CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scan.cpp.o",
-      "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_scan.cpp"
-    ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
-    "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_scan.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scan.cpp.o"
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_makefuncs.cpp.o"
   },
   {
     "arguments": [
@@ -179,14 +145,79 @@
       "CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_value.cpp.o",
       "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_value.cpp"
     ],
-    "directory": "/home/rain/stard/build/thirdparty/libpg_query",
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
     "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_nodes_value.cpp",
-    "output": "/home/rain/stard/build/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_value.cpp.o"
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_nodes_value.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++23",
+      "-fPIC",
+      "-fvisibility=hidden",
+      "-c",
+      "-o",
+      "CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scan.cpp.o",
+      "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_scan.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
+    "file": "/home/rain/stard/thirdparty/libpg_query/src_backend_parser_scan.cpp",
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_backend_parser_scan.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++23",
+      "-fPIC",
+      "-fvisibility=hidden",
+      "-c",
+      "-o",
+      "CMakeFiles/duckdb_pg_query.dir/src_common_keywords.cpp.o",
+      "/home/rain/stard/thirdparty/libpg_query/src_common_keywords.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/thirdparty/libpg_query",
+    "file": "/home/rain/stard/thirdparty/libpg_query/src_common_keywords.cpp",
+    "output": "/home/rain/stard/bu/thirdparty/libpg_query/CMakeFiles/duckdb_pg_query.dir/src_common_keywords.cpp.o"
   },
   {
     "arguments": [
       "/usr/bin/c++",
       "-I/home/rain/stard/thirdparty",
+      "-I/home/rain/stard/src/logger",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/loggertest.dir/loggertest.cpp.o",
+      "/home/rain/stard/loggertest.cpp"
+    ],
+    "directory": "/home/rain/stard/bu",
+    "file": "/home/rain/stard/loggertest.cpp",
+    "output": "/home/rain/stard/bu/CMakeFiles/loggertest.dir/loggertest.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/store.dir/BufferManager.cpp.o",
+      "/home/rain/stard/src/Storage/BufferManager.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src/Storage",
+    "file": "/home/rain/stard/src/Storage/BufferManager.cpp",
+    "output": "/home/rain/stard/bu/src/Storage/CMakeFiles/store.dir/BufferManager.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/thirdparty",
+      "-I/home/rain/stard/src/logger",
       "-g",
       "-std=gnu++20",
       "-c",
@@ -194,270 +225,16 @@
       "CMakeFiles/test_buffermanager.dir/test_buffermanager.cpp.o",
       "/home/rain/stard/test_buffermanager.cpp"
     ],
-    "directory": "/home/rain/stard/build",
+    "directory": "/home/rain/stard/bu",
     "file": "/home/rain/stard/test_buffermanager.cpp",
-    "output": "/home/rain/stard/build/CMakeFiles/test_buffermanager.dir/test_buffermanager.cpp.o"
+    "output": "/home/rain/stard/bu/CMakeFiles/test_buffermanager.dir/test_buffermanager.cpp.o"
   },
   {
     "arguments": [
       "/usr/bin/c++",
       "-I/home/rain/stard/src/include",
       "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Expressions/ColumnValueExpression.cpp.o",
-      "/home/rain/stard/src/Expressions/ColumnValueExpression.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Expressions/ColumnValueExpression.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Expressions/ColumnValueExpression.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/CataLog/Column.cpp.o",
-      "/home/rain/stard/src/CataLog/Column.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/CataLog/Column.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/CataLog/Column.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Table/Tuple.cpp.o",
-      "/home/rain/stard/src/Table/Tuple.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Table/Tuple.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Table/Tuple.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Database.cpp.o",
-      "/home/rain/stard/src/Database.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Database.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Database.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Planer/LogicalOperator.cpp.o",
-      "/home/rain/stard/src/Planer/LogicalOperator.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Planer/LogicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Planer/LogicalOperator.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Expressions/ConstantValueExpression.cpp.o",
-      "/home/rain/stard/src/Expressions/ConstantValueExpression.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Expressions/ConstantValueExpression.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Expressions/ConstantValueExpression.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/CataLog/CataLog.cpp.o",
-      "/home/rain/stard/src/CataLog/CataLog.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/CataLog/CataLog.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/CataLog/CataLog.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp.o",
-      "/home/rain/stard/src/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Planer/Planer.cpp.o",
-      "/home/rain/stard/src/Planer/Planer.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Planer/Planer.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Planer/Planer.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/CataLog/TableCataLog.cpp.o",
-      "/home/rain/stard/src/CataLog/TableCataLog.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/CataLog/TableCataLog.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/CataLog/TableCataLog.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Optimizer/Optimizer.cpp.o",
-      "/home/rain/stard/src/Optimizer/Optimizer.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Optimizer/Optimizer.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Optimizer/Optimizer.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Planer/ValuesLogicalOperator.cpp.o",
-      "/home/rain/stard/src/Planer/ValuesLogicalOperator.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Planer/ValuesLogicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Planer/ValuesLogicalOperator.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/PhysicalOperator.cpp.o",
-      "/home/rain/stard/src/Execute/ExecutorNode/PhysicalOperator.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Execute/ExecutorNode/PhysicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/PhysicalOperator.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Binder/Binder.cpp.o",
-      "/home/rain/stard/src/Binder/Binder.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Binder/Binder.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Binder/Binder.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Utils/ThreadPool.cpp.o",
-      "/home/rain/stard/src/Utils/ThreadPool.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Utils/ThreadPool.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Utils/ThreadPool.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
       "-I/home/rain/stard/thirdparty/libpg_query/include",
       "-g",
       "-std=gnu++20",
@@ -466,15 +243,322 @@
       "CMakeFiles/stard_db.dir/CataLog/Schema.cpp.o",
       "/home/rain/stard/src/CataLog/Schema.cpp"
     ],
-    "directory": "/home/rain/stard/build/src",
+    "directory": "/home/rain/stard/bu/src",
     "file": "/home/rain/stard/src/CataLog/Schema.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/CataLog/Schema.cpp.o"
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/Schema.cpp.o"
   },
   {
     "arguments": [
       "/usr/bin/c++",
       "-I/home/rain/stard/src/include",
       "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/CataLog.cpp.o",
+      "/home/rain/stard/src/CataLog/CataLog.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/CataLog.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/CataLog.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Database.cpp.o",
+      "/home/rain/stard/src/Database.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Database.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Database.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/Column.cpp.o",
+      "/home/rain/stard/src/CataLog/Column.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/Column.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/Column.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/TableCataLog.cpp.o",
+      "/home/rain/stard/src/CataLog/TableCataLog.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/TableCataLog.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/TableCataLog.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/TableHeap.cpp.o",
+      "/home/rain/stard/src/CataLog/TableHeap.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/TableHeap.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/TableHeap.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Binder/Binder.cpp.o",
+      "/home/rain/stard/src/Binder/Binder.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Binder/Binder.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Binder/Binder.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/PageIterator/ColumnNumIterator.cpp.o",
+      "/home/rain/stard/src/CataLog/PageIterator/ColumnNumIterator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/PageIterator/ColumnNumIterator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/PageIterator/ColumnNumIterator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/PageIterator/ColumnStringIterator.cpp.o",
+      "/home/rain/stard/src/CataLog/PageIterator/ColumnStringIterator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/PageIterator/ColumnStringIterator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/PageIterator/ColumnStringIterator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/CataLog/PageIterator/ColumnIterator.cpp.o",
+      "/home/rain/stard/src/CataLog/PageIterator/ColumnIterator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/CataLog/PageIterator/ColumnIterator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/CataLog/PageIterator/ColumnIterator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Table/Tuple.cpp.o",
+      "/home/rain/stard/src/Table/Tuple.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Table/Tuple.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Table/Tuple.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Expressions/ColumnValueExpression.cpp.o",
+      "/home/rain/stard/src/Expressions/ColumnValueExpression.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Expressions/ColumnValueExpression.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Expressions/ColumnValueExpression.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Expressions/ConstantValueExpression.cpp.o",
+      "/home/rain/stard/src/Expressions/ConstantValueExpression.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Expressions/ConstantValueExpression.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Expressions/ConstantValueExpression.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Planer/LogicalOperator.cpp.o",
+      "/home/rain/stard/src/Planer/LogicalOperator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Planer/LogicalOperator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Planer/LogicalOperator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Planer/Planer.cpp.o",
+      "/home/rain/stard/src/Planer/Planer.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Planer/Planer.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Planer/Planer.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Planer/ValuesLogicalOperator.cpp.o",
+      "/home/rain/stard/src/Planer/ValuesLogicalOperator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Planer/ValuesLogicalOperator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Planer/ValuesLogicalOperator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Optimizer/Optimizer.cpp.o",
+      "/home/rain/stard/src/Optimizer/Optimizer.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Optimizer/Optimizer.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Optimizer/Optimizer.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/ExprExecutor.cpp.o",
+      "/home/rain/stard/src/Execute/ExecutorNode/ExprExecutor.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecutorNode/ExprExecutor.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/ExprExecutor.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
       "-I/home/rain/stard/thirdparty/libpg_query/include",
       "-g",
       "-std=gnu++20",
@@ -483,100 +567,34 @@
       "CMakeFiles/stard_db.dir/Execute/ExecutorNode/InsertPhysicalOperator.cpp.o",
       "/home/rain/stard/src/Execute/ExecutorNode/InsertPhysicalOperator.cpp"
     ],
-    "directory": "/home/rain/stard/build/src",
+    "directory": "/home/rain/stard/bu/src",
     "file": "/home/rain/stard/src/Execute/ExecutorNode/InsertPhysicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/InsertPhysicalOperator.cpp.o"
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/InsertPhysicalOperator.cpp.o"
   },
   {
     "arguments": [
       "/usr/bin/c++",
       "-I/home/rain/stard/src/include",
       "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
       "-I/home/rain/stard/thirdparty/libpg_query/include",
       "-g",
       "-std=gnu++20",
       "-c",
       "-o",
-      "CMakeFiles/stard_db.dir/Execute/Pipeline/Pipeline.cpp.o",
-      "/home/rain/stard/src/Execute/Pipeline/Pipeline.cpp"
+      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/PhysicalOperator.cpp.o",
+      "/home/rain/stard/src/Execute/ExecutorNode/PhysicalOperator.cpp"
     ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Execute/Pipeline/Pipeline.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/Pipeline/Pipeline.cpp.o"
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecutorNode/PhysicalOperator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/PhysicalOperator.cpp.o"
   },
   {
     "arguments": [
       "/usr/bin/c++",
       "-I/home/rain/stard/src/include",
       "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Execute/ExecuteEngine.cpp.o",
-      "/home/rain/stard/src/Execute/ExecuteEngine.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Execute/ExecuteEngine.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecuteEngine.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/MaterializePhysicalOperator.cpp.o",
-      "/home/rain/stard/src/Execute/ExecutorNode/MaterializePhysicalOperator.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Execute/ExecutorNode/MaterializePhysicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/MaterializePhysicalOperator.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Utils/Scheduler.cpp.o",
-      "/home/rain/stard/src/Utils/Scheduler.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Utils/Scheduler.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Utils/Scheduler.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
-      "-I/home/rain/stard/thirdparty/libpg_query/include",
-      "-g",
-      "-std=gnu++20",
-      "-c",
-      "-o",
-      "CMakeFiles/stard_db.dir/Execute/ExecuteContext.cpp.o",
-      "/home/rain/stard/src/Execute/ExecuteContext.cpp"
-    ],
-    "directory": "/home/rain/stard/build/src",
-    "file": "/home/rain/stard/src/Execute/ExecuteContext.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecuteContext.cpp.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/c++",
-      "-I/home/rain/stard/src/include",
-      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
       "-I/home/rain/stard/thirdparty/libpg_query/include",
       "-g",
       "-std=gnu++20",
@@ -585,14 +603,285 @@
       "CMakeFiles/stard_db.dir/Execute/ExecutorNode/ValuesPhysicalOperator.cpp.o",
       "/home/rain/stard/src/Execute/ExecutorNode/ValuesPhysicalOperator.cpp"
     ],
-    "directory": "/home/rain/stard/build/src",
+    "directory": "/home/rain/stard/bu/src",
     "file": "/home/rain/stard/src/Execute/ExecutorNode/ValuesPhysicalOperator.cpp",
-    "output": "/home/rain/stard/build/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/ValuesPhysicalOperator.cpp.o"
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/ValuesPhysicalOperator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp.o",
+      "/home/rain/stard/src/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/SeqScanPhysicalOperator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/MaterializePhysicalOperator.cpp.o",
+      "/home/rain/stard/src/Execute/ExecutorNode/MaterializePhysicalOperator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecutorNode/MaterializePhysicalOperator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/MaterializePhysicalOperator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/ExecutorNode/ResultPhysicalOperator.cpp.o",
+      "/home/rain/stard/src/Execute/ExecutorNode/ResultPhysicalOperator.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecutorNode/ResultPhysicalOperator.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecutorNode/ResultPhysicalOperator.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/Pipeline/Pipeline.cpp.o",
+      "/home/rain/stard/src/Execute/Pipeline/Pipeline.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/Pipeline/Pipeline.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/Pipeline/Pipeline.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/ExecuteContext.cpp.o",
+      "/home/rain/stard/src/Execute/ExecuteContext.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecuteContext.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecuteContext.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/ExecuteEngine.cpp.o",
+      "/home/rain/stard/src/Execute/ExecuteEngine.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/ExecuteEngine.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/ExecuteEngine.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/core/Chunk.cpp.o",
+      "/home/rain/stard/src/Execute/core/Chunk.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/core/Chunk.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/core/Chunk.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/core/Column.cpp.o",
+      "/home/rain/stard/src/Execute/core/Column.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/core/Column.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/core/Column.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/core/ColumnFactory.cpp.o",
+      "/home/rain/stard/src/Execute/core/ColumnFactory.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/core/ColumnFactory.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/core/ColumnFactory.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/core/ColumnString.cpp.o",
+      "/home/rain/stard/src/Execute/core/ColumnString.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/core/ColumnString.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/core/ColumnString.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Execute/core/ColumnVector.cpp.o",
+      "/home/rain/stard/src/Execute/core/ColumnVector.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Execute/core/ColumnVector.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Execute/core/ColumnVector.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Utils/Scheduler.cpp.o",
+      "/home/rain/stard/src/Utils/Scheduler.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Utils/Scheduler.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Utils/Scheduler.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Utils/AsyncScheduler.cpp.o",
+      "/home/rain/stard/src/Utils/AsyncScheduler.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Utils/AsyncScheduler.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Utils/AsyncScheduler.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/Utils/ThreadPool.cpp.o",
+      "/home/rain/stard/src/Utils/ThreadPool.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/Utils/ThreadPool.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/Utils/ThreadPool.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/rain/stard/src/include",
+      "-I/home/rain/stard/src/Storage",
+      "-I/home/rain/stard/src/logger",
+      "-I/home/rain/stard/thirdparty/libpg_query/include",
+      "-g",
+      "-std=gnu++20",
+      "-c",
+      "-o",
+      "CMakeFiles/stard_db.dir/common/Value.cpp.o",
+      "/home/rain/stard/src/common/Value.cpp"
+    ],
+    "directory": "/home/rain/stard/bu/src",
+    "file": "/home/rain/stard/src/common/Value.cpp",
+    "output": "/home/rain/stard/bu/src/CMakeFiles/stard_db.dir/common/Value.cpp.o"
   },
   {
     "arguments": [
       "/usr/bin/c++",
       "-I/home/rain/stard/thirdparty",
+      "-I/home/rain/stard/src/logger",
       "-I/home/rain/stard/src/include",
       "-I/home/rain/stard/src/Storage",
       "-I/home/rain/stard/thirdparty/libpg_query/include",
@@ -603,8 +892,8 @@
       "CMakeFiles/main.dir/main.cpp.o",
       "/home/rain/stard/main.cpp"
     ],
-    "directory": "/home/rain/stard/build",
+    "directory": "/home/rain/stard/bu",
     "file": "/home/rain/stard/main.cpp",
-    "output": "/home/rain/stard/build/CMakeFiles/main.dir/main.cpp.o"
+    "output": "/home/rain/stard/bu/CMakeFiles/main.dir/main.cpp.o"
   }
 ]

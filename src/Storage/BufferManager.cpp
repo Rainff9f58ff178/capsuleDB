@@ -7,9 +7,13 @@
 #include <ios>
 #include <memory>
 #include <sys/stat.h>
-
+#include<condition_variable>
+#include<mutex>
 #include <cassert>
+#include<format>
+#include<span>
 constexpr const int INCLUDE_ALL=INT_MAX;
+
 
 
 
@@ -269,6 +273,256 @@ template class FileHandle<256>;
 
 
 
+template<uint32_t PAGE_SIZE>
+DiskManager<PAGE_SIZE>::DiskManager(const std::string& path,
+std::ios_base::openmode flag,int page_nums,bool& is_first_load)
+{
+        std::fstream f;
+        f.open(path,flag | std::ios::ate);
+        if(!f.is_open()){
+            f.open(path,flag | std::ios::trunc | std::ios::ate);
+        }
+        bool first_loaded = true;
+        auto size = GetFileSize(f);
+        if(size > 0){
+            first_loaded = false;
+        }
+        if(size % PAGE_SIZE != 0 && !first_loaded)
+            throw std::runtime_error(std::format("file size % PAGE_SIZE is not zero, file size is {},page size is {} ",size,PAGE_SIZE));
+        
+        f_ = std::move(f);
+
+        for(uint32_t i =0 ; i<page_nums;++i){
+            pages_.push_back(new Page<PAGE_SIZE>());
+        }
+
+        for(uint32_t i=0;i<page_nums;++i){
+            free_lists_.push_back(i);
+        }
+
+        replacer_ = std::make_shared<LRUKReplacer>(page_nums,2);
+        if(first_loaded){
+            // use first page for allocate page.
+            page_counts_ = 0;
+            page_id_t _p_id;
+            auto* page = GetNewPage(&_p_id);
+            page->is_load_ = true;
+            assert(page->page_id==0);
+            // use for bit map;
+
+            Unpin(page->page_id,false);
+        }else {
+            page_counts_ = size /PAGE_SIZE;
+        }
+        is_first_load = first_loaded;
+
+        // enable background flush thread.
+        logger_ = std::make_shared<Logger>(path+".log");
+
+        logger_->AppendDEBUG("log begin");
+        
+        backgroud_flush_thread_ = std::thread([this](){
+            // flush page that 
+            std::mutex mtx;
+            std::condition_variable cv_;
+            std::unique_lock<std::mutex> lock(mtx);
+            while(1){
+                for(uint32_t i=0;i<pages_.size();++i){
+                    auto* page = pages_[i];
+                    if(page->page_id == -1)
+                        continue;
+                //can i flush a page pin_ is not 0 ? no , a page may be isn't write finished even throughj it doesn't accuire lock;
+                    if(page->tryWriteLock() ){
+                        if( !(page->pin_ == 0 && page->is_dirty)){
+                            page->WriteUnlock();
+                            continue;
+                        }
+                        FlushPage(page->page_id);   
+                        logger_->AppendDEBUG(std::format("flush down page {}",page->page_id));
+                        page->is_dirty = false;
+
+                        page->WriteUnlock();
+                    }
+
+                }
+                if(finished_)
+                    break;
+                cv_.wait_for(lock,std::chrono::milliseconds(100));
+            }
+
+            
+        });
+}
+
+
+
+
+template<uint32_t PAGE_SIZE>
+Page<PAGE_SIZE>* DiskManager<PAGE_SIZE>::GetNewPage(page_id_t* page_id){
+    std::unique_lock<std::mutex> l(mtx_);
+    auto new_page_id = page_counts_++;
+    l.unlock();
+
+    std::array<char,PAGE_SIZE> data{0};
+    WritePage(new_page_id,data.data());
+    *page_id = new_page_id;
+    return GetPage(new_page_id);
+}
+
+
+
+template<uint32_t PAGE_SIZE>
+Page<PAGE_SIZE>* DiskManager<PAGE_SIZE>::GetPage(page_id_t page_id){
+    std::unique_lock<std::mutex> lock(mtx_);
+    if(page_counts_ <= page_id){
+        throw std::runtime_error("You try to get a page that not allocated");
+    }
+
+    // check if this page already exist in buffer pools.
+
+    auto it =
+        std::find_if(std::begin(maps_), std::end(maps_), [&](auto &it) -> bool {
+            if (it.first == page_id) {
+                return true;
+            }
+            return false;
+        });
+    
+
+    if(it != std::end(maps_)){
+        // alraedy exist in buffer pools.
+        auto* page = pages_[maps_[page_id]];
+        if(!page->is_load_){
+            throw std::runtime_error("get page in memory but it doesnt load ?");
+        }
+        page->pin_++;
+        replacer_->RecordAccess(maps_[page_id]);
+        replacer_->SetEvictable(maps_[page_id],false);
+        return  page;
+    }
+    // not in buffer pools.
+
+    if(!free_lists_.empty()){
+        // just allocate from free_lists_;
+        auto idx = free_lists_.front();
+        free_lists_.pop_front();
+        auto* page = pages_[idx];
+        assert(page->pin_==0);
+        page->pin_=1;
+        page->page_id = page_id;
+        page->is_dirty = false;
+        replacer_->RecordAccess(idx);
+        maps_.insert({page_id,idx});
+        replacer_->SetEvictable(idx,false);
+        return page;
+    }
+
+    // there are no free list in memory.
+    frame_id_t victim_page_idx;
+    if(!replacer_->Evict(&victim_page_idx)){
+        throw std::runtime_error("Evict Failed,Mayby all pages in memory is UnEvictable");
+    }
+
+    // evict successfully.
+    Page<PAGE_SIZE>* vic_page = pages_[victim_page_idx];
+    //Evictable page 's pin must 0.
+    assert(vic_page->pin_==0);
+    assert(vic_page->is_load_ == true); // this page must alraedy loaded.
+    if(vic_page->is_dirty){
+        FlushPage(vic_page->page_id);
+    }
+    maps_.erase(vic_page->page_id); // buffer poll no more storo this page.
+    vic_page->is_dirty = false;
+    vic_page->pin_ =1;
+    vic_page->page_id = page_id;
+    vic_page->is_load_ = false;
+    maps_.insert({page_id,victim_page_idx}); // new map.
+    replacer_->RecordAccess(victim_page_idx);
+    replacer_->SetEvictable(victim_page_idx,false);
+    return  vic_page;
+}
+
+
+template<uint32_t PAGE_SIZE>
+void DiskManager<PAGE_SIZE>::Unpin(page_id_t page_id,bool is_dirty){
+    
+    std::unique_lock<std::mutex> l(mtx_);
+    // this page must in memory.
+
+    auto it = std::find_if(std::begin(maps_), std::end(maps_), [&](auto &it) {
+        if (it.first == page_id) {
+            return true;
+        }
+        return false;
+    });
+
+    if(it == std::end(maps_))
+        throw std::runtime_error("You Unpin a page that not in memory ?");
+
+    auto* page = pages_[it->second];
+    if(!page->is_load_)
+        throw std::runtime_error("You Unpin a page that not loaded (is_loaded_) ?");
+    
+    if(page->pin_ ==0)
+        throw std::runtime_error("Your Unpin a page that pin_ == 0 ?");
+    page->WriteLock();
+    page->pin_--;
+
+    if(page->pin_ == 0)
+        replacer_->SetEvictable(it->second,true); 
+    page->is_dirty = page->is_dirty | is_dirty;
+
+    page->WriteUnlock();
+}
+
+template<uint32_t PAGE_SIZE>
+void DiskManager<PAGE_SIZE>::ReadPage(page_id_t page_id,char* page_data){
+    uint32_t offset = page_id * PAGE_SIZE;
+
+    if(offset > GetFileSize(f_)){
+        std::runtime_error("read past of the file ?");
+    }
+    std::unique_lock<std::mutex> lock(mtx_for_fstream_);
+    f_.seekp(offset);
+    f_.read(page_data,PAGE_SIZE);
+    if(f_.bad())
+        throw std::runtime_error("Io error when ReadPage");
+
+    auto read_count = f_.gcount();
+    lock.unlock();
+    if(read_count<PAGE_SIZE){
+        throw std::runtime_error("FATAL:Read byte less that one page ?");
+    }
+
+}
+template<uint32_t PAGE_SIZE>
+void DiskManager<PAGE_SIZE>::WritePage(page_id_t page_id,const char* page_data){
+    std::unique_lock<std::mutex> l(mtx_for_fstream_);
+    uint32_t offset = page_id * PAGE_SIZE;
+    f_.seekp(offset);
+    f_.write(page_data,PAGE_SIZE);
+    if(f_.bad()){
+        throw std::runtime_error("fstream error when write a page");
+    }
+    f_.flush();
+}
+
+template<uint32_t PAGE_SIZE>
+void DiskManager<PAGE_SIZE>::FlushPage(page_id_t page_id){
+    // this page must in memory.
+    auto it = std::find_if(std::begin(maps_), std::end(maps_), [&](auto &it) {
+        if (it.first == page_id) {
+            return true;
+        }
+        return false;
+    });
+    assert(it!= std::end(maps_));
+    auto* page = pages_[it->second];
+    assert(page->page_id == page_id);
+    WritePage(page_id,page->data);
+    
+}
+
 
 
 EXTERN_FILE_MANAGER_OPEN_TEMPLATE_PARAMETER(1024, 10);
@@ -278,25 +532,35 @@ EXTERN_FILE_MANAGER_OPEN_TEMPLATE_PARAMETER(1024, 10);
 template<uint32_t PAGE_SIZE>
 FileHandle<PAGE_SIZE>::FileHandle() : file_manager_() {}
 template<uint32_t PAGE_SIZE>
-FileHandle<PAGE_SIZE>::FileHandle(const std::string &path, FileManager &file_manager)
-    : file_manager_(&file_manager), path_(path) {}
+FileHandle<PAGE_SIZE>::FileHandle(const std::string &path, FileManager &file_manager,const LoadPageFunction& load_f)
+    : file_manager_(&file_manager), path_(path),load_f_(load_f) {}
 template<uint32_t PAGE_SIZE>
 FileHandle<PAGE_SIZE>::FileHandle(const FileHandle &other) {
     path_ = other.path_;
     file_manager_ = other.file_manager_;
+    load_f_= other.load_f_;
 }
 template<uint32_t PAGE_SIZE>
 FileHandle<PAGE_SIZE>&
 FileHandle<PAGE_SIZE>::operator=(const FileHandle &other) {
     path_ = other.path_;
     file_manager_ = other.file_manager_;
+    load_f_ = other.load_f_;
     return *this;
 }
 
 template<uint32_t PAGE_SIZE>
 Page<PAGE_SIZE> *
 FileHandle<PAGE_SIZE>::GetNewPage(page_id_t *page_id) {
-    return file_manager_->GetNewPage<PAGE_SIZE>(path_, page_id);
+    auto* page=  file_manager_->GetNewPage<PAGE_SIZE>(path_, page_id);
+    page->WriteLock();
+    if(page->is_load_){
+        throw  std::runtime_error("get a new page from buffermanager ,but it's already loaded?");
+    }
+    load_f_(page->page_id,page->data);
+    page->is_load_ = true;
+    page->WriteUnlock();
+    return  page;
 }
 template<uint32_t PAGE_SIZE>
 FileHandle<PAGE_SIZE>::~FileHandle() {}
@@ -304,7 +568,14 @@ FileHandle<PAGE_SIZE>::~FileHandle() {}
 template<uint32_t PAGE_SIZE>
 Page<PAGE_SIZE> *
 FileHandle<PAGE_SIZE>::GetPage(page_id_t page_id) {
-    return file_manager_->GetPage<PAGE_SIZE>(path_, page_id);
+    auto* page =  file_manager_->GetPage<PAGE_SIZE>(path_, page_id);
+    page->WriteLock();
+    if(!page->is_load_){
+        load_f_(page->page_id,page->data);
+        page->is_load_ = true;
+    }
+    page->WriteUnlock();
+    return  page;
 }
 
 template<uint32_t PAGE_SIZE>
@@ -319,282 +590,290 @@ FileManager::FileManager() {}
 
 template<uint32_t PAGE_SIZE>
 std::tuple<FileHandle<PAGE_SIZE>,bool>
-FileManager::open(const std::string &path, std::ios_base::openmode flag,
-                  int page_nums) {
+FileManager::open(const std::string &path, 
+std::ios_base::openmode flag,
+int page_nums) {
 
-    if (std::find_if(std::begin(files_), std::end(files_),
-                     [&](auto &it) -> bool {
-                         if (it.first == path) {
-                             return true;
-                         }
-                         return false;
-                     }) != std::end(files_)) {
-        throw "this file has loaded";
+    std::unique_lock<std::mutex> l(lock_);
+    auto it = std::find(std::begin(files_name_),std::end(files_name_),path);
+    if(it != std::end(files_name_)){
+        throw std::runtime_error("this file already opened");
     }
+    bool is_first_load;
+    disk_managers_[path] = new DiskManager<PAGE_SIZE>(path,flag,page_nums,is_first_load);
+    
+    auto delete_function = [path,this](){
+        auto*  disk_manager =
+             std::any_cast<DiskManager<PAGE_SIZE>*>(disk_managers_[path]);
+        assert(disk_manager->GetPage() == PAGE_SIZE);
+        delete disk_manager;
+    };
 
-    std::fstream f;
-    f.open(path, flag | std::ios::ate);
+    deleters_.insert({path,delete_function});
 
-    if (!f.is_open()) {
-        f.open(path, flag | std::ios::trunc | std::ios::ate);
-    }
-    bool first_loaded = true;
-    auto size = GetFileSize(f);
+    // std::fstream f;
+    // f.open(path, flag | std::ios::ate);
 
-    if (size > 0) {
-        first_loaded = false;
-    }
+    // if (!f.is_open()) {
+    //     f.open(path, flag | std::ios::trunc | std::ios::ate);
+    // }
+    // bool first_loaded = true;
+    // auto size = GetFileSize(f);
 
-    files_[path] = std::move(f);
+    // if (size > 0) {
+    //     first_loaded = false;
+    // }
+
+    // files_[path] = std::move(f);
     // auto* pages = new Page<PAGE_SIZE>[page_nums];
-    static constexpr int PAGE_NUMS =10;
     // auto* pages = new std::array<Page<PAGE_SIZE>,PAGE_NUMS>;
     // auto* pages = new char[sizeof(Page<PAGE_SIZE>)*page_nums];
-    auto* pages = new Page<PAGE_SIZE>[page_nums]; // cause ASSERT error
+    // auto* pages = new Page<PAGE_SIZE>[page_nums]; // cause ASSERT error
 
-    buffer_pools_.insert({path, (void*)pages});
-
-    // std::array<Page<PAGE_SIZE>,PAGE_NUM> array;
-    // std::vector<Page<PAGE_SIZE>> pages;
-    // int* i= new int[1024];
+    // buffer_pools_.insert({path, (void*)pages});
+    // auto& lock = locks_[path];
+    // // std::array<Page<PAGE_SIZE>,PAGE_NUM> array;
+    // // std::vector<Page<PAGE_SIZE>> pages;
+    // // int* i= new int[1024];
     
-    auto function_deleter = [=,this](){
-        auto* pages = reinterpret_cast<Page<PAGE_SIZE>*>(buffer_pools_[path]);
-        delete[] pages;
-    };
-    auto function_flusher = [=,this](){
-        auto &f = files_[path];
-        auto &table_map = maps_[path];
-        auto* pages =reinterpret_cast<Page<PAGE_SIZE>*>((buffer_pools_[path]));
+    // auto function_deleter = [=,this](){
+    //     auto* pages = reinterpret_cast<Page<PAGE_SIZE>*>(buffer_pools_[path]);
+    //     delete[] pages;
+    // };
+    // auto function_flusher = [=,this](){
+    //     logger_.AppendDEBUG("Flushing Page ,Path :" + path);
+    //     std::unique_lock<std::mutex>( this->locks_[path] );
+    //     auto &f = files_[path];
+    //     auto &table_map = maps_[path];
+    //     auto* pages =reinterpret_cast<Page<PAGE_SIZE>*>((buffer_pools_[path]));
+    //     for (auto &it : table_map) {
+    //         auto idx = it.second;
+    //         Page<PAGE_SIZE>* page = &pages [idx];
+    //         if (page->is_dirty) {
+    //             FlushPage<PAGE_SIZE>(f, path, page->page_id, table_map);
+    //             logger_.AppendDEBUG(std::format("flushed page_id {}",page->page_id));
+    //         }
+    //     }
+    // };
 
-        for (auto &it : table_map) {
-            auto idx = it.second;
-            Page<PAGE_SIZE>* page = &pages [idx];
-            if (page->is_dirty) {
-                FlushPage<PAGE_SIZE>(f, path, page->page_id, table_map);
-            }
-        }
-    };
-    // deleters_.insert({path,std::bind(function_deleter)});
-    flushers_.insert({path,function_flusher});
+    // // deleters_.insert({path,std::bind(function_deleter)});
+    // flushers_.insert({path,function_flusher});
 
+    // std::list<int> t;
+    // for (int i = 0; i < page_nums; ++i) {
+    //     t.push_back(i);
+    // }
+    // free_lists_.insert({path, std::move(t)});
+    // replacers_.insert({path, new LRUKReplacer(page_nums, 2)});
+    // files_name_.insert(path);
+    // if (first_loaded) {
+    //     page_id_t id;
+    //     auto* page = GetNewPage<PAGE_SIZE>(path,&id);
+    //     auto*  d= page->data;
+    //     *(uint8_t*)d = (uint8_t)1<<7;
+    //     UnPin<PAGE_SIZE>(path,page->page_id,true);
+    //     //TODO(WXY):the first page use to bitmap for allocate page.
+    //     page_counts_[path] = 1;
+    // } else {
 
+    //     page_counts_[path] = size / PAGE_SIZE;
+    // }
 
+    // backgroud_flush_thread_ = std::thread([this](){
+    //     std::mutex lock_;
+    //     while(!finished_){
+    //         std::unique_lock<std::mutex> l(lock_);
+    //         this->flusher_cv_.wait_for(l,std::chrono::seconds(1));
+    //         for(auto& it : flushers_ ){
+    //             it.second();
+    //         }
+    //     }
+    // });
 
-    std::list<int> t;
-    for (int i = 0; i < page_nums; ++i) {
-        t.push_back(i);
-    }
-    free_lists_.insert({path, std::move(t)});
-    replacers_.insert({path, new LRUKReplacer(page_nums, 2)});
-    files_name_.insert(path);
-    if (first_loaded) {
-        page_id_t id;
-        auto* page = GetNewPage<PAGE_SIZE>(path,&id);
-        auto*  d= page->data;
-        *(uint8_t*)d = (uint8_t)1<<7;
-        UnPin<PAGE_SIZE>(path,page->page_id,true);
-        //TODO(WXY):the first page use to bitmap for allocate page.
-        page_counts_[path] = 1;
-    } else {
+    auto* disk= std::any_cast<DiskManager<PAGE_SIZE>*>(disk_managers_[path]);
 
-        page_counts_[path] = size / PAGE_SIZE;
-    }
+    auto load_f = std::bind(&DiskManager<PAGE_SIZE>::ReadPage,disk,std::placeholders::_1,std::placeholders::_2);
 
-    return {FileHandle<PAGE_SIZE>(path, *this),first_loaded};
+    return {FileHandle<PAGE_SIZE>(path, *this,load_f),is_first_load};
 }
+
+
+
 template<uint32_t PAGE_SIZE>
 Page<PAGE_SIZE> *
 FileManager::GetPage(const std::string &path, page_id_t page_id) {
+    auto* disk = std::any_cast<DiskManager<PAGE_SIZE>*>(disk_managers_[path]);
+    return  disk->GetPage(page_id);
     //TODO(wxy):check if allocated
-    if(page_counts_[path] <= page_id){
-        throw "try get a page that not allocated";
-    }
-    auto* any = buffer_pools_[path];
-    auto* pages = reinterpret_cast<Page<PAGE_SIZE>*>(any);
-    auto *replacer = replacers_[path];
-    auto &free_list = free_lists_[path];
-    auto &map = maps_[path];
-    auto &file = files_[path];
+    // std::unique_lock<std::mutex> l(locks_[path]);
+    // if(page_counts_[path] <= page_id){
+    //     throw "try get a page that not allocated";
+    // }
 
-    auto it =
-        std::find_if(std::begin(map), std::end(map), [&](auto &it) -> bool {
-            if (it.first == page_id) {
-                return true;
-            }
-            return false;
-        });
-    frame_id_t victim_idx;
-    if (it == std::end(map)) {
-        if (!free_list.empty()) {
-            auto idx = free_list.front();
-            free_list.pop_front();
-            auto *page = &pages[idx];
-            ReadPage<PAGE_SIZE>(file, path, page_id, page->GetData());
-            assert(page->pin_ == 0);
-            page->pin_= 1;
-            page->page_id = page_id;
-            page->is_dirty = false;
-            replacer->RecordAccess(idx);
-            map.insert({page_id, idx});
-            replacer->SetEvictable(idx, false);
-            return page;
-        }
-        if (replacer->Evict(&victim_idx)) {
-            Page<PAGE_SIZE>* page = &pages[victim_idx];
-            if (page->is_dirty) {
-                FlushPage<PAGE_SIZE>(file, path, page->page_id, map);
-            }
-            page->ResetMemory();
-            page->is_dirty = false;
-            page->pin_=1;
-            map.erase(page->page_id);
-            page->page_id = page_id;
-            ReadPage<PAGE_SIZE>(file, path, page_id, page->GetData());
-            map.insert({page_id, victim_idx});
-            replacer->RecordAccess(victim_idx);
-            replacer->SetEvictable(victim_idx, false);
-            return page;
-        }
-        throw "Evict Fail";
-    }
-    auto *page = &pages[map[page_id]];
-    page->pin_++;
-    replacer->RecordAccess(map[page_id]);
-    replacer->SetEvictable(map[page_id], false);
-    return page;
+    // auto* any = buffer_pools_[path];
+    // auto* pages = reinterpret_cast<Page<PAGE_SIZE>*>(any);
+    // auto *replacer = replacers_[path];
+    // auto &free_list = free_lists_[path];
+    // auto &map = maps_[path];
+    // auto &file = files_[path];
+
+    // auto it =
+    //     std::find_if(std::begin(map), std::end(map), [&](auto &it) -> bool {
+    //         if (it.first == page_id) {
+    //             return true;
+    //         }
+    //         return false;
+    //     });
+    // frame_id_t victim_idx;
+    // if (it == std::end(map)) {
+    //     if (!free_list.empty()) {
+    //         auto idx = free_list.front();
+    //         free_list.pop_front();
+    //         auto *page = &pages[idx];
+    //         ReadPage<PAGE_SIZE>(file, path, page_id, page->GetData());
+    //         assert(page->pin_ == 0);
+    //         page->pin_= 1;
+    //         page->page_id = page_id;
+    //         page->is_dirty = false;
+    //         replacer->RecordAccess(idx);
+    //         map.insert({page_id, idx});
+    //         replacer->SetEvictable(idx, false);
+    //         return page;
+    //     }
+    //     if (replacer->Evict(&victim_idx)) {
+    //         Page<PAGE_SIZE>* page = &pages[victim_idx];
+    //         if (page->is_dirty) {
+    //             FlushPage<PAGE_SIZE>(file, path, page->page_id, map);
+    //         }
+    //         page->ResetMemory();
+    //         page->is_dirty = false;
+    //         page->pin_=1;
+    //         map.erase(page->page_id);
+    //         page->page_id = page_id;
+    //         ReadPage<PAGE_SIZE>(file, path, page_id, page->GetData());
+    //         map.insert({page_id, victim_idx});
+    //         replacer->RecordAccess(victim_idx);
+    //         replacer->SetEvictable(victim_idx, false);
+    //         return page;
+    //     }
+    //     throw "Evict Fail";
+    // }
+    // auto *page = &pages[map[page_id]];
+    // page->pin_++;
+    // replacer->RecordAccess(map[page_id]);
+    // replacer->SetEvictable(map[page_id], false);
+    // return page;
 }
 
 template<uint32_t PAGE_SIZE>
 void
 FileManager::UnPin(const std::string &path, page_id_t page_id, bool is_dirty) {
 
-    auto &map = maps_[path];
-    auto &replacer = replacers_[path];
-    auto it = std::find_if(std::begin(map), std::end(map), [&](auto &it) {
-        if (it.first == page_id) {
-            return true;
-        }
-        return false;
-    });
+    auto* disk = std::any_cast<DiskManager<PAGE_SIZE>*>(disk_managers_[path]);
+    disk->Unpin(page_id,is_dirty);
 
-    if (it != std::end(map)) {
-        auto* page = reinterpret_cast<Page<PAGE_SIZE>*>(buffer_pools_[path])+it->second;
-        if (page->pin_ >= 1) {
-            page->pin_--;
-            if (page->pin_ == 0) {
-                replacer->SetEvictable(it->second, true);
-            }
-            //WTF?
-            auto result = ( page->is_dirty == false ?   is_dirty  : true);
-            page->is_dirty = result;
-            return;
-        } else {
-            throw "The page unpined value pin =0 ?";
-        }
-    }
-    throw "you unpin a page that not loaded";
+    // std::unique_lock<std::mutex> l(locks_[path]);
+    // auto &map = maps_[path];
+    // auto &replacer = replacers_[path];
+    // auto it = std::find_if(std::begin(map), std::end(map), [&](auto &it) {
+    //     if (it.first == page_id) {
+    //         return true;
+    //     }
+    //     return false;
+    // });
+
+    // if (it != std::end(map)) {
+    //     auto* page = reinterpret_cast<Page<PAGE_SIZE>*>(buffer_pools_[path])+it->second;
+    //     if (page->pin_ >= 1) {
+    //         page->pin_--;
+    //         if (page->pin_ == 0) {
+    //             replacer->SetEvictable(it->second, true);
+    //         }
+    //         //WTF?
+    //         auto result = ( page->is_dirty == false ?   is_dirty  : true);
+    //         page->is_dirty = result;
+    //         return;
+    //     } else {
+    //         throw "The page unpined value pin =0 ?";
+    //     }
+    // }
+    // throw "you unpin a page that not loaded";
 }
 
-template<uint32_t PAGE_SIZE>
-void
-FileManager::ReadPage(std::fstream &f, const std::string &path,
-                      page_id_t page_id, char *page_data) {
-    int offset = page_id * PAGE_SIZE;
+// template<uint32_t PAGE_SIZE>
+// void
+// FileManager::ReadPage(std::fstream &f, const std::string &path,
+//                       page_id_t page_id, char *page_data) {
+//     int offset = page_id * PAGE_SIZE;
 
-    if (offset > GetFileSize(f)) {
-        throw "read past of the file ?";
-    }
-    f.seekp(offset);
-    f.read(page_data, PAGE_SIZE);
-    if (f.bad()) {
-        throw "IO error";
-    }
+//     if (offset > GetFileSize(f)) {
+//         throw "read past of the file ?";
+//     }
+//     f.seekp(offset);
+//     f.read(page_data, PAGE_SIZE);
+//     if (f.bad()) {
+//         throw "IO error";
+//     }
 
-    int read_count = f.gcount();
-    if (read_count < PAGE_SIZE) {
-        throw "READ LESS THAN A PAGE";
-    }
-}
+//     int read_count = f.gcount();
+//     if (read_count < PAGE_SIZE) {
+//         throw "READ LESS THAN A PAGE";
+//     }
+// }
 
 
 
 int
-FileManager::GetFileSize(std::fstream &f) {
+GetFileSize(std::fstream &f) {
     f.seekg(0,std::ios::end);
     return f.tellg();
 }
 
-template<uint32_t PAGE_SIZE>
-void
-FileManager::FlushPage(std::fstream &f, const std::string &path,
-                       page_id_t page_id,
-                       std::unordered_map<page_id_t, frame_id_t> &map) {
-    auto it = std::find_if(std::begin(map), std::end(map), [&](auto &it) {
-        if (it.first == page_id) {
-            return true;
-        }
-        return false;
-    });
-    assert(it != std::end(map));
-    auto *page = reinterpret_cast<Page<PAGE_SIZE>*>(buffer_pools_[path])+it->second;
-    WritePage<PAGE_SIZE>(f, path, page_id, page->GetData());
-    page->is_dirty = false;
-}
+// template<uint32_t PAGE_SIZE>
+// void
+// FileManager::FlushPage(std::fstream &f, const std::string &path,
+//                        page_id_t page_id,
+//                        std::unordered_map<page_id_t, frame_id_t> &map) {
+//     auto it = std::find_if(std::begin(map), std::end(map), [&](auto &it) {
+//         if (it.first == page_id) {
+//             return true;
+//         }
+//         return false;
+//     });
+//     assert(it != std::end(map));
+//     auto *page = reinterpret_cast<Page<PAGE_SIZE>*>(buffer_pools_[path])+it->second;
+//     WritePage<PAGE_SIZE>(f, path, page_id, page->GetData());
+//     page->is_dirty = false;
+// }
 
-template<uint32_t PAGE_SIZE>
-void
-FileManager::WritePage(std::fstream &f, const std::string &path,
-                       page_id_t page_id, const char *page_data) {
-    int offset = page_id * PAGE_SIZE;
-    f.seekp(offset);
-    f.write(page_data, PAGE_SIZE);
-    if (f.bad()) {
-        throw "error when write page";
-    }
-    f.flush();
-}
+// template<uint32_t PAGE_SIZE>
+// void
+// FileManager::WritePage(std::fstream &f, const std::string &path,
+//                        page_id_t page_id, const char *page_data) {
+        
+//     int offset = page_id * PAGE_SIZE;
+//     f.seekp(offset);
+//     f.write(page_data, PAGE_SIZE);
+//     if (f.bad()) {
+//         throw "error when write page";
+//     }
+//     f.flush();
+// }
 
 template<uint32_t PAGE_SIZE>
 Page<PAGE_SIZE> *
 FileManager::GetNewPage(const std::string &path, page_id_t *page_id) {
-
-    auto new_page_id = page_counts_[path]++;
-    char* data = new char[PAGE_SIZE];
-    memset(data, 0, PAGE_SIZE);
-    auto &f = files_[path];
-    WritePage<PAGE_SIZE>(f, path, new_page_id, data);
-    *page_id = new_page_id;
-    delete[] data;
-    return GetPage<PAGE_SIZE>(path, new_page_id);
+    auto* disk = std::any_cast<DiskManager<PAGE_SIZE>*>(disk_managers_[path]);    
+    return disk->GetNewPage(page_id);
 }
 
 FileManager::~FileManager() {
     std::lock_guard<std::mutex> l(lock_);
-
-    FlushAllFile();
-
     for (auto it : deleters_) {
-        assert(std::find(files_name_.begin(),files_name_.end(),it.first)
-            !=std::end(files_name_));
-        
         it.second();
     }
-    for (auto &it : files_) {
-        it.second.close();
-    }
 }
 
-
-void
-FileManager::FlushAllFile() {
-    for (auto &entry : flushers_) {
-        assert(std::find(files_name_.begin(),files_name_.end(),entry.first)
-            !=std::end(files_name_));
-        
-        entry.second();
-    }
-}
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k)
     : replacer_size_(num_frames), k_(k) {

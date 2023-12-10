@@ -18,9 +18,11 @@
 #include <vector>
 #include <functional>
 #include <map>
-
-
-
+#include<thread>
+#include<condition_variable>
+#include <atomic>
+#include<format>
+#include"../logger/Logger.h"
 #define DISALLOW_COPY(cname)                                    \
   cname(const cname &) = delete;                   /* NOLINT */ \
   auto operator=(const cname &)->cname & = delete; /* NOLINT */
@@ -41,11 +43,6 @@
     template Page<x>* FileManager::GetPage<x>(const std::string&,page_id_t);         \
     template Page<x>* FileManager::GetNewPage<x>(const std::string&,page_id_t*);      \
     template void FileManager::UnPin<x>(const std::string&,page_id_t ,bool);           \
-    template void  FileManager::ReadPage<x>(std::fstream&,const std::string&,page_id_t,char*);         \
-    template void  FileManager::WritePage<x>(std::fstream&,const std::string&,page_id_t,const char*);        \
-    template void  FileManager::FlushPage<x>(std::fstream&,const std::string&,page_id_t,std::unordered_map<page_id_t,frame_id_t>&);        \
-    //template void  FileManager:FlushOneFileAllPages<x>(const std::string&);              \
-    template void  FileManager::FlushAllFile<x>();     \
 
 #define EXTERN_FILE_MANAGER_OPEN_TEMPLATE_PARAMETER(PAGE_SIZE,PAGE_NUM) 
 
@@ -82,6 +79,7 @@ class BucketPage;
 class DirectoryPage;
 class LRUKReplacer;
 
+int GetFileSize(std::fstream &f);
 
 /*
 ------------------------------------------------------
@@ -97,11 +95,11 @@ private:
 public:
     int page_id=-1;
     int pin_=0;
-
+    bool is_load_=false;
     bool is_dirty=false;
     char data[PAGE_SIZE];
 public:
-
+    
 
     Page();
     ~Page();
@@ -109,8 +107,14 @@ public:
     Page(Page&& other);
     inline char* GetData(){return data;}
     void ReadLock();
+    bool tryReadLock(){
+        return rw_lock_.try_lock_shared();
+    }
     void ReadUnlock();
     void WriteLock();
+    bool tryWriteLock(){
+        return rw_lock_.try_lock();
+    }
     void WriteUnlock();
     uint32_t GetPageSize(){
         return _PAGE_SIZE;
@@ -290,28 +294,66 @@ public:
 };
 
 
+template<uint32_t PAGE_SIZE>
+class DiskManager{
+public:
+    
+    DiskManager(const std::string& path,std::ios_base::openmode flag,int page_nums,bool& is_first_load);
+    uint32_t GetPage(){
+        return  PAGE_SIZE;
+    }
+    ~DiskManager(){
+        finished_ = true;
+        backgroud_flush_thread_.join();
+        // flush all page in memroy;
+
+        for(uint32_t i=0;i<pages_.size();++i){
+            auto* page = pages_[i];
+            page->WriteLock();
+            if(page->pin_ != 0)
+                logger_->AppendDEBUG(std::format("Diskmanager close ,but still page {} still in use ? ,pin is {}",page->page_id,page->pin_));
+            if(page->is_dirty){
+                FlushPage(page->page_id);
+            }
+            page->WriteUnlock();
+        }
+    } 
+    Page<PAGE_SIZE>* GetPage(page_id_t page_id);
+    Page<PAGE_SIZE>* GetNewPage(page_id_t* page_id);
+    void Unpin(page_id_t page_id, bool is_dirty);
+    void FlushPage(page_id_t page_id);
+    
+    void WritePage(page_id_t page_id,const char* page_data);
+    void ReadPage(page_id_t page_id,char* page_data);
+    std::string path_;
+    std::fstream f_;
+    std::mutex mtx_for_fstream_;
+    std::unordered_map<page_id_t,frame_id_t> maps_;
+    std::list<page_id_t> free_lists_;
+    std::vector<Page<PAGE_SIZE>*> pages_;
+    uint32_t page_counts_;    
+    std::mutex mtx_;
+    std::shared_ptr<LRUKReplacer> replacer_;
+    
+    std::shared_ptr<Logger> logger_;
+    
+
+    // background thread flush dirty page . flush that pin 0 and dirty page.
+    std::thread backgroud_flush_thread_;
+    std::atomic<bool> finished_ = false;
+
+
+
+};
+
 
 class FileManager{
     template<uint32_t PAGE_SIZE>
     friend class FileHandle; 
 private:
-
-//every file has its own buffer_pool
-    std::map<std::string,void *> buffer_pools_;
-
-    // void (FileManager::*deleter)() = nullptr;
-
-    std::unordered_map<std::string,std::function<void()>> deleters_;
-    std::unordered_map<std::string,std::function<void()>> flushers_;
-
-    std::unordered_map<std::string,std::unordered_map<page_id_t,frame_id_t>> maps_;
-    std::unordered_map<std::string,std::fstream> files_;
-    std::unordered_map<std::string,LRUKReplacer*> replacers_;
-    std::unordered_map<std::string,std::list<int>>  free_lists_;
-
-    std::unordered_map<std::string,int> page_counts_;
-
+    std::unordered_map<std::string,std::any> disk_managers_;
     std::set<std::string> files_name_;
+    std::unordered_map<std::string,std::function<void()>> deleters_;
     std::mutex lock_;
 public:    
     FileManager();
@@ -320,9 +362,7 @@ public:
     template<uint32_t PAGE_SIZE>
     std::tuple<FileHandle<PAGE_SIZE>,bool> open(const  std::string& path, 
     std::ios_base::openmode flag,int page_nums);
-
-
-    int static GetFileSize(std::fstream& path);
+    
 
 private:
     template<uint32_t PAGE_SIZE>
@@ -333,23 +373,9 @@ private:
     template<uint32_t PAGE_SIZE>
     void UnPin(const std::string& path,page_id_t page_id,bool is_dirty);
 
-    template<uint32_t PAGE_SIZE>    
-    void ReadPage(std::fstream& f,
-                const std::string& path,
-                page_id_t page_id,
-                char* page_data);
+ 
+ 
 
-    template<uint32_t PAGE_SIZE>
-    void WritePage(std::fstream& f,const std::string& path,
-page_id_t page_id,const char* page_data);
-
-    template<uint32_t PAGE_SIZE>
-    void FlushPage(std::fstream& f,const std::string& path,
-        page_id_t page_id,std::unordered_map<page_id_t,frame_id_t>& map);
-    template<uint32_t PAGE_SIZE>
-    void FlushOneFileAllPages(const std::string& path);
-    
-    void FlushAllFile();
 };
 
 
@@ -358,11 +384,14 @@ page_id_t page_id,const char* page_data);
 template<uint32_t PAGE_SIZE>
 class FileHandle{
 private:
+    using LoadPageFunction = std::function<void(page_id_t,char*)>;
     std::string path_;
     FileManager* file_manager_=nullptr;
+    
+    LoadPageFunction load_f_;
 public:
     FileHandle();
-    FileHandle(const std::string& path,FileManager& file_manager);
+    FileHandle(const std::string& path,FileManager& file_manager,const LoadPageFunction& load_f);
     FileHandle(const FileHandle& other);
     FileHandle& operator=(const FileHandle& other);
     ~FileHandle();
@@ -372,7 +401,8 @@ public:
     }
     inline const std::string& GetFileName(){return path_;}
     inline int GetPageNum(){
-        return file_manager_->page_counts_[path_];
+        auto* disk = std::any_cast<DiskManager<PAGE_SIZE>*>(file_manager_->disk_managers_[path_]);
+        return disk->page_counts_;
     }
 
     Page<PAGE_SIZE>* GetPage(page_id_t page_id);

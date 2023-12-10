@@ -10,6 +10,8 @@ class  ColumnIterator{
 public:
     ColumnIterator(uint32_t data_chunk_sIze,ColumnIteratorType type,ColumnHeap* heap);
 
+
+    virtual ~ColumnIterator(){}
     virtual bool operator==(const ColumnIterator& other_iterator) = 0;
     virtual bool operator!=(const ColumnIterator& other_iterator) = 0;
     virtual void operator++() = 0;

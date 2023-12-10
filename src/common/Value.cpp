@@ -81,6 +81,7 @@ bool ValueUnion::operator> (const ValueUnion& other){
         if(value_len_ != other.value_len_) return  false;
         return memcmp(data_,other.data_,value_len_) > 0;
     }
+    UNREACHABLE;
 }
 bool ValueUnion::operator< (const ValueUnion& other){
 
@@ -95,6 +96,7 @@ bool ValueUnion::operator< (const ValueUnion& other){
         if(value_len_ != other.value_len_) return  false;
         return memcmp(data_,other.data_,value_len_) < 0;
     }
+    UNREACHABLE
 }
 
 ValueUnion ValueUnion::operator+ (const ValueUnion& other){

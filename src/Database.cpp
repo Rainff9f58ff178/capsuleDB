@@ -17,6 +17,7 @@
 #include "Planer/planer.h"
 #include "Execute/core/ColumnFactory.h"
 #include "Execute/core/ColumnVector.h"
+#include "Logger.h"
 extern bool show_info;
 StardDataBase::StardDataBase(const std::string& db_name):db_name_(db_name){
     file_manager_ = new FileManager();
@@ -24,6 +25,7 @@ StardDataBase::StardDataBase(const std::string& db_name):db_name_(db_name){
     execute_engine_ = new ExecuteEngine();
 }
 StardDataBase::~StardDataBase(){
+    delete execute_engine_;
     delete cata_log_;
     delete file_manager_;
 }
@@ -59,6 +61,7 @@ void StardDataBase::ShowTables(){
     std::cout<<ss.str();
 }
 void StardDataBase::ExecuteSql(const std::string& query){
+    DEBUG(std::format("Execute Sql : {}",query));
     if(query == "\\st"){
         ShowTables();
         return;

@@ -7,7 +7,7 @@ class ColumnStringIterator:public ColumnIterator{
 public: 
     ColumnStringIterator(uint32_t data_chunk_size,ColumnHeapStringPage* page,ColumnHeap* col_heap);
 
-
+    ~ColumnStringIterator();
     bool operator==(const ColumnIterator& other) override;
     bool operator!=(const ColumnIterator& other) override;
     void operator++() override;

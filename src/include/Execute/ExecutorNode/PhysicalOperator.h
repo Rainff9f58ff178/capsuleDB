@@ -37,6 +37,7 @@ public:
     ExecuteContext* context,
     std::vector<PhysicalOperatorRef> children);
     
+    virtual ~PhysicalOperator(){}
     virtual bool IsSink()=0;
     
     virtual void 

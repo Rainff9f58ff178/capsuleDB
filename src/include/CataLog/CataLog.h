@@ -24,6 +24,7 @@
 
 
 class CataLog{
+    static constexpr const page_id_t META_PAGE_ID = 1;
 public:
     std::unordered_map<table_oid_t,std::unique_ptr<TableCataLog>> tables_;
     explicit CataLog(FileManager* file_manager,std::string database_name);
@@ -36,7 +37,6 @@ public:
     std::string database_name_;
 
     
-    CataLogMetaPage* db_meta_header_page_;
     
     
     void CreateTable(const std::string& table_name,const std::vector<ColumnDef>& columns);
