@@ -13,6 +13,7 @@ public:
     void Execute(LogicalOperatorRef plan,
     
     std::shared_ptr<ExecuteContext> context);
+    void ExecuteExplain(LogicalOperatorRef plan,std::shared_ptr<ExecuteContext> context);
   
 
 private:

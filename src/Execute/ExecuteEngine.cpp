@@ -25,7 +25,6 @@ std::shared_ptr<ExecuteContext> context){
 
 
     context->Build(context->physical_plan_,nullptr);
-    if(show_info) context->ShowPipelines();
 
     auto leaf_pipelines = GetAllNoChildPipelines(context);
 
@@ -34,6 +33,19 @@ std::shared_ptr<ExecuteContext> context){
     // execute finished.
 }
 
+void ExecuteEngine::ExecuteExplain(LogicalOperatorRef plan,
+std::shared_ptr<ExecuteContext> context){
+    context->physical_plan_ = 
+        CreatePhysicalOperatorTree(plan,context.get());
+
+    context->physical_plan_ = std::shared_ptr<ResultPhysicalOperator>(
+        new ResultPhysicalOperator(nullptr,context.get(),{context->physical_plan_})
+    );
+    context->Build(context->physical_plan_,nullptr);
+
+    context->ShowPipelines();
+    // not execute it.
+}
 
 void 
 ExecuteEngine::ExecuteInteranl(

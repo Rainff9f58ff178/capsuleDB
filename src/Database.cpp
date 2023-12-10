@@ -142,6 +142,9 @@ void StardDataBase::ExecuteSql(const std::string& query){
                 print_result(std::move(result_set));
                 break;
             }
+            case StatementType::EXPLAIN_STATEMENT:{
+                ExecuteExplainStatement(std::move(bound_statement));
+            }
             default:
                 break;
         }
@@ -149,6 +152,7 @@ void StardDataBase::ExecuteSql(const std::string& query){
     
    
 }
+
 
 
 bool StardDataBase::ExecuteCreateStatement(std::unique_ptr<BoundStatement> stmt){
@@ -161,19 +165,10 @@ bool StardDataBase::ExecuteCreateStatement(std::unique_ptr<BoundStatement> stmt)
 bool StardDataBase::ExecuteInsertStatement(std::unique_ptr<BoundStatement> stmt,
 std::vector<ChunkRef>& result_set,SchemaRef& schema){
     Planer planer(cata_log_);
-    if(show_info) std::cout<<"==== Plan   Later ===="<<std::endl;
-    planer.CreatePlanAndShowPlanTree(std::move(stmt));
-
+    planer.CreatePlan(std::move(stmt));
     //optimer .
     Optimizer optimizer;
-    // auto optimerzed_plan = 
-    //     optimizer.OptimizerInsert(planer.plan_);
-
-    auto optimerzed_plan =  planer.plan_;
-    if(show_info) std::cout<<"==== Optimer Later ===="<<std::endl;
-
-    planer.PreOrderTraverse(optimerzed_plan,0);
-
+    auto optimerzed_plan  = optimizer.RegularOptimize(planer.plan_);
     auto context = std::make_shared<ExecuteContext>(cata_log_);
     execute_engine_->Execute(optimerzed_plan,
         context);
@@ -196,12 +191,9 @@ std::vector<ChunkRef>& result_set,
 SchemaRef& schema){
     
     Planer planer(cata_log_);
-    std::cout<<"==== Plan   Later ===="<<std::endl;
-    planer.CreatePlanAndShowPlanTree(std::move(stmt));
+    planer.CreatePlan(std::move(stmt));
     Optimizer optimizer;
-    std::cout<<"==== Optimer Later ===="<<std::endl;
     auto op_p =optimizer.RegularOptimize(planer.plan_);
-    planer.PreOrderTraverse(op_p,0);
 
     auto context = std::make_shared<ExecuteContext>(cata_log_);
     execute_engine_->Execute(op_p,
@@ -217,4 +209,18 @@ SchemaRef& schema){
     }
 
     return true;
+}
+void StardDataBase::ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt){
+    auto* explain_stmt = down_cast<ExplainStatement*>(stmt.get());
+    Planer planer(cata_log_);
+    planer.CreatePlan(std::move(explain_stmt->stmt_));
+    std::cout<<"==== Plan   Later ===="<<std::endl;
+    planer.ShowPlanTree(planer.plan_);
+    std::cout<<"==== Optimer Later ===="<<std::endl;
+    Optimizer optimizer;
+    auto op_p =optimizer.RegularOptimize(planer.plan_);
+    planer.ShowPlanTree(op_p);
+    auto context = std::make_shared<ExecuteContext>(cata_log_);
+
+    execute_engine_->ExecuteExplain(op_p,context);
 }

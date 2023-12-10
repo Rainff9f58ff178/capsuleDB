@@ -29,7 +29,7 @@
 #include "Binder/TableRef/BoundExpressionList.h"
 #include "Binder/TableRef/BoundJoinTable.h"
 #include "Binder/TableRef/BoundSubQueryTable.h"
-
+#include "Binder/Statement/ExplainStatement.h"
 
 class Binder{
 public:
@@ -46,6 +46,10 @@ public:
 
     std::unique_ptr<SelectStatement>
     BindSelect(duckdb_libpgquery::PGSelectStmt* stmt);
+    
+    std::unique_ptr<ExplainStatement>
+    BindExplain(duckdb_libpgquery::PGExplainStmt* stmt);
+
 
     std::unique_ptr<BoundTabRef>
     BindFrom(duckdb_libpgquery::PGList* from);

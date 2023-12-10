@@ -111,6 +111,8 @@ private:
         std::vector<ChunkRef>& result_set,
         SchemaRef& schema);
 
+    void ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt);
+
     void ShowTables();
     duckdb::PostgresParser parser_;
     FileManager* file_manager_;

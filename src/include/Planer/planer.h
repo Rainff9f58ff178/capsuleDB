@@ -71,10 +71,6 @@ public:
     PlanExpressionList(const BoundExpressionList& expr_list);
 
 
-    void 
-    CreatePlanAndShowPlanTree(
-        std::unique_ptr<BoundStatement> stmt);
-
 
 
 
@@ -93,10 +89,15 @@ public:
     void AddColumnFromExpression(BoundExpression& expr,SchemaRef& schema);
     LogicalOperatorRef plan_{nullptr};
 
+    void ShowPlanTree(LogicalOperatorRef plan){
+        uint32_t depth = 0;
+        PreOrderTraverse(plan,depth);
+    }
     void PreOrderTraverse(LogicalOperatorRef plan,int depth);
         
     // check if op output this column,if not ,load 
-    void LoadColumn(const Column& col,LogicalOperatorRef op);
+    enum class LoadResult:uint8_t{LoadSucc,LoadFailed};
+    LoadResult LoadColumn(const Column& col,LogicalOperatorRef op);
     
     SchemaRef eraseSurplusColumn(SchemaRef select_schema,LogicalOperatorRef op){
         auto output_schema = op->GetInputSchema()->Copy();

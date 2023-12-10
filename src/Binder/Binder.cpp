@@ -14,7 +14,7 @@
 #include "Binder/Statement/CreateStatement.h"
 #include "Binder/Statement/InsertStatement.h"
 #include "Binder/Statement/SelectStatement.h"
-
+#include "Binder/Statement/ExplainStatement.h"
 #include "common/commonfunc.h"
 
 Binder::Binder(duckdb_libpgquery::PGList* parsed_tree,CataLog* cata_log){
@@ -27,6 +27,15 @@ Binder::Binder(duckdb_libpgquery::PGList* parsed_tree,CataLog* cata_log){
 }
 
 
+std::unique_ptr<ExplainStatement> Binder::BindExplain(duckdb_libpgquery::PGExplainStmt* stmt){
+    if(stmt->query ==nullptr)
+        throw Exception("can't explain empty");
+    
+    auto query = BindStatement(stmt->query);
+    return std::unique_ptr<ExplainStatement>(
+        new ExplainStatement(std::move(query))
+    );
+}
 
 std::unique_ptr<BoundStatement> Binder::BindStatement(duckdb_libpgquery::PGNode* stmt){
     switch (stmt->type) {
@@ -38,8 +47,8 @@ std::unique_ptr<BoundStatement> Binder::BindStatement(duckdb_libpgquery::PGNode*
             return BindInsert(reinterpret_cast<duckdb_libpgquery::PGInsertStmt *>(stmt));
         case duckdb_libpgquery::T_PGSelectStmt:
             return BindSelect(reinterpret_cast<duckdb_libpgquery::PGSelectStmt *>(stmt));
-        // case duckdb_libpgquery::T_PGExplainStmt:
-        // return BindExplain(reinterpret_cast<duckdb_libpgquery::PGExplainStmt *>(stmt));
+        case duckdb_libpgquery::T_PGExplainStmt:
+        return BindExplain(reinterpret_cast<duckdb_libpgquery::PGExplainStmt *>(stmt));
         // case duckdb_libpgquery::T_PGDeleteStmt:
         // return BindDelete(reinterpret_cast<duckdb_libpgquery::PGDeleteStmt *>(stmt));
         // case duckdb_libpgquery::T_PGUpdateStmt:
@@ -263,6 +272,19 @@ Binder::GetAllColumnExpr(BoundTabRef* table){
             }
             return v;
         }
+        case TableReferenceType::JOIN:{
+            std::vector<std::unique_ptr<BoundExpression>> v;
+            auto* join_table = reinterpret_cast<BoundJoinTable*>(table);
+            auto l_exprs = GetAllColumnExpr(join_table->l_table_.get());
+            auto r_exprs = GetAllColumnExpr(join_table->r_table_.get());
+
+            v.insert(v.end(),std::make_move_iterator(l_exprs.begin()),
+                std::make_move_iterator(l_exprs.end()));
+            v.insert(v.end(),std::make_move_iterator(r_exprs.begin()),
+                std::make_move_iterator(r_exprs.end())) ;
+            
+            return v;
+        }
         default:
             break;
     }
@@ -375,9 +397,11 @@ Binder::BindJoinExpr(duckdb_libpgquery::PGJoinExpr* join_exrp){
 
     auto left_table = BindTable(join_exrp->larg);
     auto right_table = BindTable(join_exrp->rarg);
+    auto join = std::make_unique<BoundJoinTable>(join_type,std::move(left_table),std::move(right_table));
+    scope_ = join.get();
     auto expr = BindExpression(join_exrp->quals);
-
-    return std::make_unique<BoundJoinTable>(join_type,std::move(left_table),std::move(right_table),std::move(expr));
+    join->condition_ = std::move(expr);
+    return join;
 }
 
 
@@ -497,6 +521,9 @@ auto Binder::ResolveColumn(const BoundTabRef &scope,std::vector<std::string> &co
 std::unique_ptr<BoundExpression>
 Binder::ResolveColumnInternal(const BoundTabRef& scope,
 std::vector<std::string>& col_names){
+    if(col_names.size() >= 3){
+        throw Exception("Not Support col name three part parse");
+    }
     switch(scope.type_){
         case TableReferenceType::BASE_TABLE:{
             auto& base =
@@ -506,12 +533,26 @@ std::vector<std::string>& col_names){
                 auto* tb = cata_log_->GetTable(base.table_id_);
                 auto _column_ = tb->GetColumnFromSchema(col_name);
                 if(!_column_.has_value())
-                    throw  Exception("Not func this"+col_name+"  in table");
-                col_names.insert(col_names.begin(),base.table_name_);
+                    return  nullptr;
+                auto _col_names = col_names;
+                _col_names.insert(_col_names.begin(),base.table_name_);
                 return std::unique_ptr<BoundColumnRef>(
-                    new BoundColumnRef(col_names,_column_->type_)
+                    new BoundColumnRef(_col_names,_column_->type_)
                 );
             }
+            // col_names.size() > 1.
+            auto& table_name = col_names[0];
+            if(table_name != base.table_name_)
+                return nullptr;
+            
+
+            auto col_name = join(col_names,".");
+            auto* tb = cata_log_->GetTable(base.table_id_);
+            auto _col = tb->GetColumnFromSchema(col_name);
+            if(!_col.has_value())
+                return  nullptr;
+            return std::unique_ptr<BoundColumnRef>(new BoundColumnRef(col_names,_col->type_));
+            
         }
         case TableReferenceType::JOIN:{
             // select t1.colA ,colB from t1 inner join t2 on t1.colA = t2.colB;

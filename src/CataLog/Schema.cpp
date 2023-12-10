@@ -23,9 +23,7 @@ Schema::Schema(const TableHeap* table_heap){
     }
 }
 void Schema::Merge(const Schema& other_schema){
-    columns_.insert(
-        columns_.begin(),other_schema.columns_.begin(),
-        other_schema.columns_.end());
+    AddColumns(other_schema.columns_);
 }
 void Schema::AddColumns(const std::vector<Column>& cols ){
     for(auto& col:cols){
@@ -33,7 +31,6 @@ void Schema::AddColumns(const std::vector<Column>& cols ){
     }
 }
 void Schema::AddColumn(const std::string& col_name,ColumnType type){
-
     Column col(col_name,type);
     auto it = std::find(columns_.begin(),columns_.end(),col);
     if(it !=columns_.end())

@@ -60,27 +60,43 @@ void Planer::AddColumnFromExpression(BoundExpression& expr,SchemaRef& schema){
     }
 }
 
-void Planer::LoadColumn(const Column& col,LogicalOperatorRef op){
+Planer::LoadResult Planer::LoadColumn(const Column& col,LogicalOperatorRef op){
     if(op->GetOutPutSchema()->exist(col)){
-        return;
+        return LoadResult::LoadSucc;
     }
     // output schema hasn't !
     if(op->GetInputSchema()->exist(col)){
         // if input has already exist ,just need add to output schema.
         op->GetOutPutSchema()->AddColumn(col);
-        return;
+        return LoadResult::LoadSucc;
     }
     // input schema and output schame both hasn't
 
     // let all child node load this column.
-    for(auto& child:op->children_){
-        LoadColumn(col,child);
+    CHEKC_THORW(op->children_.size()<=2);
+    if(op->children_.size() == 1){
+        auto result = LoadColumn(col,op->children_[0]);
+        if(result== LoadResult::LoadSucc){
+            op->GetInputSchema()->AddColumn(col);
+            op->GetOutPutSchema()->AddColumn(col);
+        }
+        return  result;
     }
-    if(op->GetType()!=SeqScanOperatorNode)
-        CHEKC_THORW(op->children_[0]->GetOutPutSchema()->exist(col));
-    
-    op->SetInputSchema(op->children_[0]->GetOutPutSchema()->Copy());
-    op->GetOutPutSchema()->AddColumn(col);
+    if(op->children_.size() == 2){
+        auto l_result = LoadColumn(col,op->children_[0]);
+        auto r_result = LoadColumn(col,op->children_[1]);
+
+        if(l_result ==LoadResult::LoadSucc || r_result==LoadResult::LoadSucc){
+            op->GetInputSchema()->AddColumn(col);
+            op->GetOutPutSchema()->AddColumn(col);
+            return  LoadResult::LoadSucc;
+        }
+        return  LoadResult::LoadFailed;
+    }
+    // no child . SeqScan node. this col not in this table.
+    CHEKC_THORW(op->GetType()==SeqScanOperatorNode)
+    CHEKC_THORW(!op->input_schema_->exist(col));
+    return  LoadResult::LoadFailed;
 }
 
 void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
@@ -125,6 +141,32 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             node.SetOutputSchema(output_schema);
             break;
         }
+        case HashJoinOperatorNode:{
+            SetInputOutputSchemaInternal(op->children_[0]);
+            SetInputOutputSchemaInternal(op->children_[1]);
+
+            auto& node = op->Cast<HashJoinLogicalOperator>();
+            auto& select_list = select_list_queue_.front();
+            std::vector<Column> cols_this_node_need;
+            CHEKC_THORW(node.condition_);
+            node.condition_->collect_column(cols_this_node_need);
+            for(auto& col : cols_this_node_need){
+                auto l = LoadColumn(col,node.children_[0]);
+                auto r = LoadColumn(col,node.children_[1]);
+                if(l==LoadResult::LoadFailed && r==LoadResult::LoadFailed){
+                    throw Exception(std::format("{} load failed",col.name_));
+                }
+            }
+            auto l_output_schema = node.children_[0]->GetOutPutSchema()->Copy();
+            auto r_output_schema = node.children_[1]->GetOutPutSchema()->Copy();
+            l_output_schema->Merge(*r_output_schema);
+            auto input = l_output_schema;
+            node.SetInputSchema(input);
+            auto output_schema = eraseSurplusColumn(select_list,op);
+            node.SetOutputSchema(output_schema);
+            break;
+
+        }
         case ValuesOperatorNode:{
             // to the end . input schema already seted.
             auto& node = op->Cast<ValuesLogicalOperator>();
@@ -142,7 +184,8 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             auto output_schema = eraseSurplusColumn(select_list,op);
             node.SetOutputSchema(output_schema);
             break;
-        };
+        }
+ 
         case InsertOperatorNode:{
             SetInputOutputSchemaInternal(op->children_[0]);
             auto& node = op->Cast<InsertLogicalOperator>();
@@ -197,12 +240,6 @@ void Planer::CreatePlan(std::unique_ptr<BoundStatement> stmt){
         default:
             break;
     }   
-}
-void 
-Planer::CreatePlanAndShowPlanTree(std::unique_ptr<BoundStatement> stmt){
-    CreatePlan(std::move(stmt));
-    uint8_t depth=0;
-    if(show_info) PreOrderTraverse(plan_,depth);
 }
 void
 Planer::PreOrderTraverse(LogicalOperatorRef plan,int depth){
@@ -421,7 +458,7 @@ const std::vector<LogicalOperatorRef>& children){
 LogicalOperatorRef 
 Planer::PlanJoinTable(const BoundJoinTable& join_table){
     auto l_node = PlanTableRef(*join_table.l_table_);
-    auto r_node = PlanTableRef(*join_table.l_table_);
+    auto r_node = PlanTableRef(*join_table.r_table_);
     auto [_1,condition] = PlanExpression(*join_table.condition_,{l_node,r_node});
     auto hash_join = 
         std::shared_ptr<HashJoinLogicalOperator>(
