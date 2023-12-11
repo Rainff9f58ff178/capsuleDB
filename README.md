@@ -1,4 +1,4 @@
-# capsuleDB
+# capsuleDB - query thousands of rows in century
 This is my database as graduation project.
 
 ## implementing:
