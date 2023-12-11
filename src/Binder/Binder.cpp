@@ -539,7 +539,7 @@ std::vector<std::string>& col_names){
                 if(!_column_.has_value())
                     return  nullptr;
                 auto _col_names = col_names;
-                _col_names.insert(_col_names.begin(),base.table_name_);
+                _col_names.insert(_col_names.begin(),base.getTableNameRef());
                 return std::unique_ptr<BoundColumnRef>(
                     new BoundColumnRef(_col_names,_column_->type_)
                 );

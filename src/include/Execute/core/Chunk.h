@@ -29,6 +29,15 @@ public:
         }
         return nullptr;
     }
+    void eraseColumn(const std::string& col_name){
+        for(auto it = columns_.begin() ; it!= columns_.end();++it){
+            if(it->get()->name_ == col_name){
+                columns_.erase(it);
+                return;
+            }
+        }
+        
+    }
     void insertFrom(Chunk* otherchunk,uint32_t idx);
     uint32_t rows();
     uint32_t columns(){

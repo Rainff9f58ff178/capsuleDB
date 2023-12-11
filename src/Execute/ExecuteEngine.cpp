@@ -7,6 +7,7 @@
 #include "Execute/ExecutorNode/ResultPhysicalOperator.h"
 #include "Execute/ExecutorNode/HashJoinPhysicalOperator.h"
 #include "common/Exception.h"
+#include<stack>
 ExecuteEngine::ExecuteEngine(){
 
 }
@@ -57,20 +58,53 @@ std::vector<PipelineRef> leaf_pipelines){
 }
 
 OperatorResult ExecuteEngine::ExecutePush(PipelineRef& pipeline,ChunkRef& chunk){
-    for(auto* o:pipeline->operators_){
-        auto operator_result = o->Execute(chunk);
-        if(operator_result == OperatorResult::FINISHED){
+
+    uint32_t current_op_idx=0;
+    auto& operators = pipeline->operators_;
+    ChunkRef current_chunk = chunk;
+    std::stack<uint32_t> stack;
+    while(1){
+        for(uint32_t i= current_op_idx ;i<operators.size();++i){
+            auto* o = operators[i];
+            auto result = o->Execute(current_chunk);
+            o->CleanUpSurplusColumn(current_chunk);
+            if(result==OperatorResult::FINISHED){
+                return OperatorResult::FINISHED;
+            }
+            if(result == OperatorResult::HAVE_MORE){
+                stack.push(i);
+            }
+        }
+
+        SinkResult sink_result = pipeline->sink_->Sink(current_chunk);
+        if(sink_result== SinkResult::FINISHED){
             return OperatorResult::FINISHED;
         }
-    }
-    SinkResult sink_result = pipeline->sink_->Sink(chunk);
-    if(sink_result== SinkResult::FINISHED){
-        return OperatorResult::FINISHED;
-    }
-    if(sink_result == SinkResult::NEED_MORE){
+        if(sink_result == SinkResult::NEED_MORE && stack.size() == 0){
             return OperatorResult::NEED_MORE;
+        }
+        current_op_idx = stack.top();
+        stack.pop();
+        current_chunk = nullptr;
     }
-    UNREACHABLE
+
+
+
+
+    // for(auto* o:pipeline->operators_){
+    //     auto operator_result = o->Execute(chunk);
+    //     if(operator_result == OperatorResult::FINISHED){
+    //         return OperatorResult::FINISHED;
+    //     }
+    // }
+    // SinkResult sink_result = pipeline->sink_->Sink(chunk);
+    // if(sink_result== SinkResult::FINISHED){
+    //     return OperatorResult::FINISHED;
+    // }
+    // if(sink_result == SinkResult::NEED_MORE){
+    //         return OperatorResult::NEED_MORE;
+    // }
+    // UNREACHABLE
 }
 void 
 ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
@@ -126,7 +160,7 @@ ChunkRef& chunk){
         auto result =  source_node->Source(chunk);
         if(result == SourceResult::HAVE_MORE && chunk->rows()==0)
             continue;
-        
+        source_node->CleanUpSurplusColumn(chunk);
         return result;
     }
 }

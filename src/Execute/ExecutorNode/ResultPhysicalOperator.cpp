@@ -20,6 +20,7 @@ SourceResult ResultPhysicalOperator::Source(ChunkRef& chunk){
     return SourceResult::HAVE_MORE;
 }
 SinkResult ResultPhysicalOperator::Sink(ChunkRef& chunk){
+    CHEKC_THORW(chunk);
     result.push_back(std::move(chunk));
     return SinkResult::NEED_MORE;
 }

@@ -28,16 +28,14 @@ SinkResult HashJoinPhysicalOperator::Sink(ChunkRef& chunk){
     return SinkResult::NEED_MORE;
 }
 
-OperatorResult HashJoinPhysicalOperator::Execute(ChunkRef& chunk){
-    // probe port.
+Generator<ChunkRef>
+HashJoinPhysicalOperator::ExecuteInteranl(ChunkRef chunk){
     auto& plan = GetPlan()->Cast<HashJoinLogicalOperator>();
-    
     ExprExecutor executor(plan.condition_->children_[1],chunk);
     auto r_ref = executor.execute(plan.condition_->children_[1]->toString());
 
     auto left_chunk = build_chunks_[0]->cloneEmpty();
     auto right_chunk = chunk->cloneEmpty();
-
     for(uint32_t i=0;i<r_ref->rows();++i){
         auto bucket_id = r_ref->HashAt(i) % hash_table_size_;
         auto bucket = hash_table_[bucket_id];
@@ -47,12 +45,58 @@ OperatorResult HashJoinPhysicalOperator::Execute(ChunkRef& chunk){
                 left_chunk->insertFrom( build_chunks_[pair.first].get(),pair.second);
                 right_chunk->insertFrom( chunk.get(),i);
             }
+            if(left_chunk->rows() == 4096){
+                left_chunk->appendColumns(std::move(right_chunk->columns_));
+                co_yield std::move(left_chunk);
+                left_chunk = build_chunks_[0]->cloneEmpty();
+                right_chunk = chunk->cloneEmpty();
+            }
         }
     }
     left_chunk->appendColumns(std::move(right_chunk->columns_));
+    co_return std::move(left_chunk);
+}
+OperatorResult HashJoinPhysicalOperator::Execute(ChunkRef& chunk){
+    // probe port.
+    if(!current_generator_){
+        current_generator_ = ExecuteInteranl(chunk);
+    }
+
+    auto new_chunk = current_generator_();
+    chunk = std::move(new_chunk);
+    CHEKC_THORW(chunk);
+    if(current_generator_.finish()){
+        return OperatorResult::NEED_MORE;
+    }
+    return OperatorResult::HAVE_MORE;
+
+    // if(current_generator_.finish()){
+    //     return  OperatorResult::NEED_MORE;
+    // }
+    // return  OperatorResult::HAVE_MORE;
+    // auto& plan = GetPlan()->Cast<HashJoinLogicalOperator>();
     
-    chunk = std::move(left_chunk);
-    return OperatorResult::NEED_MORE;
+    // ExprExecutor executor(plan.condition_->children_[1],chunk);
+    // auto r_ref = executor.execute(plan.condition_->children_[1]->toString());
+
+    // auto left_chunk = build_chunks_[0]->cloneEmpty();
+    // auto right_chunk = chunk->cloneEmpty();
+
+    // for(uint32_t i=0;i<r_ref->rows();++i){
+    //     auto bucket_id = r_ref->HashAt(i) % hash_table_size_;
+    //     auto bucket = hash_table_[bucket_id];
+    //     for(auto& pair : bucket ){
+    //         auto result = plan.condition_->EvaluteJoin(&build_chunks_[pair.first],&chunk,pair.second,i);
+    //         if(static_cast<bool>(result.num_)){
+    //             left_chunk->insertFrom( build_chunks_[pair.first].get(),pair.second);
+    //             right_chunk->insertFrom( chunk.get(),i);
+    //         }
+    //     }
+    // }
+    // left_chunk->appendColumns(std::move(right_chunk->columns_));
+    
+    // chunk = std::move(left_chunk);
+    // return OperatorResult::NEED_MORE;
 }
 void HashJoinPhysicalOperator::sink_init(){
     // init hash table.
@@ -65,7 +109,7 @@ void HashJoinPhysicalOperator::
 BuildPipeline(PipelineRef current,ExecuteContext* context){
     // this node as current node opreator,and same pipeline with right node.
     // create a new child pipeline for left child , this node is its sink.
-    
+
     current->operators_.insert(current->operators_.begin(),this);
     auto new_pipeline = std::make_shared<Pipeline>(context,context->id_++);   
     current->children_.push_back(new_pipeline);

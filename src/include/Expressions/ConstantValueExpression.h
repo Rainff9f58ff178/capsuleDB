@@ -17,7 +17,9 @@ public:
     virtual ValueUnion Evalute(ChunkRef* chunk,uint32_t idx) override{
         return val_;
     }
-
+    ValueUnion EvaluteJoin(ChunkRef* l_chunk,ChunkRef* r_chunk,uint32_t l_idx,uint32_t r_idx) override{
+        return val_;
+    }
     LogicalExpressionType GetType() override{
         return LogicalExpressionType::ConstantExpr;
     }

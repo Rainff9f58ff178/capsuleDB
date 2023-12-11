@@ -26,7 +26,18 @@ public:
         }
         return ValueUnion(0);
     }
-
+    virtual ValueUnion EvaluteJoin(ChunkRef* l_chunk,ChunkRef* r_chunk,
+        uint32_t l_idx,uint32_t r_idx) override{
+            
+        auto l_val = children_[0]->EvaluteJoin(l_chunk,r_chunk,l_idx,r_idx);
+        auto r_val = children_[1]->EvaluteJoin(l_chunk,r_chunk,l_idx,r_idx);
+        if(a_type_ == ArithmeticType::Add){
+            return l_val+r_val;
+        }else if(a_type_ == ArithmeticType::Minus){
+            return l_val-r_val;
+        }
+        return ValueUnion(0);
+    }
 
     std::string toString() override{
         auto left = children_[0]->toString();

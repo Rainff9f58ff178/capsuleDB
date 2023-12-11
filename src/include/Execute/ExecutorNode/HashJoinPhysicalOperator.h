@@ -2,6 +2,7 @@
 
 
 #include "Execute/ExecutorNode/PhysicalOperator.h"
+#include "Utils/Generator.h"
 
 class HashJoinPhysicalOperator : public PhysicalOperator{
     static constexpr const OperatorType type_ = 
@@ -19,6 +20,11 @@ public:
     SourceResult Source(ChunkRef& chunk) override;
     SinkResult Sink(ChunkRef& chunk) override;
     OperatorResult Execute(ChunkRef& chunk) override;
+
+    Generator<ChunkRef> ExecuteInteranl(ChunkRef chunk);
+
+
+    
     OperatorType GetType() override{
         return type_;
     }
@@ -29,7 +35,8 @@ public:
 
     // {chunk idx,line idx}
     using BuildEntry = std::pair<uint32_t,uint32_t>;
-
+    
+    Generator<ChunkRef> current_generator_;
     std::vector<std::vector<BuildEntry>> hash_table_;
     std::vector<ChunkRef> build_chunks_;
     uint32_t hash_table_size_=0;

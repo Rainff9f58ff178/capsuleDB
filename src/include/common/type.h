@@ -38,6 +38,7 @@ enum class SinkResult:uint8_t{
 };
 enum class OperatorResult:uint8_t{
     NEED_MORE,
+    HAVE_MORE,
     FINISHED
 
 };

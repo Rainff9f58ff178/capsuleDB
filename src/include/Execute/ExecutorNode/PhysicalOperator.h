@@ -37,6 +37,20 @@ public:
     ExecuteContext* context,
     std::vector<PhysicalOperatorRef> children);
     
+    void CleanUpSurplusColumn(ChunkRef chunk){
+       auto output = plan_->GetOutPutSchema(); 
+       std::vector<std::string> d_cols;
+        for(auto& col : chunk->columns_){
+            if(!output->exist(Column(col->name_,ColumnType::UNKOWN))){
+                d_cols.push_back(col->name_);
+            }
+        }
+        for(auto& n : d_cols){
+            DEBUG(std::format("erase column {}",n));
+            chunk->eraseColumn(n);
+        }
+    }
+
     virtual ~PhysicalOperator(){}
     virtual bool IsSink()=0;
     
