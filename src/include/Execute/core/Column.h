@@ -37,6 +37,9 @@ public:
     virtual uint32_t rows(){
         COLUMN_IMPOSSBLE;
     }
+    virtual uint64_t HashAt(uint32_t idx){
+        COLUMN_IMPOSSBLE;
+    }
 
     virtual ValueUnion ValueAt(uint32_t row_id){
         COLUMN_IMPOSSBLE;

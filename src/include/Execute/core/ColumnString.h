@@ -22,6 +22,7 @@ public:
         CHEKC_THORW(row_id < data_.size());
         return ValueUnion(data_[row_id].data(),data_[row_id].size());
     }
+    uint64_t HashAt(uint32_t idx) override;
     void insertFrom(const ValueUnionView& value) override;
     void insertFrom(ExecColumn* other,uint32_t idx) override;
     void insertToTable(TableCataLog* table,uint32_t col_idx) override;

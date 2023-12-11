@@ -6,16 +6,28 @@
 #include"common/type.h"
 #include"CataLog/Schema.h"
 #include<ranges>
+#include "common/commonfunc.h"
 class PlanContext;
 
 class TablePlan{
 public:
-    TablePlan(std::string table_name,SchemaRef table_schema,SchemaRef input_schema):interested_columns_(std::move(input_schema)){
-        alias_ =std::move(table_name);
+    TablePlan(std::string table_name,std::optional<std::string> alias_name,SchemaRef table_schema,SchemaRef input_schema):interested_columns_(std::move(input_schema)),alias_(std::move(alias_name)){
         int idx = 0;
-        column_names_ = table_schema;
-        for(auto& col : column_names_->columns_){
-            columns_map_[col.name_]= idx++;
+        if(!alias_name){
+            column_names_ = table_schema;
+            for(auto& col : column_names_->columns_){
+                columns_map_[col.name_]= idx++;
+            }
+        }else {
+            //column_names should be alias.colname.
+            column_names_ = std::make_shared<Schema>();
+            for(auto& col : table_schema->columns_){
+                auto cols = split(col.name_,".");
+                CHEKC_THORW(cols.size() >=2);
+                cols[0] = *alias_;
+                column_names_->AddColumn(Column(join(cols,"."),col.type_));
+                columns_map_[join(cols,".")] = idx++;
+            }
         }
     }
 
@@ -43,7 +55,7 @@ public:
     }
 
 
-    std::string alias_;
+    std::optional<std::string> alias_;
 
     SchemaRef column_names_; // tables whole column schema.
     std::unordered_map<std::string,column_idx_t> columns_map_; // map column name to his idx .

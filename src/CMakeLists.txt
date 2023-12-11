@@ -6,6 +6,7 @@ set(CXX_STANDARD 23)
 add_subdirectory(Storage)
 add_subdirectory(logger)
 set(SRC Database.cpp
+        Env.cpp
         Binder/Binder.cpp
         CataLog/Column.cpp
         CataLog/Schema.cpp
@@ -29,6 +30,7 @@ set(SRC Database.cpp
         Execute/ExecutorNode/SeqScanPhysicalOperator.cpp
         Execute/ExecutorNode/MaterializePhysicalOperator.cpp
         Execute/ExecutorNode/ResultPhysicalOperator.cpp
+        Execute/ExecutorNode/HashJoinPhysicalOperator.cpp
         Execute/Pipeline/Pipeline.cpp 
         Execute/ExecuteContext.cpp 
         Execute/ExecuteEngine.cpp

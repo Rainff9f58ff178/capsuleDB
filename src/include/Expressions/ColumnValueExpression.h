@@ -33,7 +33,21 @@ public:
         auto col = chunk->get()->getColumnByname(column_info_.name_);
         return col->ValueAt(idx);
     }
-
+    virtual ValueUnion EvaluteJoin(ChunkRef* l_chunk,ChunkRef* r_chunk,
+        uint32_t l_idx,uint32_t r_idx) override{
+            
+        auto l_col = l_chunk->get()->getColumnByname(column_info_.name_);
+        auto r_col = r_chunk->get()->getColumnByname(column_info_.name_);
+        if(l_col && r_col){
+            throw Exception("hash join ,left child and right child have same col name?");
+        }
+        if(l_col){
+            return l_col->ValueAt(l_idx);
+        }else if(r_col){
+            return  r_col->ValueAt(r_idx);
+        }
+        UNREACHABLE;
+    }
     std::string toString()override{
         return  column_info_.name_;
     }

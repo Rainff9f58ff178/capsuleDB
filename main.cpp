@@ -13,6 +13,8 @@ using namespace std;
 
 Logger g_logger("global.log");
 bool show_info= false;
+//env 
+
 int
 main() {
 

@@ -48,6 +48,10 @@ public:
     virtual ValueUnion Evalute(ChunkRef* chunk,uint32_t idx){
         throw Exception("Unreachable call LogicalExpression 's Evalute");
     }
+    virtual ValueUnion EvaluteJoin(ChunkRef* left_chunk,
+        ChunkRef* right_chunk,uint32_t l_idx,uint32_t r_idx){
+        UNREACHABLE;
+    }
 
 
     

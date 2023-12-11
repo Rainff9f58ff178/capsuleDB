@@ -31,10 +31,10 @@ void Chunk::updateMetadata(){
 }
 void Chunk::insertFrom(Chunk* otherchunk,uint32_t idx){
     CHEKC_THORW(otherchunk->columns_.size() == columns_.size());
-    
     for(uint32_t i=0;i<columns_.size();++i){
         columns_[i]->insertFrom(otherchunk->columns_[i].get(),idx);
     }
+    metadata.rows_++;
 }
 
 ChunkRef Chunk::cloneEmpty(){

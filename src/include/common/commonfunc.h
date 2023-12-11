@@ -48,7 +48,11 @@ static std::string ColumnTypeToString(ColumnType type){
             return "Unkowned";
     }
 }
-
+static std::string getTableNameFromColName(const std::string& col_name){
+    auto cols = split(col_name,".");
+    CHEKC_THORW(cols.size() >= 2);
+    return cols[0];
+}
 static ColumnType ValueTypeConvertToColumnType(ValueType type){
     switch(type){
         case ValueType::TypeInt:{
@@ -62,6 +66,14 @@ static ColumnType ValueTypeConvertToColumnType(ValueType type){
         }
     }
     UNREACHABLE;
+}
+static std::string ChangeTableName(
+    const std::string& name,std::string& table_name){
+    
+    auto cols = split(name,".") ;
+    CHEKC_THORW(cols.size() >=2);
+    cols[0] = table_name;
+    return join(cols,".");
 }
 static ValueType ColumnTypeConverToValueType(ColumnType type){
     switch(type){

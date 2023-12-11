@@ -70,6 +70,20 @@ public:
     LogicalOperatorRef
     PlanExpressionList(const BoundExpressionList& expr_list);
 
+    bool CheckHashJoinCondition(LogicalExpressionRef condition){
+        // just need check build type.
+        auto left_cols = std::vector<Column>();
+        condition->children_[0]->collect_column(left_cols);
+        CHEKC_THORW(!left_cols.empty());
+        auto l_table_name = getTableNameFromColName(left_cols[0].name_);
+        for(auto& col : left_cols){
+            if(getTableNameFromColName(col.name_) != l_table_name){
+                return false;
+            }
+        }
+
+        return true;
+    }
 
 
 

@@ -35,6 +35,23 @@ public:
         }
         UNREACHABLE
     }
+    virtual ValueUnion EvaluteJoin(ChunkRef* l_chunk,ChunkRef* r_chunk,uint32_t l_idx,uint32_t r_idx) override{
+        auto l_val = children_[0]->EvaluteJoin(l_chunk,r_chunk,l_idx,r_idx);
+        auto r_val = children_[1]->EvaluteJoin(l_chunk,r_chunk,l_idx,r_idx);
+        // actually ,here must be "=".
+        if(cp_type_==ComparisonType::Equal){
+            return ValueUnion(static_cast<int>( l_val==r_val) );
+        }else if(cp_type_ == ComparisonType::GreaterEqualThan){
+            return ValueUnion(static_cast<int> ( l_val>=r_val));
+        }else if(cp_type_==ComparisonType::GreaterThan){
+            return ValueUnion(static_cast<int>( l_val > r_val));
+        }else if(cp_type_==ComparisonType::LesserEquanThan){
+            return ValueUnion(static_cast<int>( l_val<=r_val));
+        }else if(cp_type_== ComparisonType::LesserThan){
+            return ValueUnion(static_cast<int>( l_val < r_val));
+        }
+        UNREACHABLE;
+    }
     ColumnType GetReturnType() override{
         return ColumnType::INT;
     }

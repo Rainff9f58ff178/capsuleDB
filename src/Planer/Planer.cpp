@@ -149,6 +149,15 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             auto& select_list = select_list_queue_.front();
             std::vector<Column> cols_this_node_need;
             CHEKC_THORW(node.condition_);
+            
+            // if like this
+            // " select * from test_1 inner join test_2 on test_1.colA + test_2.colA = test_2.colB+test_1.colA" 
+            // is unexecutable,because build port of hash join can't get chunk came form "test_2" 
+            // so that can't build hash table. nestLoopJoin is able to deal thsi situation
+            // but im not implent it.
+
+            if(!CheckHashJoinCondition(node.condition_))
+                throw  Exception("Join Condition build port can't include column that different table,because Hashjoin doesnt support it .NestLoopJoin can,but Not Impl");
             node.condition_->collect_column(cols_this_node_need);
             for(auto& col : cols_this_node_need){
                 auto l = LoadColumn(col,node.children_[0]);
@@ -164,6 +173,31 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             node.SetInputSchema(input);
             auto output_schema = eraseSurplusColumn(select_list,op);
             node.SetOutputSchema(output_schema);
+            // "explain select test_1.colA from test_1 inner join test_1 as b on b.colA + b.colB = test_1.colA;"
+            // in this situation. 
+            // build port on oppsite of probe port . need exchange it .
+
+            auto l_input = node.children_[0]->GetOutPutSchema();
+            auto l_table_name = getTableNameFromColName(l_input->columns_[0].name_);
+            std::vector<Column> __cols;
+            node.condition_->children_[0]->collect_column(__cols);
+            auto ac_table_name = getTableNameFromColName(__cols[0].name_);
+            if(l_table_name != ac_table_name){
+                auto l_condition = node.condition_->children_[0];
+                auto r_condition = node.condition_->children_[1];
+                node.condition_->children_[0]= r_condition;
+                node.condition_->children_[1]= l_condition;
+            }
+            
+            if(!CheckHashJoinCondition(node.condition_))
+                throw  Exception("Join Condition build port can't include column that different table,because Hashjoin doesnt support it .NestLoopJoin can,but Not Impl");
+            __cols.clear();
+            node.condition_->children_[0]->collect_column(__cols);
+            ac_table_name = getTableNameFromColName(__cols[0].name_);
+            if(ac_table_name != l_table_name){
+                throw Exception("Build port must exist left table col,because i didn't impl nestloop join");
+            }
+
             break;
 
         }
@@ -175,7 +209,16 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
         }
         case SeqScanOperatorNode:{
             auto& node = op->Cast<SeqScanLogicalOperator>();
-            auto& col_name = node.GetInputSchema()->columns_[0].name_;
+            auto col_name = std::string();
+            col_name = node.GetInputSchema()->columns_[0].name_;
+            
+            if(node.alias_name_){
+                // replace col_name to real col_name.
+                auto cols = split(col_name,".");
+                cols[0] = node.table_name_;
+                col_name  = join(cols,".");
+            }
+
             auto* tb_catalog = cata_log_->GetTable(node.table_name_);
             auto* col_heap = tb_catalog->GetColumnHeapByName(col_name);
             if(col_heap->get()->metadata.total_rows==0)
@@ -450,6 +493,7 @@ const std::vector<LogicalOperatorRef>& children){
     if(!col_info.has_value())
         throw Exception("Not found this column");
 
+
     return {col_name,std::shared_ptr<ColumnValueExpression>(
         new ColumnValueExpression(idx,col_info.value(),0)
     )};
@@ -465,6 +509,11 @@ Planer::PlanJoinTable(const BoundJoinTable& join_table){
             new HashJoinLogicalOperator({l_node,r_node},
                 condition,join_table.j_type_)
         );
+    
+    if(condition->GetType()!= LogicalExpressionType::ComparsionExpr){
+        throw Exception("Join Expression must be ComparsionExpr");
+    }
+
 
     return hash_join;
 }
@@ -500,14 +549,15 @@ LogicalOperatorRef
 Planer::PlanBaseTable(const BoundBaseTableRef& base_table){
     
     auto table = std::shared_ptr<SeqScanLogicalOperator>(
-        new SeqScanLogicalOperator(base_table.table_name_,
+        new SeqScanLogicalOperator(base_table.table_name_,base_table.alias_name_,
         base_table.table_id_,{})
     );
+    
 
     table->SetInputSchema(std::make_shared<Schema>());
-    context_.planings_[base_table.table_name_] =
+    context_.planings_[base_table.getTableNameRef()] =
         std::make_unique<TablePlan>(
-            base_table.table_name_,cata_log_->GetTable(base_table.table_name_)->GetSchemaRef(),table->input_schema_);
+            base_table.table_name_,base_table.alias_name_,cata_log_->GetTable(base_table.table_name_)->GetSchemaRef(),table->input_schema_);
 
     context_.table_name_queue_.push_back(table->table_name_);
     return table;
@@ -535,7 +585,7 @@ Planer::PlanExpressionList(const BoundExpressionList& expr_list){
         for(uint32_t y = 0;y<all_values[0].size();++y){
             if(all_values[row][y]->Evalute(nullptr,0).type_!=example[y]){
                 throw  Exception(std::format(
-        "Type mismatch in {} row {} col ",row,y 
+        "Type mismatch in {} row {} col ",row+1,y +1
                 ));
             }
         }
@@ -564,7 +614,7 @@ Planer::PlanExpressionList(const BoundExpressionList& expr_list){
 
     values->SetInputSchema(schema);
     
-    context_.planings_["__values#0"] = std::make_unique<TablePlan>("__values#0",schema,std::make_shared<Schema>());
+    context_.planings_["__values#0"] = std::make_unique<TablePlan>("__values#0",std::nullopt,schema,std::make_shared<Schema>());
     return values;
 
 }

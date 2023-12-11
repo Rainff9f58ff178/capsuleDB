@@ -3,7 +3,7 @@
 #include "Execute/ExecuteContext.h"
 #include "CataLog/PageIterator/ColumnNumIterator.h"
 #include "CataLog/PageIterator/ColumnStringIterator.h"
-
+#include "common/commonfunc.h"
 
 SourceResult
 SeqScanPhysicaloperator::Source(ChunkRef& chunk){
@@ -81,11 +81,15 @@ void SeqScanPhysicaloperator::source_init(){
     auto& plan = GetPlan()->Cast<SeqScanLogicalOperator>();
     auto* tb_cata_log = context_->cata_log_->GetTable(plan.table_oid_);
     std::vector<ColumnRef> cols;
+
     for(auto& col : plan.input_schema_->columns_){
-        auto* col_heap = tb_cata_log->GetColumnHeapByName(col.name_);
+        auto col_name = col.name_;
+        if(plan.alias_name_){
+            col_name = ChangeTableName(col_name,plan.table_name_);
+        }
+        auto* col_heap = tb_cata_log->GetColumnHeapByName(col_name);
         THROW_IF_NULL(col_heap);
         column_iterators_.push_back(col_heap->get()->begin());
-
     }
 }
 void SeqScanPhysicaloperator::source_uninit(){

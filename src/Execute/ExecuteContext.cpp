@@ -41,6 +41,9 @@ ExecuteContext::ShowPipelines(){
         std::cout<<"[";
         for(int32_t i=pipeline->operators_.size()-1;i>=0;--i){
             PrintOperatorName(pipeline->operators_[i]);
+            if(i!= 0){
+                std::cout<<",";
+            }
         }
         std::cout<<"]----->";
         std::cout<<"[";

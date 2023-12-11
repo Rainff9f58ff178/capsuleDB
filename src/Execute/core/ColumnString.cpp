@@ -10,6 +10,9 @@ void ColumnString::insertFrom(const ValueUnionView& value){
         data_.push_back(std::string(value[i].data_,value[i].value_len_));
     }
 }
+uint64_t ColumnString::HashAt(uint32_t idx){
+    return std::hash<std::string>()(data_[idx]);
+}
 void ColumnString::
 insertToTable(TableCataLog* table,uint32_t col_idx){
     for(auto& val:data_){

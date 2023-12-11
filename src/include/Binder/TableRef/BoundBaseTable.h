@@ -25,7 +25,11 @@ public:
     BoundBaseTableRef()=default;
     ~BoundBaseTableRef()=default;
 
-
+    std::string getTableNameRef() const{
+        if(alias_name_)
+            return *alias_name_;
+        return  table_name_;
+    }
 
     std::string table_name_;
     table_oid_t table_id_;

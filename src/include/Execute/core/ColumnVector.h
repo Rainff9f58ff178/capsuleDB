@@ -3,8 +3,6 @@
 
 #include"Execute/core/Column.h"
 #include "CataLog/TableCataLog.h"
-
-
 template<class T>
 class ColumnVector : public ExecColumn{
     friend class ColumnFactory; 
@@ -21,10 +19,14 @@ public:
     uint32_t rows()override{
         return data_.size();
     }
+    uint64_t HashAt(uint32_t idx) override{
+        return std::hash<T>()(data_[idx]);
+    }
     ValueUnion ValueAt(uint32_t idx) override{
         CHEKC_THORW(idx<data_.size());
         return ValueUnion(data_[idx]);
     }
+    
     void insertFrom(const ValueUnionView& value) override{
         for(uint32_t i=0;i<value.size();++i){
             DASSERT(value[i].type_ == TypeInt);

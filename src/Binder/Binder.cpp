@@ -267,8 +267,12 @@ Binder::GetAllColumnExpr(BoundTabRef* table){
             auto* base_table = reinterpret_cast<BoundBaseTableRef*>(table);
             auto* t_c = cata_log_->GetTable(base_table->table_id_);
             for(auto& col :t_c->schema_.columns_){
+                auto col_name = col.name_;
+                if(base_table->alias_name_){
+                    col_name = ChangeTableName(col_name,*base_table->alias_name_);
+                }
                 v.push_back(std::unique_ptr<BoundColumnRef>(
-                    new BoundColumnRef(  split(col.name_,".") ,col.type_)));
+                    new BoundColumnRef(  split(col_name,".") ,col.type_)));
             }
             return v;
         }
@@ -542,11 +546,11 @@ std::vector<std::string>& col_names){
             }
             // col_names.size() > 1.
             auto& table_name = col_names[0];
-            if(table_name != base.table_name_)
+            if(table_name != base.getTableNameRef())
                 return nullptr;
             
 
-            auto col_name = join(col_names,".");
+            auto col_name = base.table_name_ + "." + col_names[1];
             auto* tb = cata_log_->GetTable(base.table_id_);
             auto _col = tb->GetColumnFromSchema(col_name);
             if(!_col.has_value())
@@ -563,7 +567,7 @@ std::vector<std::string>& col_names){
             auto right_expr = ResolveColumnInternal(*join_table.r_table_,col_names);
 
             if(left_expr && right_expr){
-                throw Exception( std::format("{} is ambiguous",col_names[0]));
+                throw Exception( std::format("{} is ambiguous",join(col_names,".") ));
             }
             if(!left_expr)
                 return  right_expr;
