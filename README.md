@@ -24,7 +24,7 @@ This is my database as graduation project.
 -- execute 'select * from database_info;' show more infomation
 
 
-Capsule >insert into c values('💩🤝💦👃👴🐍🐔，💊');
+Capsule >select * from c;
 +------------------------------------------+
 |                                    c.cola|
 +------------------------------------------+
