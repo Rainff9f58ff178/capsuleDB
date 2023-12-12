@@ -6,6 +6,13 @@ This is my database as graduation project.
     - 2.push-base execute. column execute engine.
     - 3.column store engine. page base.
 
+## implemented:
+    - TableScan
+    - HashJoin
+    - Limit
+    - Sort
+
+
 -- input \st to show tables
 
 -- input \q to quit
