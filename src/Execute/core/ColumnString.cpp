@@ -28,6 +28,29 @@ void ColumnString::insertFrom(ExecColumn* other,uint32_t idx){
     data_.push_back(o->data_[idx]);
 }   
 
+int ColumnString::compare_at(ExecColumn* _other,
+uint32_t l_idx,uint32_t r_idx){
+    auto* other = down_cast<ColumnString*>(_other);
+    CHEKC_THORW( l_idx < data_.size());
+    CHEKC_THORW(r_idx < other->data_.size());
+    auto size = data_[l_idx].size();
+    auto rhs_size = other->data_[r_idx].size();
+    int cmp = memcmp(data_[l_idx].data(),other->data_[r_idx].data(),std::min(size,rhs_size));
+    if(cmp != 0)
+        return cmp;
+    else 
+        return size > rhs_size ? 1 :(size<rhs_size ? -1 : 0);
+}
+ColumnRef ColumnString::GetByRowNumbers(RowNumbers& nums){
+    auto col = std::make_shared<ColumnString>(name_);
+    CHEKC_THORW(nums.size() == rows());
+    col->data_.resize(nums.size());
+    for(uint32_t i=0;i<nums.size();++i){
+        col->data_[i] = data_[ nums[i] ];
+    }
+    return col;
+};
+
 
 void ColumnString::MergeData(ExecColumn* other){
     auto* o = down_cast<ColumnString*>(other);

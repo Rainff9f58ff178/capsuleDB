@@ -26,6 +26,9 @@ public:
     void insertFrom(const ValueUnionView& value) override;
     void MergeData(ExecColumn* other) override;
 
+    int compare_at(ExecColumn* _other,uint32_t l_idx,uint32_t r_idx) override;
+
+    ColumnRef GetByRowNumbers(RowNumbers& nums) override;
     void insertFrom(ExecColumn* other,uint32_t idx) override;
     void insertToTable(TableCataLog* table,uint32_t col_idx) override;
     std::string toString(uint32_t row_idx) override;

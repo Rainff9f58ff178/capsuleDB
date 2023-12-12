@@ -7,6 +7,15 @@ Chunk::Chunk(){
 
 }
 void Chunk::appendColumn(ColumnRef&& col){
+    auto have = std::find_if(columns_.begin(),columns_.end(),[&,this](auto& lcol){
+        if(lcol->name_ == col->name_){
+            return  true;
+        }
+        return  false;
+    });
+    if(have != columns_.end())
+        return;
+    
     columns_.push_back(std::move(col));
     updateMetadata();
 }

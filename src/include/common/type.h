@@ -9,6 +9,9 @@ using column_idx_t = uint32_t;
 using column_type = int32_t;
 using   Value = int32_t;
 
+using RowNumbers = std::vector<uint32_t>;
+
+
 #define down_cast dynamic_cast
 extern bool show_info;
 using   String = std::string;
@@ -43,5 +46,8 @@ enum class OperatorResult:uint8_t{
 
 };
 
-
+enum class OrderByType : uint8_t{
+    ASC,
+    DESC 
+};
 

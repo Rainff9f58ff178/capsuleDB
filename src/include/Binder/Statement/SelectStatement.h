@@ -4,7 +4,7 @@
 #include "Binder/BoundTabRef.h"
 #include "Binder/BoundExpression.h"
 #include "nodes/primnodes.hpp"
-#include <charconv>
+#include "Binder/BoundOrderBy.h"
 
 
 
@@ -18,6 +18,7 @@ public:
         std::unique_ptr<BoundExpression> having,
         std::unique_ptr<BoundExpression> limit,
         std::unique_ptr<BoundExpression> limit_offset,
+        std::vector<std::unique_ptr<BoundOrderBy>> order_bys,
         bool is_distinct):
             BoundStatement(StatementType::SELECT_STATEMENT),
             from_(std::move(from)),
@@ -25,8 +26,9 @@ public:
             where_(std::move(where)),
             group_by_(std::move(group_by)),
             having_(std::move(having)),
-            limit_(std::move(limit)),limit_offset_(std::move(limit_offset)),
+            limit_(std::move(limit)),limit_offset_(std::move(limit_offset)),order_bys_(std::move(order_bys)),
             is_distinct_(is_distinct){
+                
                 for(auto& expr : select_list){
                     original_select_list_.push_back(expr->Copy());
                 }
@@ -51,8 +53,7 @@ public:
     std::unique_ptr<BoundExpression> limit_;
     std::unique_ptr<BoundExpression> limit_offset_;
 
-    // TODO(wxy):sort
-    // std::unique_ptr<BoundOrderBy> sort_
+    std::vector<std::unique_ptr<BoundOrderBy>> order_bys_;
 
     bool is_distinct_;
 

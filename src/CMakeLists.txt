@@ -32,6 +32,7 @@ set(SRC Database.cpp
         Execute/ExecutorNode/ResultPhysicalOperator.cpp
         Execute/ExecutorNode/HashJoinPhysicalOperator.cpp
         Execute/ExecutorNode/LimitPhysicalOperator.cpp 
+        Execute/ExecutorNode/SortPhysicalOperator.cpp 
         Execute/Pipeline/Pipeline.cpp 
         Execute/ExecuteContext.cpp 
         Execute/ExecuteEngine.cpp

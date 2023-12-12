@@ -15,6 +15,7 @@
 #include "Binder/Statement/InsertStatement.h"
 #include "Binder/Statement/SelectStatement.h"
 #include "Binder/Statement/ExplainStatement.h"
+#include "Binder/BoundOrderBy.h"
 #include "common/commonfunc.h"
 
 Binder::Binder(duckdb_libpgquery::PGList* parsed_tree,CataLog* cata_log){
@@ -157,7 +158,7 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
         return std::unique_ptr<SelectStatement>(new SelectStatement(std::move(all_values), 
             std::move(col_exprs_),
             std::make_unique<BoundExpression>(),{},std::make_unique<BoundExpression>(),
-            std::make_unique<BoundExpression>(),std::make_unique<BoundExpression>(),false));
+            std::make_unique<BoundExpression>(),std::make_unique<BoundExpression>(),{},false));
     }
 
     if(stmt->withClause!=nullptr){
@@ -197,13 +198,13 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
         limit_offset = BindLimitCount(stmt->limitOffset);
     // sort 
     
-    auto sort = std::vector<std::unique_ptr<BoundExpression>>();
+    auto sort = std::vector<std::unique_ptr<BoundOrderBy>>();
     if(stmt->sortClause)
         sort = BindSort(stmt->sortClause);
 
     return std::unique_ptr<SelectStatement>(
         new SelectStatement(std::move(table),std::move(select_list),std::move(where)
-        ,std::move(group_by),std::move(having),std::move(limit),std::move(limit_offset),false)
+        ,std::move(group_by),std::move(having),std::move(limit),std::move(limit_offset),std::move(sort),false)
     );
 
 }
@@ -211,9 +212,32 @@ std::unique_ptr<BoundExpression>
 Binder::BindHaving(duckdb_libpgquery::PGNode* node){
     throw NotImplementedException("Not Support hving");
 }
-std::vector<std::unique_ptr<BoundExpression>>
+std::vector<std::unique_ptr<BoundOrderBy>>
 Binder::BindSort(duckdb_libpgquery::PGList* list){
-    throw NotImplementedException("Not support sort for now");
+    std::vector<std::unique_ptr<BoundOrderBy>> order_bys ;
+    for(auto node = list->head; node!= nullptr;node = node->next){
+
+        auto temp = reinterpret_cast<duckdb_libpgquery::PGNode *>(node->data.ptr_value);
+        if (temp->type == duckdb_libpgquery::T_PGSortBy) {
+        OrderByType type;
+        auto sort = reinterpret_cast<duckdb_libpgquery::PGSortBy *>(temp);
+        auto target = sort->node;
+        if (sort->sortby_dir == duckdb_libpgquery::PG_SORTBY_DEFAULT) {
+            type = OrderByType::ASC;
+        } else if (sort->sortby_dir == duckdb_libpgquery::PG_SORTBY_ASC) {
+            type = OrderByType::ASC;
+        } else if (sort->sortby_dir == duckdb_libpgquery::PG_SORTBY_DESC) {
+            type = OrderByType::DESC;
+        } else {
+            throw NotImplementedException("unsupport order by type");
+        }
+        auto order_expression = BindExpression(target);
+            order_bys.emplace_back(std::make_unique<BoundOrderBy>(type, std::move(order_expression)));
+        } else {
+        throw NotImplementedException("unsupported order by node");
+        }
+    }
+    return  order_bys;
 }
 
 std::unique_ptr<BoundExpression>

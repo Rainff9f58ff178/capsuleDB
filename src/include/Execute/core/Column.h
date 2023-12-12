@@ -60,9 +60,14 @@ public:
     virtual std::string toString(uint32_t row_idx){
         COLUMN_IMPOSSBLE;
     }
+    virtual int compare_at(ExecColumn* other,uint32_t l_idx,uint32_t r_idx){
+        COLUMN_IMPOSSBLE;
+    }
 
-    
-    //find the max size of chars, stupid;
+    virtual ColumnRef GetByRowNumbers(RowNumbers& row_numer){
+        COLUMN_IMPOSSBLE;
+    }
+    //find the max size of chars, stupid;   
     virtual uint32_t max_char_size(){
         COLUMN_IMPOSSBLE;
     }

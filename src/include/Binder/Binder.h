@@ -20,6 +20,7 @@
 #include "Binder/Expression/BoundUnaryOp.h"
 #include "Binder/Expression/BoundBinaryOp.h"
 #include "Binder/Expression/BoundStar.h"
+#include "Binder/BoundOrderBy.h"
 #include "Binder/Statement/CreateStatement.h"
 #include "Binder/Statement/InsertStatement.h"
 #include "Binder/Statement/SelectStatement.h"
@@ -133,7 +134,7 @@ public:
     std::unique_ptr<BoundExpression>
     BindLimitOffset(duckdb_libpgquery::PGNode* node);
 
-    std::vector<std::unique_ptr<BoundExpression>>
+    std::vector<std::unique_ptr<BoundOrderBy>>
     BindSort(duckdb_libpgquery::PGList* node);
 
     std::unique_ptr<BoundBaseTableRef>

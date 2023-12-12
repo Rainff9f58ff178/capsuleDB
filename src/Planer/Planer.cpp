@@ -21,6 +21,7 @@
 #include "Planer/FilterLogicalOperator.h"
 #include "Planer/HashJoinLogicalOperator.h"
 #include "Planer/LimitLogicalOperator.h"
+#include "Planer/SortLogicalOperator.h"
 #include "common/Exception.h"
 #include "common/commonfunc.h"
 #include <format>
@@ -118,6 +119,28 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
 
             node.SetOutputSchema(output_schema);
 
+
+            select_list_queue_.pop_front();
+            break;
+        }
+        case SortOperatorNode:{
+            SetInputOutputSchemaInternal(op->children_[0]);
+            auto& node = op->Cast<SortLogicalOperator>();
+            for(auto& order_by : node.order_bys_){
+                auto expr = order_by.second;
+                std::vector<Column> cols;
+                expr->collect_column(cols);
+                for(auto& col : cols){
+                    auto result = LoadColumn(col,op->children_[0]);
+                    if(result== LoadResult::LoadFailed){
+                        throw Exception(std::format("Load column {} failed",col.name_));
+                    }
+                }
+            }
+            node.SetInputSchema(node.children_[0]->GetOutPutSchema()->Copy());
+            auto& select_list = select_list_queue_.front();
+            auto output_schema = eraseSurplusColumn(select_list,op);
+            node.SetOutputSchema(output_schema);
             break;
         }
         case LimitOperatorNode:{
@@ -376,6 +399,20 @@ Planer::PlanSelect(const SelectStatement& stmt){
         throw NotImplementedException("Not support distinct");
     }
     // plan order by
+
+    if(!stmt.order_bys_.empty()){
+        std::vector<std::pair<OrderByType,LogicalExpressionRef>> exprs;
+        for(auto& order_by : stmt.order_bys_){
+            auto [_1,expr] = PlanExpression(*order_by->expr_,{plan});
+            exprs.push_back({order_by->order_type_,std::move(expr)});
+        }
+        plan = std::shared_ptr<SortLogicalOperator>(
+            new SortLogicalOperator({plan},std::move(exprs))
+        );
+
+    }
+
+
     // plan limit 
     if(!stmt.limit_->isInvalid() || !stmt.limit_offset_->isInvalid()){
         auto limit =0;

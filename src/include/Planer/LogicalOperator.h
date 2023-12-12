@@ -41,9 +41,6 @@ public:
     }
     template<class TARGET>
     TARGET& Cast(){
-    #ifdef NDEBUG
-        
-    #endif
         return dynamic_cast<TARGET&>(*this);
     }
 

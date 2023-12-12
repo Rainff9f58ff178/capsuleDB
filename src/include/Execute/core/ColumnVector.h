@@ -10,6 +10,7 @@ class ColumnVector : public ExecColumn{
 public:
     ColumnVector(){
         col_type_ = ExecInt;
+        max_width_ = sizeof(T);
     }
     ColumnVector(const std::string& name){
         name_ = name;
@@ -41,7 +42,21 @@ public:
         }
     }
 
-
+    int compare_at(ExecColumn* _other,uint32_t l_idx,uint32_t r_idx) override{
+        auto* other = down_cast<Self*>(_other);
+        CHEKC_THORW(l_idx < data_.size());
+        CHEKC_THORW(r_idx < other->data_.size());
+        return data_[l_idx] > other->data_[r_idx] ? 1 :( data_[l_idx] < other->data_[r_idx] ? -1 : 0);
+    }
+    ColumnRef GetByRowNumbers(RowNumbers& nums) override{
+        auto col = std::make_shared<ColumnVector<T>>(name_);        
+        CHEKC_THORW(nums.size() == rows());
+        col->data_.resize(rows());
+        for(uint32_t i=0;i<nums.size();++i){
+            col->data_[i] = data_[ nums[i] ];
+        }
+        return col;
+    }
     void insertToTable(TableCataLog* table,uint32_t col_idx) override{
         for(uint32_t i=0;i<data_.size();++i){
             table->Insert(col_idx,data_[i]);

@@ -7,6 +7,7 @@
 #include "Execute/ExecutorNode/ResultPhysicalOperator.h"
 #include "Execute/ExecutorNode/HashJoinPhysicalOperator.h"
 #include "Execute/ExecutorNode/LimitPhysicalOperator.h"
+#include "Execute/ExecutorNode/SortPhyscialOperator.h"
 #include "common/Exception.h"
 #include<stack>
 ExecuteEngine::ExecuteEngine(){
@@ -200,6 +201,12 @@ LogicalOperatorRef plan,ExecuteContext* context){
                 new MaterializePhysicalOperator(std::move(plan),context,{child})
             );
         }
+        case SortOperatorNode:{
+            auto child = CreatePhysicalOperatorTree(plan->children_[0],context);
+            return std::shared_ptr<SortPhysicalOperator>(
+                new SortPhysicalOperator(std::move(plan),context,{child})
+            );
+        }
         case LimitOperatorNode:{
             auto child = CreatePhysicalOperatorTree(plan->children_[0],context);
             return std::shared_ptr<LimitPhysicalOperator>(
@@ -215,6 +222,7 @@ LogicalOperatorRef plan,ExecuteContext* context){
             break;
         }
         case FilterOperatorNode:{
+            UNREACHABLE;
             break;
         }
         case InsertOperatorNode:{
