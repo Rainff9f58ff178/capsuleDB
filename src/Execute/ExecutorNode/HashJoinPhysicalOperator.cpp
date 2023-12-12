@@ -63,8 +63,39 @@ OperatorResult HashJoinPhysicalOperator::Execute(ChunkRef& chunk){
     }
 
     auto new_chunk = current_generator_();
-    chunk = std::move(new_chunk);
-    CHEKC_THORW(chunk);
+    CHEKC_THORW(new_chunk);
+    // filter .
+    auto& plan = GetPlan()->Cast<HashJoinLogicalOperator>();
+    if(!plan.pridicators_.empty()){
+        if(plan.pridicators_.size() >1 ){
+            throw Exception("Not Support pridicator > 1");
+        }
+        std::vector<ValueUnion> new_value;
+        auto& p = plan.pridicators_[0];
+        for(uint32_t i=0;i<new_chunk->rows();++i){
+            new_value.push_back(p->Evalute(&new_chunk,i).clone());
+        }
+        if(new_value[0].type_== ValueType::TypeString){
+            // if expr result is string /
+            new_value.clear();
+            for(uint32_t i=0;i<new_chunk->rows();++i){
+                new_value.emplace_back(1);
+            }
+        }
+
+        auto filter = std::dynamic_pointer_cast<ColumnVector<int32_t>>(ColumnFactory::CreateColumn(new_value));
+        auto& data = filter->data_;
+        CHEKC_THORW(data.size() == new_chunk->rows());
+        auto filterd_chunk = new_chunk->cloneEmpty();
+        for(uint32_t i=0;i<data.size();++i){
+            if(static_cast<bool>(data[i])){
+                filterd_chunk->insertFrom(new_chunk.get(),i);
+            }
+        }
+        chunk = std::move(filterd_chunk);
+    }else 
+        chunk = std::move(new_chunk);
+
     if(current_generator_.finish()){
         return OperatorResult::NEED_MORE;
     }

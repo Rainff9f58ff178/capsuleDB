@@ -5,9 +5,7 @@
 #include "Planer/SeqScanLogicalOperator.h"
 #include "Planer/MaterilizeLogicaloperator.h"
 #include "Planer/FilterLogicalOperator.h"
-/*
-    the root node should be insert_node
-*/
+#include "Planer/HashJoinLogicalOperator.h"
 LogicalOperatorRef
 Optimizer::OptimizerInsert(LogicalOperatorRef plan){
     assert(plan->GetType() == OperatorType::InsertOperatorNode);
@@ -56,6 +54,19 @@ LogicalOperatorRef plan){
         sp.SetOutputSchema(fp.GetOutPutSchema());
         return plan->children_[0];
     }
+
+    if(plan->GetType() == OperatorType::FilterOperatorNode &&
+    plan->children_[0]->GetType() == 
+    OperatorType::HashJoinOperatorNode){
+        auto& fp = plan->Cast<FilterLogicalOperator>();
+        auto& hp = plan->children_[0]->Cast<HashJoinLogicalOperator>();
+        auto p = std::move(fp.pridicator_);
+        hp.pridicators_ = std::move(p);
+        hp.SetOutputSchema(fp.GetOutPutSchema());
+        return  plan->children_[0];
+    }
+    
+
     //todo push to hash join
     auto op_p = plan->CopyWithChildren(std::move(children));
     return op_p;

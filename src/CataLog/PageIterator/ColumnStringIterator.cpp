@@ -18,8 +18,11 @@ page_(page){
     }
 }
 ColumnStringIterator::~ColumnStringIterator(){
-
-
+    if(page_){
+        auto& heap_handle = col_heap_->log_->column_heap_handle_;
+        SafeUnpin(heap_handle,page_,false);
+        page_ = nullptr;
+    }
 }
 
 bool ColumnStringIterator::operator!=(const ColumnIterator& other){

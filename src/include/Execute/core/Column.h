@@ -51,7 +51,9 @@ public:
     virtual void insertFrom(ExecColumn* other,uint32_t idx){
         COLUMN_IMPOSSBLE;
     }
-
+    virtual void MergeData(ExecColumn* other){
+        COLUMN_IMPOSSBLE;
+    }
     virtual void insertToTable(TableCataLog* table,column_idx_t col_idx){
         COLUMN_IMPOSSBLE;
     }

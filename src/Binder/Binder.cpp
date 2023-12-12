@@ -157,7 +157,7 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
         return std::unique_ptr<SelectStatement>(new SelectStatement(std::move(all_values), 
             std::move(col_exprs_),
             std::make_unique<BoundExpression>(),{},std::make_unique<BoundExpression>(),
-            std::make_unique<BoundExpression>(),false));
+            std::make_unique<BoundExpression>(),std::make_unique<BoundExpression>(),false));
     }
 
     if(stmt->withClause!=nullptr){
@@ -203,7 +203,7 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
 
     return std::unique_ptr<SelectStatement>(
         new SelectStatement(std::move(table),std::move(select_list),std::move(where)
-        ,std::move(group_by),std::move(having),std::move(limit),false)
+        ,std::move(group_by),std::move(having),std::move(limit),std::move(limit_offset),false)
     );
 
 }
@@ -217,8 +217,12 @@ Binder::BindSort(duckdb_libpgquery::PGList* list){
 }
 
 std::unique_ptr<BoundExpression>
+Binder::BindLimitOffset(duckdb_libpgquery::PGNode* node){
+    return BindExpression(node);
+}
+std::unique_ptr<BoundExpression>
 Binder::BindLimitCount(duckdb_libpgquery::PGNode* node){
-    throw NotImplementedException("Not support limit for now");
+    return BindExpression(node);
 }
 
 std::vector<std::unique_ptr<BoundExpression>>

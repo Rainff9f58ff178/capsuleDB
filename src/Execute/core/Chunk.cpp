@@ -46,3 +46,15 @@ ChunkRef Chunk::cloneEmpty(){
     new_chunk->appendColumns(std::move(cols));
     return new_chunk;
 }
+
+
+void Chunk::MergeBlock(Chunk* other_chunk){
+    __check_all_column_row_same();
+    other_chunk->__check_all_column_row_same();
+    uint32_t other = other_chunk->rows();
+    CHEKC_THORW(columns_.size() == other_chunk->columns_.size());
+    for(uint32_t i=0;i<columns_.size();++i){
+        columns_[i]->MergeData(other_chunk->columns_[i].get());
+    }
+    metadata.rows_+= other;
+}

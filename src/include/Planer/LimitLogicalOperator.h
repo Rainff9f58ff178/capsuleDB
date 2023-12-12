@@ -6,13 +6,15 @@ class LimitLogicalOperator : public LogicalOperator{
         OperatorType::LimitOperatorNode;
 public:
     LimitLogicalOperator(std::vector<LogicalOperatorRef> child,
-    SchemaRef schema,SchemaRef table_schame,uint32_t number):
-    LogicalOperator(std::move(child),std::move(schema),std::move(table_schame)),number_(number){}
+    uint32_t limit ,uint32_t offset):
+    LogicalOperator(std::move(child)),limit_(limit),offset_(offset){
 
+    }
 
-
+    COPY_PLAN_WITH_CHILDREN(LimitLogicalOperator)
     virtual OperatorType GetType() override{
         return type_;
     }
-    uint32_t number_;
+    uint32_t limit_;
+    uint32_t offset_;
 };

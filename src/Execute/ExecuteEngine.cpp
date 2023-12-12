@@ -6,6 +6,7 @@
 #include "Execute/ExecutorNode/SeqScanPhysicalOperator.h"
 #include "Execute/ExecutorNode/ResultPhysicalOperator.h"
 #include "Execute/ExecutorNode/HashJoinPhysicalOperator.h"
+#include "Execute/ExecutorNode/LimitPhysicalOperator.h"
 #include "common/Exception.h"
 #include<stack>
 ExecuteEngine::ExecuteEngine(){
@@ -197,6 +198,12 @@ LogicalOperatorRef plan,ExecuteContext* context){
             
             return  std::shared_ptr<MaterializePhysicalOperator>(
                 new MaterializePhysicalOperator(std::move(plan),context,{child})
+            );
+        }
+        case LimitOperatorNode:{
+            auto child = CreatePhysicalOperatorTree(plan->children_[0],context);
+            return std::shared_ptr<LimitPhysicalOperator>(
+                new LimitPhysicalOperator(std::move(plan),context,{child})
             );
         }
         case HashJoinOperatorNode:{

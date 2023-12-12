@@ -29,6 +29,12 @@ void ColumnString::insertFrom(ExecColumn* other,uint32_t idx){
 }   
 
 
+void ColumnString::MergeData(ExecColumn* other){
+    auto* o = down_cast<ColumnString*>(other);
+    for(uint32_t i=0;i<o->data_.size();++i){
+        data_.push_back(o->data_[i]);
+    }
+}
 uint32_t ColumnString::max_char_size() {
     uint32_t max_size = 0;
     for(auto& val: data_){

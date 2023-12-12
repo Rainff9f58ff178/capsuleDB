@@ -30,7 +30,11 @@ bool ColumnNumIterator::operator==(const ColumnIterator& other){
     return true;
 }
 ColumnNumIterator::~ColumnNumIterator(){
-
+    if(page_){
+        auto& heap_handle = col_heap_->log_->column_heap_handle_;
+        SafeUnpin(heap_handle,page_,false);
+        page_=nullptr;
+    }
 
 }
 void ColumnNumIterator::operator++(){

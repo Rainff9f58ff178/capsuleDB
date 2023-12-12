@@ -20,6 +20,7 @@
 #include "Planer/SeqScanLogicalOperator.h"
 #include "Planer/FilterLogicalOperator.h"
 #include "Planer/HashJoinLogicalOperator.h"
+#include "Planer/LimitLogicalOperator.h"
 #include "common/Exception.h"
 #include "common/commonfunc.h"
 #include <format>
@@ -117,6 +118,17 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
 
             node.SetOutputSchema(output_schema);
 
+            break;
+        }
+        case LimitOperatorNode:{
+            SetInputOutputSchemaInternal(op->children_[0]);
+            auto& node = op->Cast<LimitLogicalOperator>();
+            if(node.limit_ ==0 && node.offset_ ==0)
+                throw Exception("Empty Set");
+            
+
+            node.SetInputSchema(op->children_[0]->GetOutPutSchema()->Copy());
+            node.SetOutputSchema(node.GetInputSchema()->Copy());
             break;
         }
         case FilterOperatorNode:{
@@ -365,9 +377,27 @@ Planer::PlanSelect(const SelectStatement& stmt){
     }
     // plan order by
     // plan limit 
-    if(!stmt.limit_->isInvalid()){
-        throw Exception("Not Support Limit for now");
-    }
+    if(!stmt.limit_->isInvalid() || !stmt.limit_offset_->isInvalid()){
+        auto limit =0;
+        auto offset = 0;
+        if(!stmt.limit_->isInvalid()){
+            auto c = down_cast<BoundConstant*>(stmt.limit_.get());
+            if(c->value_.type_== ValueType::TypeString){
+                throw Exception("limit num can't be string");
+            }   
+            limit = c->value_.num_;
+        }
+        if(!stmt.limit_offset_->isInvalid()){
+            auto o = down_cast<BoundConstant*>(stmt.limit_offset_.get());
+            if(o->value_.type_ == ValueType::TypeString){
+                throw Exception("offset value can't be string");
+            }
+            offset = o->value_.num_;
+        }
+        plan = std::shared_ptr<LimitLogicalOperator>(
+            new LimitLogicalOperator({plan},limit,offset)
+        );
+    }   
 
     plan = std::shared_ptr<MaterilizeLogicaloperator>(
         new MaterilizeLogicaloperator({plan})

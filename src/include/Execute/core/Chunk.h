@@ -36,16 +36,29 @@ public:
                 return;
             }
         }
-        
+
     }
+    void MergeBlock(Chunk* other_chunk);
     void insertFrom(Chunk* otherchunk,uint32_t idx);
     uint32_t rows();
     uint32_t columns(){
         return columns_.size();
     }
+
+    void __check_all_column_row_same(){
+        
+#ifndef  NDEBUG
+        if(columns_.empty())
+            return;
+        uint32_t row = columns_[0]->rows();
+        for(auto& col : columns_){
+            CHEKC_THORW(col->rows() == row);
+        }
+#endif
+    }
+
     ChunkRef cloneEmpty();
     
-
     __metadata metadata;
     ColumnRefs columns_;
 };

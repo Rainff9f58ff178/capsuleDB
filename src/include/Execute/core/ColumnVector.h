@@ -34,6 +34,13 @@ public:
         }
     }
 
+    void MergeData(ExecColumn* other) override{
+        auto _other = down_cast<Self*>(other);
+        for(uint32_t i=0;i<_other->data_.size();++i){
+            data_.push_back(_other->data_[i]);
+        }
+    }
+
 
     void insertToTable(TableCataLog* table,uint32_t col_idx) override{
         for(uint32_t i=0;i<data_.size();++i){

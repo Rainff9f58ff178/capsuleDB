@@ -130,6 +130,8 @@ public:
 
     std::unique_ptr<BoundExpression>
     BindLimitCount(duckdb_libpgquery::PGNode* node);
+    std::unique_ptr<BoundExpression>
+    BindLimitOffset(duckdb_libpgquery::PGNode* node);
 
     std::vector<std::unique_ptr<BoundExpression>>
     BindSort(duckdb_libpgquery::PGList* node);

@@ -24,6 +24,8 @@ public:
     }
     uint64_t HashAt(uint32_t idx) override;
     void insertFrom(const ValueUnionView& value) override;
+    void MergeData(ExecColumn* other) override;
+
     void insertFrom(ExecColumn* other,uint32_t idx) override;
     void insertToTable(TableCataLog* table,uint32_t col_idx) override;
     std::string toString(uint32_t row_idx) override;
