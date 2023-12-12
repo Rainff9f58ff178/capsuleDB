@@ -14,7 +14,7 @@ This is my database as graduation project.
     - Filter
     - explain
 
-
+```sql
 -- input \st to show tables
 
 -- input \q to quit
@@ -22,5 +22,15 @@ This is my database as graduation project.
 -- only support varchar and int column
 
 -- execute 'select * from database_info;' show more infomation
+
+
+Capsule >insert into c values('💩🤝💦👃👴🐍🐔，💊');
++------------------------------------------+
+|                                    c.cola|
++------------------------------------------+
+|                        💩🤝💦👃👴🐍🐔，💊|
++------------------------------------------+
+```
+
 
 
