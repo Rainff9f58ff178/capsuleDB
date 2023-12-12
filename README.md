@@ -11,6 +11,7 @@ This is my database as graduation project.
     - HashJoin
     - Limit
     - Sort
+    - Filter
 
 
 -- input \st to show tables
