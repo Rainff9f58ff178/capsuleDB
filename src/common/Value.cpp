@@ -118,9 +118,9 @@ ValueUnion ValueUnion::operator- (const ValueUnion& other){
         throw Exception(_error_msg("type mismatch value can't add "));
 
     if(id_==ValueId::SignedNumeric){
-        return ValueUnion( (int32_t)((int64_t)num_+(int64_t)other.num_));
+        return ValueUnion( (int32_t)((int64_t)num_-(int64_t)other.num_));
     }else if(id_ == ValueId::UnSignedNumeric){
-        return ValueUnion( (uint64_t)(num_) + (uint64_t)(other.num_));
+        return ValueUnion( (uint64_t)(num_) - (uint64_t)(other.num_));
     }else if(id_==ValueId::String){
         throw Exception("can't string minus for now");
     }

@@ -12,6 +12,8 @@ SourceResult HashJoinPhysicalOperator::Source(ChunkRef& chunk){
 }   
 
 SinkResult HashJoinPhysicalOperator::Sink(ChunkRef& chunk){
+    if(chunk->rows() == 0)
+        return SinkResult::NEED_MORE;
     // Build port.
     CHEKC_THORW(hash_table_.size() > 0);
 
@@ -61,12 +63,13 @@ OperatorResult HashJoinPhysicalOperator::Execute(ChunkRef& chunk){
     if(!current_generator_){
         current_generator_ = ExecuteInteranl(chunk);
     }
-
     auto new_chunk = current_generator_();
     CHEKC_THORW(new_chunk);
-    // filter .
     auto& plan = GetPlan()->Cast<HashJoinLogicalOperator>();
-    if(!plan.pridicators_.empty()){
+    if(new_chunk->rows() ==0){
+        chunk=std::move( new_chunk);
+    }
+    else if(!plan.pridicators_.empty()){
         if(plan.pridicators_.size() >1 ){
             throw Exception("Not Support pridicator > 1");
         }
@@ -95,6 +98,7 @@ OperatorResult HashJoinPhysicalOperator::Execute(ChunkRef& chunk){
         chunk = std::move(filterd_chunk);
     }else 
         chunk = std::move(new_chunk);
+
 
     if(current_generator_.finish()){
         return OperatorResult::NEED_MORE;

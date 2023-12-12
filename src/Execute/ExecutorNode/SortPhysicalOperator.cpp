@@ -15,6 +15,9 @@ SinkResult SortPhysicalOperator::Sink(ChunkRef& chunk) {
     if(!cache_chunk_)   {
         cache_chunk_ = std::move(chunk);
     }else {
+        if(chunk->rows() == 0)
+            return  SinkResult::NEED_MORE;
+        
         cache_chunk_->MergeBlock(chunk.get());
     }
     return SinkResult::NEED_MORE;
