@@ -12,6 +12,7 @@ This is my database as graduation project.
     - Limit
     - Sort
     - Filter
+    - explain
 
 
 -- input \st to show tables
