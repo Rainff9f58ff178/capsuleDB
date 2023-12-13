@@ -67,6 +67,9 @@ Planer::LoadResult Planer::LoadColumn(const Column& col,LogicalOperatorRef op){
     if(op->GetOutPutSchema()->exist(col)){
         return LoadResult::LoadSucc;
     }
+    if(op->GetType() == AggOperatorNode){
+        return LoadResult::LoadFailed;
+    }
     // output schema hasn't !
     if(op->GetInputSchema()->exist(col)){
         // if input has already exist ,just need add to output schema.
@@ -146,7 +149,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             for(auto& col : cols_this_node_need){
                 auto r = LoadColumn(col,op->children_[0]);
                 if(r == LoadResult::LoadFailed){
-                    throw Exception(std::format("Load Column {} Failed ,not found this column. ",col.name_));
+                    throw Exception(std::format("Load Column {} Failed ,your try to load a expression that not in group by ",col.name_));
                 }
             }
             // Load columns aggs need.
@@ -160,7 +163,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
                 for(auto& col : cols_this_node_need){
                     auto r = LoadColumn(col,op->children_[0]);
                     if(r == LoadResult::LoadFailed){
-                        throw Exception(std::format("Load Column {} Failed,not found this column.", col.name_));
+                        throw Exception(std::format("Load Column {} Failed,nyour try to load a expression that not in group by", col.name_));
                     }
                 }
             }
@@ -171,6 +174,10 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
                 // for now , just all agg set to int.
                 output_schema->AddColumn(Column(agg.agg_result_name,ColumnType::INT));
             }
+            for(auto& col : node.group_by_cols_){
+                output_schema->AddColumn(col);
+            }
+            
             node.SetInputSchema(op->children_[0]->GetOutPutSchema()->Copy());
             node.SetOutputSchema(output_schema);
             break;
@@ -185,7 +192,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
                 for(auto& col : cols){
                     auto result = LoadColumn(col,op->children_[0]);
                     if(result== LoadResult::LoadFailed){
-                        throw Exception(std::format("Load column {} failed",col.name_));
+                        throw Exception(std::format("Load column {} failed,your try to load a expression that not in group by ?",col.name_));
                     }
                 }
             }
@@ -220,7 +227,10 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             // check if columns that this node need exist in child output_schema .
             // if not exist , let child node load this column.
             for(auto& col:filter_cols){
-                LoadColumn(col,node.children_[0]);
+                auto r = LoadColumn(col,node.children_[0]);
+                if(r == LoadResult::LoadFailed){
+                    throw Exception(std::format("Load column {} failed,your try to load a expression that not in group by",col.name_));
+                }
             }
             node.SetInputSchema(node.children_[0]->GetOutPutSchema()->Copy());
             //final erase columns that not in final select_list.
@@ -494,8 +504,9 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
     // first check if group by contain any agg. group by can't contain agg. 
 
     std::vector<LogicalExpressionRef> group_bys;
-
+    
     auto group_cols = std::make_shared<Schema>();
+    auto _group_cols = std::make_shared<Schema>();
     for(auto& expr : stmt.group_by_){
         if(expr->HasAgg()){
             throw Exception("Group By clause can't contain agg !");
@@ -503,6 +514,14 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
         auto [_1,gpb] = PlanExpression(*expr,{child});
         std::vector<Column> cols;
         group_cols->AddColumn(Column(gpb->toString(),gpb->GetReturnType()));
+
+        gpb->collect_column(cols);
+        _group_cols->AddColumns(cols);
+        
+        context_.agg_group_by_map_[gpb->toString()]
+            = std::shared_ptr<ColumnValueExpression>(  new ColumnValueExpression(1010,Column(gpb->toString(),gpb->GetReturnType()),0));
+
+        group_bys.push_back(std::move(gpb));
     }
     // and having clase can't include 
     std::vector<AggregateEntry> all_aggs;
@@ -511,7 +530,7 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
     if(!stmt.having_->isInvalid()){
         AddAggToContext(*stmt.having_,all_aggs,std::move(cols),child);
         for(auto& col: cols){
-            if(!group_cols->exist(col)){
+            if(!_group_cols->exist(col)){
                 throw Exception(std::format("{} must appear in group by clause !",col.name_));
             }
         }
@@ -521,7 +540,7 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
         cols.clear();
         AddAggToContext(*expr,all_aggs,std::move(cols),child);
         for(auto& col : cols){
-            if(!group_cols->exist(col)){
+            if(!_group_cols->exist(col)){
                 throw Exception(std::format("{} must appear in group by clause !",col.name_));
             }
         }
@@ -533,7 +552,7 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
         cols.clear();
         AddAggToContext(*order->expr_,all_aggs,std::move(cols),child);
         for(auto& col : cols){
-            if(!group_cols->exist(col)){
+            if(!_group_cols->exist(col)){
                 throw Exception(std::format("{} must appear in group by clause !",col.name_));
             }
         }
@@ -541,8 +560,8 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
     // output should be all aggs.and group bys.
     LogicalOperatorRef plan = nullptr;
     plan = std::shared_ptr<AggregateLogicalOperator>( new AggregateLogicalOperator(std::move(group_bys),std::move(all_aggs),{child}));
-
-
+    plan->Cast<AggregateLogicalOperator>().group_by_cols_ = std::move(group_cols->columns_);
+    
     LogicalExpressionRef having_expr=nullptr;
     if(!stmt.having_->isInvalid()){
         auto [_1,expr] =PlanExpression(*stmt.having_,{child});
@@ -713,6 +732,10 @@ std::vector<LogicalOperatorRef> children){
             auto& binary_op = 
                 dynamic_cast<const BoundBinaryOp&>(expr);
             auto r = PlanBinaryOp(binary_op,children);
+            if(context_.agg_group_by_map_.find(r->toString()) != context_.agg_group_by_map_.end()){
+                // this expression is group by result.
+                return {UNKNOWNED_NAME,context_.agg_group_by_map_[r->toString()]};
+            }
             r->alias_ = expr.alias_;
             return {UNKNOWNED_NAME,r};
         }

@@ -65,6 +65,7 @@ public:
         return  type_;
     }
     std::vector<LogicalExpressionRef> group_bys_;
+    std::vector<Column> group_by_cols_;
     std::vector<AggregateEntry> aggs_;
     
 

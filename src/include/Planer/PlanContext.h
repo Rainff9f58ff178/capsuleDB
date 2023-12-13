@@ -19,4 +19,5 @@ public:
 
 
     std::unordered_map<std::string,LogicalExpressionRef> agg_map_;
+    std::unordered_map<std::string,LogicalExpressionRef> agg_group_by_map_;
 };
