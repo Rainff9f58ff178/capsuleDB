@@ -28,10 +28,14 @@ public:
         return ValueTypeConvertToColumnType(val_.type_);
     }
     std::string toString() override{
+        if(alias_){
+            return *alias_;
+        }
+
         if(val_.type_==ValueType::TypeString){
-            return std::string(val_.data_,val_.value_len_);
+            return std::string(val_.val_.data_,val_.value_len_);
         }else {
-            return std::to_string(val_.num_);
+            return std::to_string(val_.val_.num_);
         }
         return  "";
     }

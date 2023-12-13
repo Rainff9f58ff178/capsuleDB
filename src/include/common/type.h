@@ -22,6 +22,7 @@ static constexpr const char* const UNKNOWNED_NAME
 enum ColumnType:uint32_t{
         INT=0,
         STRING,
+        DOUBLE,
         UNKOWN
 };
 

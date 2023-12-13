@@ -18,13 +18,15 @@ public:
     BoundColumnRef()=default;
     ~BoundColumnRef()=default;
 
-    inline const std::string ToString()const {
+     std::string ToString()const  override{
         return std::format("{}",join(column_,"."));
     }
     inline std::string table_name() const{
         return column_[0];
     }
-
+    bool HasAgg() override{
+        return false;
+    }
     std::unique_ptr<BoundExpression> Copy()override{
         return std::make_unique<BoundColumnRef>(column_,col_type_);
     }

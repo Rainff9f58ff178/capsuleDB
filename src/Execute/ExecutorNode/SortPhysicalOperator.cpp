@@ -17,7 +17,7 @@ SinkResult SortPhysicalOperator::Sink(ChunkRef& chunk) {
     }else {
         if(chunk->rows() == 0)
             return  SinkResult::NEED_MORE;
-        
+
         cache_chunk_->MergeBlock(chunk.get());
     }
     return SinkResult::NEED_MORE;
@@ -74,8 +74,8 @@ SortBlock(ChunkRef& chunk,std::vector<SortEntry> sorts){
             int d = sort.type_== OrderByType::ASC ? -1 : 1;
             r = r*d;
             if(r>0)
-                return false;
-            return true;
+                return true;
+            return false;
         }
         // equal 
         return  l_idx>r_idx;

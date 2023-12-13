@@ -25,6 +25,17 @@ public:
     std::unique_ptr<BoundExpression> Copy() override{
         return std::make_unique<BoundBinaryOp>(operator_name_,larg_->Copy(),rarg_->Copy());
     }
+    
+    std::string ToString() const override {
+        return larg_->ToString()+operator_name_+rarg_->ToString();
+    }
+    bool HasAgg() override{
+        auto l = larg_->HasAgg();
+        auto r = rarg_->HasAgg();
+        if(l || r)
+            return true;
+        return false;
+    }
 
     std::string operator_name_;
     std::unique_ptr<BoundExpression> larg_;

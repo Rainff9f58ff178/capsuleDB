@@ -40,6 +40,9 @@ public:
     }
 
     std::string toString() override{
+        if(alias_){
+            return  *alias_;
+        }
         auto left = children_[0]->toString();
         auto op =" ";
         if(a_type_ == ArithmeticType::Add){

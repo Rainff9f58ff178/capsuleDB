@@ -22,6 +22,7 @@
 #include "Planer/HashJoinLogicalOperator.h"
 #include "Planer/LimitLogicalOperator.h"
 #include "Planer/SortLogicalOperator.h"
+#include "Planer/AggregateLogicalOperator.h"
 #include "common/Exception.h"
 #include "common/commonfunc.h"
 #include <format>
@@ -108,7 +109,17 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             auto& node = op->Cast<MaterilizeLogicaloperator>();            
             node.SetInputSchema(op->children_[0]->GetOutPutSchema());
             std::vector<Column> final_output_cols;
+
             for(auto& expr : node.final_select_list_expr_){
+                std::vector<Column> cols;
+                expr->collect_column(cols);
+
+                for(auto& col : cols){
+                    if(LoadColumn(col,op->children_[0]) == LoadResult::LoadFailed){
+                        throw Exception(std::format("Load column {} failed",col.name_));
+                    }
+                }
+
                 auto final_col_name = expr->toString();
                 // select colA+1 ,colB > colC from test_1 . 
                 auto type = expr->GetReturnType();
@@ -121,6 +132,47 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
 
 
             select_list_queue_.pop_front();
+            break;
+        }
+        case AggOperatorNode:{
+            SetInputOutputSchemaInternal(op->children_[0]);
+            auto& node = op->Cast<AggregateLogicalOperator>();
+            std::vector<Column> cols_this_node_need;
+            for(auto& expr : node.group_bys_){
+                std::vector<Column> cols;
+                expr->collect_column(cols);
+                cols_this_node_need.insert(cols_this_node_need.end(),cols.begin(),cols.end());
+            }
+            for(auto& col : cols_this_node_need){
+                auto r = LoadColumn(col,op->children_[0]);
+                if(r == LoadResult::LoadFailed){
+                    throw Exception(std::format("Load Column {} Failed ,not found this column. ",col.name_));
+                }
+            }
+            // Load columns aggs need.
+            for(auto& agg:node.aggs_){
+                cols_this_node_need.clear();
+                for(auto& expr : agg.args_expr_){
+                    std::vector<Column> cols;
+                    expr->collect_column(cols);
+                    cols_this_node_need.insert(cols_this_node_need.end(),cols.begin(),cols.end());
+                }
+                for(auto& col : cols_this_node_need){
+                    auto r = LoadColumn(col,op->children_[0]);
+                    if(r == LoadResult::LoadFailed){
+                        throw Exception(std::format("Load Column {} Failed,not found this column.", col.name_));
+                    }
+                }
+            }
+
+            //set output_schema.
+            auto output_schema = std::make_shared<Schema>();
+            for(auto& agg : node.aggs_){
+                // for now , just all agg set to int.
+                output_schema->AddColumn(Column(agg.agg_result_name,ColumnType::INT));
+            }
+            node.SetInputSchema(op->children_[0]->GetOutPutSchema()->Copy());
+            node.SetOutputSchema(output_schema);
             break;
         }
         case SortOperatorNode:{
@@ -245,6 +297,10 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
         case SeqScanOperatorNode:{
             auto& node = op->Cast<SeqScanLogicalOperator>();
             auto col_name = std::string();
+            if(node.GetInputSchema()->columns_.empty()){
+                throw Exception("Whole table scan hasn't one column, i admit your query is fatal.");
+            }
+
             col_name = node.GetInputSchema()->columns_[0].name_;
             
             if(node.alias_name_){
@@ -353,6 +409,150 @@ std::map<std::string,Schema>& map ){
     }
 
 }
+
+AggregateEntry Planer::GenerateAgg(const BoundAgg& a,LogicalOperatorRef child){
+    std::string agg_result_name = a.ToString();
+    AggregationType type;
+    if(a.agg_name_ == "count_start"){
+        type = AggregationType::CountStarAggregate;
+    }else if(a.agg_name_ == "min"){
+        type = AggregationType::MinAggregate;
+    }else if(a.agg_name_ == "max"){
+        type = AggregationType::MaxAggregate;
+    }else if(a.agg_name_ =="count"){
+        type = AggregationType::CountAggregate;
+    }else if(a.agg_name_ == "avg"){
+        type =AggregationType::AvgAggregate;
+    }else if(a.agg_name_ =="sum"){
+        type = AggregationType::SumAggregate;
+    }
+    else {
+        NOT_IMP
+    }
+    std::vector<LogicalExpressionRef> args;
+    for(auto& expr : a.args_){
+        auto [_1,p] = PlanExpression(*expr,{child});
+        args.push_back(p);
+    }
+    return AggregateEntry{std::move(agg_result_name),type,a.alias_,std::move(args)};
+}
+
+void Planer::AddAggToContext(const BoundExpression& expr,std::vector<AggregateEntry>& agg_ety,std::vector<Column>&& cols,LogicalOperatorRef child){
+    switch(expr.type_){
+        case ExpressionType::AGG_CALL:{
+            auto& agg = down_cast<const BoundAgg&>(expr);
+            if(context_.agg_map_.find(agg.ToString()) == context_.agg_map_.end()){
+                context_.agg_map_[agg.ToString()] = 
+                    std::shared_ptr<ColumnValueExpression>(new ColumnValueExpression(998,Column(agg.ToString(),ColumnType::DOUBLE),0));
+                context_.agg_map_[agg.ToString()]->alias_ = agg.alias_;
+            }
+            auto it = std::find_if(agg_ety.begin(),agg_ety.end(),[&,this](AggregateEntry& _agg){
+                if(_agg.agg_result_name == agg.ToString()){
+                    return true;
+                }
+                return false;
+            });
+            if(it != agg_ety.end()){
+                return;
+            }
+            agg_ety.emplace_back(GenerateAgg(agg,child));
+            break;;
+        }
+        case ExpressionType::ALIAS:{
+            UNREACHABLE;
+        }
+        case ExpressionType::BINARY_OP:{
+            auto& binary_expr = down_cast<const BoundBinaryOp&>(expr);
+            AddAggToContext(*binary_expr.larg_,agg_ety,std::move(cols),child);
+            AddAggToContext(*binary_expr.rarg_,agg_ety,std::move(cols),child);
+            break;
+        }
+        case ExpressionType::COLUMN_REF:{
+            auto& col = down_cast<const BoundColumnRef&> (expr);
+            cols.push_back(Column(col.ToString(),col.col_type_));
+            break;
+        }
+        case ExpressionType::UNARY_OP:{
+            auto& unary_expr = down_cast<const BoundUnaryOp&>(expr);
+            AddAggToContext(*unary_expr.args_,agg_ety,std::move(cols),child);
+            break;
+        }
+        case ExpressionType::CONSTANT:{
+            break;
+        }
+        case ExpressionType::STAR:{
+            throw Exception("Not Support star with agg");
+        }
+        default:
+            NOT_IMP;
+    }
+}
+LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRef child){
+    // add those agg to context.
+
+    //select sum(colA),avg(colB) from t group by colC order by avg(colC)  having count(colC) > 1 limit 1;
+    // first check if group by contain any agg. group by can't contain agg. 
+
+    std::vector<LogicalExpressionRef> group_bys;
+
+    auto group_cols = std::make_shared<Schema>();
+    for(auto& expr : stmt.group_by_){
+        if(expr->HasAgg()){
+            throw Exception("Group By clause can't contain agg !");
+        }
+        auto [_1,gpb] = PlanExpression(*expr,{child});
+        std::vector<Column> cols;
+        group_cols->AddColumn(Column(gpb->toString(),gpb->GetReturnType()));
+    }
+    // and having clase can't include 
+    std::vector<AggregateEntry> all_aggs;
+    std::vector<Column> cols;
+
+    if(!stmt.having_->isInvalid()){
+        AddAggToContext(*stmt.having_,all_aggs,std::move(cols),child);
+        for(auto& col: cols){
+            if(!group_cols->exist(col)){
+                throw Exception(std::format("{} must appear in group by clause !",col.name_));
+            }
+        }
+    }
+
+    for(auto& expr : stmt.select_list_){
+        cols.clear();
+        AddAggToContext(*expr,all_aggs,std::move(cols),child);
+        for(auto& col : cols){
+            if(!group_cols->exist(col)){
+                throw Exception(std::format("{} must appear in group by clause !",col.name_));
+            }
+        }
+    }
+
+    //and order by 
+    auto& order_bys = stmt.order_bys_;
+    for(auto& order : order_bys){
+        cols.clear();
+        AddAggToContext(*order->expr_,all_aggs,std::move(cols),child);
+        for(auto& col : cols){
+            if(!group_cols->exist(col)){
+                throw Exception(std::format("{} must appear in group by clause !",col.name_));
+            }
+        }
+    }
+    // output should be all aggs.and group bys.
+    LogicalOperatorRef plan = nullptr;
+    plan = std::shared_ptr<AggregateLogicalOperator>( new AggregateLogicalOperator(std::move(group_bys),std::move(all_aggs),{child}));
+
+
+    LogicalExpressionRef having_expr=nullptr;
+    if(!stmt.having_->isInvalid()){
+        auto [_1,expr] =PlanExpression(*stmt.having_,{child});
+        having_expr = expr;
+        plan = std::shared_ptr<FilterLogicalOperator>( new FilterLogicalOperator({plan},{having_expr}));
+    }
+
+    return plan;
+}
+
 LogicalOperatorRef
 Planer::PlanSelect(const SelectStatement& stmt){   
     LogicalOperatorRef plan = nullptr;
@@ -366,21 +566,6 @@ Planer::PlanSelect(const SelectStatement& stmt){
             plan = PlanTableRef(*stmt.from_);
             break;
     }
-    auto final_select_list_exprs = std::vector<LogicalExpressionRef>();
-    for(auto& expr : stmt.select_list_){
-        auto [_1,pr] =  PlanExpression(*expr,{plan});
-        final_select_list_exprs.push_back(std::move(pr));
-    }
-    SchemaRef select_list_column = std::make_shared<Schema>();
-    
-    std::vector<Column> _cols;
-    for(auto& expr:final_select_list_exprs){
-        std::vector<Column> cols;
-        expr->collect_column(cols);
-        _cols.insert(_cols.end(),cols.begin(),cols.end());
-    }
-    select_list_column->AddColumns(_cols);
-    select_list_queue_.push_back(std::move(select_list_column));
 
 
     if(!stmt.where_->isInvalid()){
@@ -390,14 +575,38 @@ Planer::PlanSelect(const SelectStatement& stmt){
         );
     }
 
+    
+
+    bool has_agg = false;
+    for(auto& expr : stmt.select_list_){
+        if(expr->HasAgg()){
+            has_agg = true;
+        }
+    }
     // plan Agg
-    if(!stmt.group_by_.empty() || !stmt.having_->isInvalid()){
-        throw NotImplementedException("Not Implement AggCall");
+    if(!stmt.group_by_.empty() || !stmt.having_->isInvalid() || has_agg){
+        plan = PlanAgg(stmt,plan);
     }
     // plan distinct 
     if(stmt.is_distinct_){
         throw NotImplementedException("Not support distinct");
     }
+    SchemaRef select_list_column = std::make_shared<Schema>();
+    
+    auto final_select_list_exprs = std::vector<LogicalExpressionRef>();
+    for(auto& expr : stmt.select_list_){
+        auto [_1,pr] =  PlanExpression(*expr,{plan});
+        final_select_list_exprs.push_back(std::move(pr));
+    }
+    std::vector<Column> _cols;
+    for(auto& expr:final_select_list_exprs){
+        std::vector<Column> cols;
+        expr->collect_column(cols);
+        _cols.insert(_cols.end(),cols.begin(),cols.end());
+    }
+    select_list_column->AddColumns(_cols);
+    select_list_queue_.push_back(std::move(select_list_column));
+
     // plan order by
 
     if(!stmt.order_bys_.empty()){
@@ -409,7 +618,6 @@ Planer::PlanSelect(const SelectStatement& stmt){
         plan = std::shared_ptr<SortLogicalOperator>(
             new SortLogicalOperator({plan},std::move(exprs))
         );
-
     }
 
 
@@ -422,14 +630,14 @@ Planer::PlanSelect(const SelectStatement& stmt){
             if(c->value_.type_== ValueType::TypeString){
                 throw Exception("limit num can't be string");
             }   
-            limit = c->value_.num_;
+            limit = c->value_.val_.num_;
         }
         if(!stmt.limit_offset_->isInvalid()){
             auto o = down_cast<BoundConstant*>(stmt.limit_offset_.get());
             if(o->value_.type_ == ValueType::TypeString){
                 throw Exception("offset value can't be string");
             }
-            offset = o->value_.num_;
+            offset = o->value_.val_.num_;
         }
         plan = std::shared_ptr<LimitLogicalOperator>(
             new LimitLogicalOperator({plan},limit,offset)
@@ -440,6 +648,7 @@ Planer::PlanSelect(const SelectStatement& stmt){
         new MaterilizeLogicaloperator({plan})
     );
     
+
     plan->Cast<MaterilizeLogicaloperator>().final_select_list_expr_ = std::move(final_select_list_exprs);
     return plan;
 }
@@ -477,20 +686,35 @@ std::tuple<std::string,LogicalExpressionRef>
 Planer::PlanExpression(const BoundExpression& expr,
 std::vector<LogicalOperatorRef> children){
     switch (expr.type_) {
+        case ExpressionType::AGG_CALL:{
+            auto& agg = down_cast<const BoundAgg&>(expr);
+            auto it = context_.agg_map_.find(agg.ToString());
+            if(it == std::end(context_.agg_map_))
+                throw Exception(std::format("Logical Error,{} not found in plan context.",agg.ToString()) );
+            return  {UNKNOWNED_NAME,it->second};
+        }
         case ExpressionType::CONSTANT:{
             auto& constant_expr =
                  dynamic_cast<const BoundConstant&>(expr);
-            return {UNKNOWNED_NAME,PlanConstant(constant_expr)};
+            auto r = PlanConstant(constant_expr);
+            r->alias_ = expr.alias_;
+            
+            return {UNKNOWNED_NAME,r};
         }
         case ExpressionType::COLUMN_REF:{
             auto& column_expr
              = dynamic_cast<const BoundColumnRef&>(expr);
-             return PlanColumn(column_expr,children);
+             auto [name,r]  = PlanColumn(column_expr,children);
+             r->alias_ = expr.alias_;
+             return {name,r};
+
         }
         case ExpressionType::BINARY_OP:{
             auto& binary_op = 
                 dynamic_cast<const BoundBinaryOp&>(expr);
-            return {UNKNOWNED_NAME,PlanBinaryOp(binary_op,children)};
+            auto r = PlanBinaryOp(binary_op,children);
+            r->alias_ = expr.alias_;
+            return {UNKNOWNED_NAME,r};
         }
         case ExpressionType::UNARY_OP:{
             

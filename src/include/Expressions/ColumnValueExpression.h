@@ -49,6 +49,9 @@ public:
         UNREACHABLE;
     }
     std::string toString()override{
+        if(alias_){
+            return  *alias_;
+        }
         return  column_info_.name_;
     }
 

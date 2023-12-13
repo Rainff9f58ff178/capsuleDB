@@ -36,6 +36,11 @@ InferSchemaFromCols(const std::vector<std::string> cols){
     }
     return std::shared_ptr<Schema>(new Schema(columns));
 }
+static std::string StringLower(const std::string& string){
+    std::string a = string;
+    std::transform(a.begin(),a.end(),a.begin(),[](char& c){ return std::tolower(c) ;});
+    return  a;
+}
 static std::string ColumnTypeToString(ColumnType type){
     switch(type){
         case  ColumnType::INT:{

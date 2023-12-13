@@ -3,11 +3,13 @@
 #include "Utils/ArrayView.h"
 enum ValueType{
     TypeInt =0,
-    TypeString 
+    TypeString ,
+    TypeDouble,
 };
 enum class ValueId{
     SignedNumeric=0,
     UnSignedNumeric,
+    DoubleFloatPoint,
     String
 };
 
@@ -19,7 +21,7 @@ public:
 
     ValueUnion(char* data,uint32_t len){
         type_ = ValueType::TypeString;
-        data_ = data;
+        val_.data_ = data;
         id_ = ValueId::String;
         value_len_ = len;
     }
@@ -28,9 +30,9 @@ public:
     ~ValueUnion();
     ValueUnion clone()const{
         if(type_==TypeInt){
-            return ValueUnion(num_);
+            return ValueUnion(val_.num_);
         }else {
-            return ValueUnion(std::string(data_,value_len_));
+            return ValueUnion(std::string(val_.data_,value_len_));
         }
     }
     bool operator==(const ValueUnion& other);
@@ -44,10 +46,12 @@ public:
     ValueUnion operator- (const ValueUnion& other);
     ValueType type_;
     ValueId id_;
-    union{
+    union __value{
+        double d_val_;
         char* data_;
         Value num_;
     };
+    __value val_;
     uint32_t value_len_{0};
     bool allocated_{false};
 

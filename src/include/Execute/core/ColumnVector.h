@@ -31,7 +31,7 @@ public:
     void insertFrom(const ValueUnionView& value) override{
         for(uint32_t i=0;i<value.size();++i){
             DASSERT(value[i].type_ == TypeInt);
-            data_.push_back(value[i].num_);
+            data_.push_back(value[i].val_.num_);
         }
     }
 

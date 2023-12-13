@@ -43,7 +43,7 @@ HashJoinPhysicalOperator::ExecuteInteranl(ChunkRef chunk){
         auto bucket = hash_table_[bucket_id];
         for(auto& pair : bucket ){
             auto result = plan.condition_->EvaluteJoin(&build_chunks_[pair.first],&chunk,pair.second,i);
-            if(static_cast<bool>(result.num_)){
+            if(static_cast<bool>(result.val_.num_)){
                 left_chunk->insertFrom( build_chunks_[pair.first].get(),pair.second);
                 right_chunk->insertFrom( chunk.get(),i);
             }

@@ -150,6 +150,7 @@ public:
     CataLog* cata_log_;
 
     BoundTabRef* scope_{nullptr};
+    std::vector<std::unique_ptr<BoundExpression>>* scope_select_list_;
 private:
     uint32_t universe_id_{0};
 };

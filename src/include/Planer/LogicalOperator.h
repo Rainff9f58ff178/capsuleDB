@@ -56,6 +56,7 @@ public:
     }
     virtual LogicalOperatorRef 
     CopyWithChildren(std::vector<LogicalOperatorRef> children)=0;
+    
     virtual void PrintDebug(){
         if(!show_info)
             return;;

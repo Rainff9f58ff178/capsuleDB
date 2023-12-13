@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include<memory>
+#include<sstream>
 #include "common/Exception.h"
 
 enum class ExpressionType : uint8_t {
@@ -33,6 +34,12 @@ public:
     virtual std::unique_ptr<BoundExpression> Copy(){
         UNREACHABLE
     }
-
+    virtual std::string ToString() const{
+        UNREACHABLE;
+    }
+    virtual bool HasAgg(){
+        UNREACHABLE;
+    }
+    std::optional<std::string> alias_=std::nullopt;
     ExpressionType type_{ExpressionType::INVALID};
 };

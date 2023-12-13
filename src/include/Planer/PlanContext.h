@@ -3,6 +3,7 @@
 #include<string>
 #include<memory>
 #include"Planer/TablePlan.h"
+#include"Expressions/LogicalExpression.h"
 /*
     this class store some data use to create correct Operator,like 
     columns that should loaded.
@@ -15,4 +16,7 @@ public:
     PlanContext(){}
     std::vector<std::string> table_name_queue_;
     std::unordered_map<std::string,std::unique_ptr<TablePlan>> planings_;
+
+
+    std::unordered_map<std::string,LogicalExpressionRef> agg_map_;
 };

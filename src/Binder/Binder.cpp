@@ -81,7 +81,7 @@ Binder::BindColumnDef(duckdb_libpgquery::PGColumnDef* col_def){
         auto exprs = BindExpressionLists(col_def->typeName->typmods);
         const auto &varchar_max_length_val =
              dynamic_cast<const BoundConstant &>(*exprs[0]);
-        return ColumnDef(col_def->colname,0,ColumnType::STRING,varchar_max_length_val.value_.num_);
+        return ColumnDef(col_def->colname,0,ColumnType::STRING,varchar_max_length_val.value_.val_.num_);
     }
 
     throw Exception("Not support column type");
@@ -143,6 +143,8 @@ Binder::BindBaseTable(std::string table_name,std::optional<std::string> alias){
 
 std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectStmt* stmt){
     
+
+    
     if(stmt->valuesLists!=nullptr){
         auto all_values  = BindValueList(stmt->valuesLists);
 
@@ -166,13 +168,28 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
     }
 
     auto table =BindFrom(stmt->fromClause);
+    
     scope_ = table.get();
 
     if(stmt->targetList == nullptr)
         throw Exception("select list couldn't be empty");
 
     auto select_list = BindSelectList(stmt->targetList);
+    //check if have save alias;
+    std::set<std::string> alisa;
+    for(auto& expr : select_list){
+        if(expr->alias_){
+            auto it = std::find( alisa.begin(),alisa.end(),*expr->alias_);
+            if(it != alisa.end()){
+                throw Exception("select list expression can't have same alias");
+            }
+            alisa.insert(*expr->alias_);
+        }
+    }
 
+    scope_select_list_  = &select_list;
+
+    
     auto where = std::make_unique<BoundExpression>();
     if(stmt->whereClause!=nullptr){
         where = BindWhere(stmt->whereClause);  
@@ -210,7 +227,7 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
 }
 std::unique_ptr<BoundExpression>
 Binder::BindHaving(duckdb_libpgquery::PGNode* node){
-    throw NotImplementedException("Not Support hving");
+    return BindExpression(node);
 }
 std::vector<std::unique_ptr<BoundOrderBy>>
 Binder::BindSort(duckdb_libpgquery::PGList* list){
@@ -251,7 +268,7 @@ Binder::BindLimitCount(duckdb_libpgquery::PGNode* node){
 
 std::vector<std::unique_ptr<BoundExpression>>
 Binder::BindGroupBy(duckdb_libpgquery::PGList* list){
-    throw NotImplementedException("Not support group by");
+    return  BindExpressionLists(list);
 }
 
 
@@ -470,6 +487,10 @@ Binder::BindExpressionLists(duckdb_libpgquery::PGList* list){
     for(auto entry = list->head;entry!=nullptr;entry=entry->next){
         auto pg_node = static_cast<duckdb_libpgquery::PGNode*>(entry->data.ptr_value);
         auto expr = BindExpression(pg_node);
+        if (expr->type_ == ExpressionType::STAR) {
+            throw Exception("unsupport * in expression list");
+        }
+
         values.push_back(std::move(expr));
     }
     return values;
@@ -564,8 +585,21 @@ std::vector<std::string>& col_names){
                 auto col_name = base.table_name_+"."+col_names[0];
                 auto* tb = cata_log_->GetTable(base.table_id_);
                 auto _column_ = tb->GetColumnFromSchema(col_name);
-                if(!_column_.has_value())
+                if(!_column_.has_value()){
+                    // can't found in table . try to find in select_list as alias.
+
+                    if(scope_select_list_){
+                        for(auto& expr  : *scope_select_list_){
+                            if(col_names[0] == expr->alias_){
+                                auto real =  expr->Copy();
+                                //erase alias.
+                                real->alias_ = std::nullopt;
+                                return real;
+                            }
+                        }
+                    }
                     return  nullptr;
+                }
                 auto _col_names = col_names;
                 _col_names.insert(_col_names.begin(),base.getTableNameRef());
                 return std::unique_ptr<BoundColumnRef>(
@@ -576,8 +610,8 @@ std::vector<std::string>& col_names){
             auto& table_name = col_names[0];
             if(table_name != base.getTableNameRef())
                 return nullptr;
-            
 
+            // alias wont col_names > 1;
             auto col_name = base.table_name_ + "." + col_names[1];
             auto* tb = cata_log_->GetTable(base.table_id_);
             auto _col = tb->GetColumnFromSchema(col_name);
@@ -616,7 +650,30 @@ Binder::BindStarRef(duckdb_libpgquery::PGAStar* star){
 }
 std::unique_ptr<BoundExpression>
 Binder::BindFuncCall(duckdb_libpgquery::PGFuncCall* func){
-    throw NotImplementedException("Not Support Agg");
+    auto n = func->funcname;
+    auto function_name =
+      StringLower(reinterpret_cast<duckdb_libpgquery::PGValue *>(n->head->data.ptr_value)->val.str);
+    
+    if(func->args ==nullptr){
+        throw Exception("Empty Args Function ?");
+    }
+    std::vector<std::unique_ptr<BoundExpression>> args;
+    for(auto node = func->args->head;node!=nullptr;node= node->next ){
+        auto expr = BindExpression(static_cast<duckdb_libpgquery::PGNode*>(node->data.ptr_value));
+        args.push_back(std::move(expr));
+    }
+
+    if (function_name == "min" || function_name == "max" || function_name == "first" || function_name == "last" ||
+      function_name == "sum" || function_name == "count" || function_name=="avg") {
+    // Rewrite count(*) to count_star().
+    if (function_name == "count" && args.empty()) {
+      function_name = "count_star";
+    }
+
+    // Bind function as agg call.
+    return std::make_unique<BoundAgg>(function_name, func->agg_distinct, std::move(args));
+  }
+  throw Exception(std::format("Unsupport function {}",function_name));
 }
 
 std::unique_ptr<BoundExpression>
@@ -625,9 +682,7 @@ Binder::BindResTarget(duckdb_libpgquery::PGResTarget* target){
     if(expr == nullptr)
         throw Exception("BindResTarget Error");
     if(target->name!=nullptr){
-        return std::unique_ptr<BoundAlias>(
-            new BoundAlias(std::move(expr),target->name)
-        );
+        expr->alias_ = std::make_optional(target->name);
     }
     return expr;
 }

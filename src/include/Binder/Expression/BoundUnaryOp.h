@@ -22,6 +22,12 @@ public:
         return std::make_unique<BoundUnaryOp>(operator_name_,args_->Copy());
     }
 
+    std::string ToString() const override{
+        return  operator_name_+args_->ToString();
+    }
+    bool HasAgg() override{
+        return  args_->HasAgg();
+    }
     std::string operator_name_;
     std::unique_ptr<BoundExpression> args_;
 

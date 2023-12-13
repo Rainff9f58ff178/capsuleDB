@@ -28,8 +28,9 @@
 #include <iostream>
 #include <memory>
 
-
+class AggregateEntry;
 class BoundJoinTable;
+class BoundAgg;
 class Planer{
 public:
     
@@ -70,6 +71,14 @@ public:
     LogicalOperatorRef
     PlanExpressionList(const BoundExpressionList& expr_list);
 
+    LogicalOperatorRef 
+    PlanAgg(const SelectStatement& stmt,LogicalOperatorRef child);
+    void AddAggToContext(const BoundExpression& expr,
+    std::vector<AggregateEntry>& agg_ety,
+    std::vector<Column>&& cols,LogicalOperatorRef child);
+
+    AggregateEntry GenerateAgg(const BoundAgg& a,LogicalOperatorRef child);
+    
     bool CheckHashJoinCondition(LogicalExpressionRef condition){
         // just need check build type.
         auto left_cols = std::vector<Column>();
