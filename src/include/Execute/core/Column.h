@@ -48,6 +48,9 @@ public:
     virtual void insertFrom(const ValueUnionView& value){
         COLUMN_IMPOSSBLE;
     }
+    virtual void insertFrom(const ValueUnion& value){
+        COLUMN_IMPOSSBLE;
+    }
     virtual void insertFrom(ExecColumn* other,uint32_t idx){
         COLUMN_IMPOSSBLE;
     }
@@ -73,6 +76,22 @@ public:
     }
     virtual ColumnRef clone(uint32_t row = 0){
         COLUMN_IMPOSSBLE
+    }
+
+    virtual ValueUnion agg_count(){
+        COLUMN_IMPOSSBLE;
+    }
+    virtual ValueUnion agg_sum(){
+        COLUMN_IMPOSSBLE;
+    }
+    virtual ValueUnion agg_min(){
+        COLUMN_IMPOSSBLE;
+    }
+    virtual ValueUnion agg_max(){
+        COLUMN_IMPOSSBLE;
+    }
+    virtual ValueUnion agg_avg(){
+        COLUMN_IMPOSSBLE;
     }
 };
 

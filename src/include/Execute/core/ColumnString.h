@@ -24,6 +24,7 @@ public:
     }
     uint64_t HashAt(uint32_t idx) override;
     void insertFrom(const ValueUnionView& value) override;
+    void insertFrom(const ValueUnion& value) override;
     void MergeData(ExecColumn* other) override;
 
     int compare_at(ExecColumn* _other,uint32_t l_idx,uint32_t r_idx) override;
@@ -44,6 +45,11 @@ public:
         }
         return new_col;
     }
+    ValueUnion agg_count() override;
+    ValueUnion agg_sum() override;
+    ValueUnion agg_min() override;
+    ValueUnion agg_max() override;
+    ValueUnion agg_avg() override;
     std::vector<std::string> data_;
 };
 

@@ -35,15 +35,16 @@ public:
             return ValueUnion(std::string(val_.data_,value_len_));
         }
     }
-    bool operator==(const ValueUnion& other);
-    bool operator!=(const ValueUnion& other);
-    bool operator>=(const ValueUnion& other);
-    bool operator<=(const ValueUnion& other);
-    bool operator> (const ValueUnion& other);
-    bool operator< (const ValueUnion& other);
+    bool operator=(const ValueUnion& other);
+    bool operator==(const ValueUnion& other) const;
+    bool operator!=(const ValueUnion& other) const;
+    bool operator>=(const ValueUnion& other) const;
+    bool operator<=(const ValueUnion& other) const;
+    bool operator> (const ValueUnion& other) const;
+    bool operator< (const ValueUnion& other) const;
 
-    ValueUnion operator+ (const ValueUnion& other);
-    ValueUnion operator- (const ValueUnion& other);
+    ValueUnion operator+ (const ValueUnion& other) const;
+    ValueUnion operator- (const ValueUnion& other) const;
     ValueType type_;
     ValueId id_;
     union __value{

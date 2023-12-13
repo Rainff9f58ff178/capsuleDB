@@ -38,6 +38,15 @@ public:
         }
 
     }
+    void insertFrom(const ValueUnionView& value){
+        CHEKC_THORW(value.size() == columns_.size());
+        __check_all_column_row_same();
+        for(uint32_t i=0;i<value.size();++i){
+            columns_[i]->insertFrom(value[i]);
+        }
+        __check_all_column_row_same();
+        metadata.rows_++;
+    }
     void MergeBlock(Chunk* other_chunk);
     void insertFrom(Chunk* otherchunk,uint32_t idx);
     uint32_t rows();

@@ -10,6 +10,11 @@ void ColumnString::insertFrom(const ValueUnionView& value){
         data_.push_back(std::string(value[i].val_.data_,value[i].value_len_));
     }
 }
+void ColumnString::insertFrom(const ValueUnion& value){
+    CHEKC_THORW(value.type_ == TypeString);
+    data_.push_back(std::string(value.val_.data_,value.value_len_));
+}
+
 uint64_t ColumnString::HashAt(uint32_t idx){
     return std::hash<std::string>()(data_[idx]);
 }
@@ -64,4 +69,33 @@ uint32_t ColumnString::max_char_size() {
         max_size = std::max((uint32_t)val.size(),max_size);
     }
     return max_size;
+}
+
+
+ValueUnion ColumnString::agg_count(){
+    return ValueUnion(data_.size());
+}
+ValueUnion ColumnString::agg_sum(){
+    int sum = 0;
+    for(auto& data : data_){
+        sum+=data.size();
+    }
+    return ValueUnion(sum);
+}
+ValueUnion ColumnString::agg_min(){
+    int min = INT32_MAX;
+    for(auto& data:data_){
+        min = std::min((int)data.size(),min);
+    }
+    return min;
+}
+ValueUnion ColumnString::agg_max(){
+    int max= INT32_MAX;
+    for(auto &data: data_){
+        max = std::max( (int)data.size(),max ) ;
+    }
+    return max;
+}
+ValueUnion ColumnString::agg_avg(){
+    return  ValueUnion(agg_sum().val_.num_ / data_.size());
 }

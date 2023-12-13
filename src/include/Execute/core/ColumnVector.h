@@ -67,6 +67,10 @@ public:
         CHEKC_THORW(o->data_.size()>idx);
         data_.push_back(o->data_[idx]);
     }
+    void insertFrom(const ValueUnion& val) override{
+        CHEKC_THORW(val.type_== TypeInt);
+        data_.push_back(val.val_.num_);
+    }
     std::string toString(uint32_t row_idx) override{
         return std::to_string(data_[row_idx]);
     }
@@ -86,6 +90,37 @@ public:
             new_col->data_[i] = data_[i];
         }
         return new_col;
+    }
+
+
+
+    ValueUnion agg_count() override{
+        return  ValueUnion(data_.size());
+    }
+    ValueUnion agg_sum() override{
+        int32_t sum = 0;
+        for(uint32_t i=0;i<data_.size();++i){
+            sum+=data_[i];
+        }
+        return ValueUnion(sum);
+    }
+    ValueUnion agg_min() override{
+        int32_t min = INT32_MAX;
+        for(uint32_t i=0;i<data_.size();++i){
+            min = std::min((int32_t) data_[i],min);
+        }
+        return min;
+    }
+    ValueUnion agg_max() override{
+        int32_t max = INT32_MIN;
+        for(uint32_t i=0;i<data_.size();++i){
+            max = std::max((int32_t)data_[i],max);
+        }
+        return max;
+    }
+    ValueUnion agg_avg() override{
+        ValueUnion v =agg_sum();
+        return ValueUnion(v.val_.num_/data_.size());
     }
 
     std::vector<T> data_;

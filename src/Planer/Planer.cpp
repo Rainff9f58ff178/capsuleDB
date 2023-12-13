@@ -119,7 +119,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
 
                 for(auto& col : cols){
                     if(LoadColumn(col,op->children_[0]) == LoadResult::LoadFailed){
-                        throw Exception(std::format("Load column {} failed",col.name_));
+                        throw Exception(std::format("Load column {} failed,Maybe you try to load a expression that not in group by ?",col.name_));
                     }
                 }
 
@@ -149,7 +149,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             for(auto& col : cols_this_node_need){
                 auto r = LoadColumn(col,op->children_[0]);
                 if(r == LoadResult::LoadFailed){
-                    throw Exception(std::format("Load Column {} Failed ,your try to load a expression that not in group by ",col.name_));
+                    throw Exception(std::format("Load Column {} Failed ,Maybe you try to load a expression that not in group by ?",col.name_));
                 }
             }
             // Load columns aggs need.
@@ -163,7 +163,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
                 for(auto& col : cols_this_node_need){
                     auto r = LoadColumn(col,op->children_[0]);
                     if(r == LoadResult::LoadFailed){
-                        throw Exception(std::format("Load Column {} Failed,nyour try to load a expression that not in group by", col.name_));
+                        throw Exception(std::format("Load Column {} Failed,Maybe you try to load a expression that not in group by ?", col.name_));
                     }
                 }
             }
@@ -192,7 +192,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
                 for(auto& col : cols){
                     auto result = LoadColumn(col,op->children_[0]);
                     if(result== LoadResult::LoadFailed){
-                        throw Exception(std::format("Load column {} failed,your try to load a expression that not in group by ?",col.name_));
+                        throw Exception(std::format("Load column {} failed,Maybe you try to load a expression that not in group by?",col.name_));
                     }
                 }
             }
@@ -229,7 +229,7 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             for(auto& col:filter_cols){
                 auto r = LoadColumn(col,node.children_[0]);
                 if(r == LoadResult::LoadFailed){
-                    throw Exception(std::format("Load column {} failed,your try to load a expression that not in group by",col.name_));
+                    throw Exception(std::format("Load column {} failed,Maybe you try to load a expression that not in group by?",col.name_));
                 }
             }
             node.SetInputSchema(node.children_[0]->GetOutPutSchema()->Copy());
@@ -497,6 +497,11 @@ void Planer::AddAggToContext(const BoundExpression& expr,std::vector<AggregateEn
             NOT_IMP;
     }
 }
+
+
+
+
+
 LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRef child){
     // add those agg to context.
 
@@ -504,9 +509,9 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
     // first check if group by contain any agg. group by can't contain agg. 
 
     std::vector<LogicalExpressionRef> group_bys;
-    
     auto group_cols = std::make_shared<Schema>();
     auto _group_cols = std::make_shared<Schema>();
+    
     for(auto& expr : stmt.group_by_){
         if(expr->HasAgg()){
             throw Exception("Group By clause can't contain agg !");
@@ -544,6 +549,7 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
                 throw Exception(std::format("{} must appear in group by clause !",col.name_));
             }
         }
+        
     }
 
     //and order by 
@@ -571,6 +577,13 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
 
     return plan;
 }
+
+
+
+
+
+
+
 
 LogicalOperatorRef
 Planer::PlanSelect(const SelectStatement& stmt){   

@@ -8,6 +8,7 @@
 #include "Execute/ExecutorNode/HashJoinPhysicalOperator.h"
 #include "Execute/ExecutorNode/LimitPhysicalOperator.h"
 #include "Execute/ExecutorNode/SortPhyscialOperator.h"
+#include "Execute/ExecutorNode/AggregatePhysicalOperator.h"
 #include "common/Exception.h"
 #include<stack>
 ExecuteEngine::ExecuteEngine(){
@@ -89,24 +90,7 @@ OperatorResult ExecuteEngine::ExecutePush(PipelineRef& pipeline,ChunkRef& chunk)
         stack.pop();
         current_chunk = nullptr;
     }
-
-
-
-
-    // for(auto* o:pipeline->operators_){
-    //     auto operator_result = o->Execute(chunk);
-    //     if(operator_result == OperatorResult::FINISHED){
-    //         return OperatorResult::FINISHED;
-    //     }
-    // }
-    // SinkResult sink_result = pipeline->sink_->Sink(chunk);
-    // if(sink_result== SinkResult::FINISHED){
-    //     return OperatorResult::FINISHED;
-    // }
-    // if(sink_result == SinkResult::NEED_MORE){
-    //         return OperatorResult::NEED_MORE;
-    // }
-    // UNREACHABLE
+    UNREACHABLE;
 }
 void 
 ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
@@ -199,6 +183,12 @@ LogicalOperatorRef plan,ExecuteContext* context){
             
             return  std::shared_ptr<MaterializePhysicalOperator>(
                 new MaterializePhysicalOperator(std::move(plan),context,{child})
+            );
+        }
+        case AggOperatorNode:{
+            auto child =  CreatePhysicalOperatorTree(plan->children_[0],context);
+            return std::shared_ptr<AggregatePhysicalOperator>(
+                new AggregatePhysicalOperator(std::move(plan),context,{child})
             );
         }
         case SortOperatorNode:{
