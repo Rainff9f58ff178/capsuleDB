@@ -13,6 +13,7 @@
 #include "Binder/TableRef/BoundBaseTable.h"
 #include "Binder/TableRef/BoundExpressionList.h"
 #include "Binder/TableRef/BoundJoinTable.h"
+#include "Binder/TableRef/BoundSubQueryTable.h"
 #include "CataLog/Schema.h"
 #include "Expressions/LogicalExpression.h"
 #include "Planer/LogicalOperator.h"
@@ -23,6 +24,8 @@
 #include "Planer/LimitLogicalOperator.h"
 #include "Planer/SortLogicalOperator.h"
 #include "Planer/AggregateLogicalOperator.h"
+#include "Planer/SubqueryMaterializeLogicalOperator.h"
+#include "Planer/MaterilizeLogicaloperator.h"
 #include "common/Exception.h"
 #include "common/commonfunc.h"
 #include <format>
@@ -66,6 +69,9 @@ void Planer::AddColumnFromExpression(BoundExpression& expr,SchemaRef& schema){
 Planer::LoadResult Planer::LoadColumn(const Column& col,LogicalOperatorRef op){
     if(op->GetOutPutSchema()->exist(col)){
         return LoadResult::LoadSucc;
+    }
+    if(op->GetType() == SubqueryMaterializeOperatorNode){
+        return LoadResult::LoadFailed;
     }
     if(op->GetType() == AggOperatorNode){
         return LoadResult::LoadFailed;
@@ -116,13 +122,11 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             for(auto& expr : node.final_select_list_expr_){
                 std::vector<Column> cols;
                 expr->collect_column(cols);
-
                 for(auto& col : cols){
                     if(LoadColumn(col,op->children_[0]) == LoadResult::LoadFailed){
                         throw Exception(std::format("Load column {} failed,Maybe you try to load a expression that not in group by ?",col.name_));
                     }
                 }
-
                 auto final_col_name = expr->toString();
                 // select colA+1 ,colB > colC from test_1 . 
                 auto type = expr->GetReturnType();
@@ -134,6 +138,27 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             node.SetOutputSchema(output_schema);
 
 
+            select_list_queue_.pop_front();
+            break;
+        }
+        case SubqueryMaterializeOperatorNode:{
+            SetInputOutputSchemaInternal(op->children_[0]);
+            auto& node = op->Cast<SubqueryMaterializeLogicalOperator>();
+            std::vector<Column> final_output_cols;
+            for(auto& expr : node.final_select_list_expr_){
+                std::vector<Column> cols;
+                expr->collect_column(cols);
+                for(auto& col : cols){
+                    if(LoadColumn(col,op->children_[0]) == LoadResult::LoadFailed){
+                        throw Exception(std::format("Load column {} failed,Maybe you try to load a expression that not in group by ?",col.name_));
+                    }
+                }
+                auto final_col_name = expr->toString();
+                auto type = expr->GetReturnType();
+                final_output_cols.push_back(Column(final_col_name,type));
+            }
+            node.SetInputSchema(op->children_[0]->GetOutPutSchema()->Copy());
+            node.SetOutputSchema(node.select_list_);
             select_list_queue_.pop_front();
             break;
         }
@@ -414,6 +439,7 @@ std::map<std::string,Schema>& map ){
             map[base.table_name_].Merge(base.schema_);
             break;
         }
+
         default:
             break;
     }
@@ -532,15 +558,6 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
     std::vector<AggregateEntry> all_aggs;
     std::vector<Column> cols;
 
-    if(!stmt.having_->isInvalid()){
-        AddAggToContext(*stmt.having_,all_aggs,std::move(cols),child);
-        for(auto& col: cols){
-            if(!_group_cols->exist(col)){
-                throw Exception(std::format("{} must appear in group by clause !",col.name_));
-            }
-        }
-    }
-
     for(auto& expr : stmt.select_list_){
         cols.clear();
         AddAggToContext(*expr,all_aggs,std::move(cols),child);
@@ -551,6 +568,19 @@ LogicalOperatorRef Planer::PlanAgg(const SelectStatement& stmt,LogicalOperatorRe
         }
         
     }
+
+
+    if(!stmt.having_->isInvalid()){
+        cols.clear();
+        AddAggToContext(*stmt.having_,all_aggs,std::move(cols),child);
+        for(auto& col: cols){
+            if(!_group_cols->exist(col)){
+                throw Exception(std::format("{} must appear in group by clause !",col.name_));
+            }
+        }
+    }
+
+
 
     //and order by 
     auto& order_bys = stmt.order_bys_;
@@ -645,6 +675,9 @@ Planer::PlanSelect(const SelectStatement& stmt){
         std::vector<std::pair<OrderByType,LogicalExpressionRef>> exprs;
         for(auto& order_by : stmt.order_bys_){
             auto [_1,expr] = PlanExpression(*order_by->expr_,{plan});
+            // copy it . and .erease alias.
+            expr = expr->Copy();
+            expr->alias_ = std::nullopt;
             exprs.push_back({order_by->order_type_,std::move(expr)});
         }
         plan = std::shared_ptr<SortLogicalOperator>(
@@ -846,7 +879,18 @@ Planer::PlanJoinTable(const BoundJoinTable& join_table){
 }
     
 
+LogicalOperatorRef
+Planer::PlanSubSelcet(const BoundSubQueryTable& table){
+    auto& sub = down_cast<const BoundSubQueryTable&>(table);
+    auto node = PlanSelect(*sub.sub_query_statement_);
+    CHEKC_THORW(node->GetType() == MaterilizeOperatorNode);
 
+    auto& ma_node = down_cast<MaterilizeLogicaloperator&>(*node);
+    auto sub_query_materialize = std::shared_ptr<SubqueryMaterializeLogicalOperator>( new SubqueryMaterializeLogicalOperator(std::move(ma_node.children_),sub.select_list_));
+    sub_query_materialize->final_select_list_expr_ = std::move(ma_node.final_select_list_expr_);
+    context_.planings_[sub.alias_] = std::make_unique<TablePlan>(table.alias_,std::nullopt,sub.select_list_,std::make_shared<Schema>());
+    return sub_query_materialize;
+}
 LogicalOperatorRef
 Planer::PlanTableRef(const BoundTabRef& expr){
     switch (expr.type_) {
@@ -865,6 +909,11 @@ Planer::PlanTableRef(const BoundTabRef& expr){
             auto& expr_list = 
                 dynamic_cast<const BoundExpressionList&>(expr);
             return PlanExpressionList(expr_list);
+            break;
+        }
+        case TableReferenceType::SUBQUERY:{
+            auto& sub_query = down_cast<const BoundSubQueryTable&>(expr);
+            return PlanSubSelcet(sub_query);
             break;
         }
         default:

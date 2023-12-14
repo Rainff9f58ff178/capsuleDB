@@ -40,7 +40,7 @@ ExecuteContext* context){
         }else{
             //has child_,it must has only one child  for now 
             assert(children_.size()==1);
-            current->operators_.push_back(this);
+            current->operators_.insert(current->operators_.begin(),this);
             children_[0]->BuildPipeline(current,context);
         }
 

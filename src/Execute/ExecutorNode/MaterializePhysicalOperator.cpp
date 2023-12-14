@@ -13,6 +13,7 @@ OperatorResult
 MaterializePhysicalOperator::Execute(ChunkRef& chunk){
     CHEKC_THORW(chunk);
     auto& plan = GetPlan()->Cast<MaterilizeLogicaloperator>();
+    CHEKC_THORW (chunk->columns() == plan.GetInputSchema()->columns_.size())
     auto& exprs = plan.final_select_list_expr_;
     ChunkRef new_chunk = std::make_shared<Chunk>();
     for(auto& expr : exprs){

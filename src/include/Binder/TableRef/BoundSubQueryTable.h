@@ -3,15 +3,16 @@
 #include "Binder/BoundStatement.h"
 #include <string>
 
-
+#include "CataLog/Schema.h"
+#include "Binder/Statement/SelectStatement.h"
 
 
 
 class BoundSubQueryTable:public BoundTabRef{
 public:
     explicit BoundSubQueryTable(
-        std::vector<std::vector<std::string>>&& select_list,
-        std::unique_ptr<BoundStatement> sub_query_statement,
+        SchemaRef select_list,
+        std::unique_ptr<SelectStatement> sub_query_statement,
         std::string alias
     ):BoundTabRef(TableReferenceType::SUBQUERY),
     select_list_(std::move(select_list)),
@@ -19,11 +20,11 @@ public:
     alias_(std::move(alias)){}
 
     BoundSubQueryTable()=default;
-    ~BoundSubQueryTable()=default;
 
 
-    std::unique_ptr<BoundStatement> sub_query_statement_;
-    std::vector<std::vector<std::string>> select_list_;
+    std::unique_ptr<SelectStatement> sub_query_statement_;
+    
+    SchemaRef select_list_;
     std::string alias_;
 };
 

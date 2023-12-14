@@ -49,7 +49,7 @@ std::unique_ptr<BoundStatement> Binder::BindStatement(duckdb_libpgquery::PGNode*
         case duckdb_libpgquery::T_PGSelectStmt:
             return BindSelect(reinterpret_cast<duckdb_libpgquery::PGSelectStmt *>(stmt));
         case duckdb_libpgquery::T_PGExplainStmt:
-        return BindExplain(reinterpret_cast<duckdb_libpgquery::PGExplainStmt *>(stmt));
+            return BindExplain(reinterpret_cast<duckdb_libpgquery::PGExplainStmt *>(stmt));
         // case duckdb_libpgquery::T_PGDeleteStmt:
         // return BindDelete(reinterpret_cast<duckdb_libpgquery::PGDeleteStmt *>(stmt));
         // case duckdb_libpgquery::T_PGUpdateStmt:
@@ -219,6 +219,8 @@ std::unique_ptr<SelectStatement> Binder::BindSelect(duckdb_libpgquery::PGSelectS
     if(stmt->sortClause)
         sort = BindSort(stmt->sortClause);
 
+
+    scope_select_list_=nullptr;
     return std::unique_ptr<SelectStatement>(
         new SelectStatement(std::move(table),std::move(select_list),std::move(where)
         ,std::move(group_by),std::move(having),std::move(limit),std::move(limit_offset),std::move(sort),false)
@@ -334,6 +336,16 @@ Binder::GetAllColumnExpr(BoundTabRef* table){
             
             return v;
         }
+        case TableReferenceType::SUBQUERY:{
+            std::vector<std::unique_ptr<BoundExpression>> v;
+            auto* sub_query = reinterpret_cast<BoundSubQueryTable*>(table);
+            for(auto& col : sub_query->select_list_->columns_){
+                v.push_back(std::unique_ptr<BoundColumnRef>(
+                    new BoundColumnRef(split(col.name_,"."),col.type_)
+                ));
+            }
+            return v;
+        }
         default:
             break;
     }
@@ -382,36 +394,28 @@ Binder::BindRangeSubSelect(duckdb_libpgquery::PGRangeSubselect* query){
     if(query->lateral)
         throw NotImplementedException("Not Support lateral in subquery");
 
+    
+    if(query->alias==nullptr){
+        throw Exception("You Must Specify SubQuery table name .");
+    }
 
     auto* sub = reinterpret_cast<duckdb_libpgquery::PGSelectStmt*>(query->subquery);
-    if(query->alias)
-        return BindSubSelect(sub,query->alias->aliasname);
-
-    return BindSubSelect(sub,
-    (std::format("__unname_sub_quer.{}",this->universe_id_++)));
-
+    return BindSubSelect(sub,query->alias->aliasname);
 
 }
 std::unique_ptr<BoundTabRef>
 Binder::BindSubSelect(duckdb_libpgquery::PGSelectStmt* stmt,std::string alias){
-    std::vector<std::vector<std::string>> select_list;
     auto sub =  BindSelect(stmt);
-    for(auto& item:sub->select_list_){
-        switch(item->type_){
-            case ExpressionType::COLUMN_REF:{
-                auto& c_ref = reinterpret_cast<BoundColumnRef&>(*item);
-                select_list.push_back(c_ref.column_);
-                break;
-            }
-            case ExpressionType::ALIAS:{
-                auto& alias = reinterpret_cast<BoundAlias&>(*item);
-                select_list.push_back({alias.alias_});
-            }
-            default:
-                select_list.push_back({std::format("__sub_query_item_.{}",universe_id_++)});
+    auto select_list = std::make_shared<Schema>();
+    
+    for(auto i =0;i<sub->select_list_.size();++i){
+        auto& item = sub->select_list_[i];
+        if(item->alias_){
+            select_list->AddColumn(Column(join({alias,*item->alias_},"."),item->GetReturnType()));
+            continue;
         }
+        select_list->AddColumn(Column(join({alias,std::format("unname_col{}",i)},"."),item->GetReturnType()));
     }
-
     return std::unique_ptr<BoundSubQueryTable>(
         new BoundSubQueryTable(std::move(select_list),std::move(sub),std::move(alias))
     );
@@ -634,6 +638,38 @@ std::vector<std::string>& col_names){
             if(!left_expr)
                 return  right_expr;
             return left_expr;
+        }
+        case TableReferenceType::SUBQUERY:{
+            auto& sub_q = down_cast<const BoundSubQueryTable&>(scope);
+            auto select_list = sub_q.select_list_;
+            if(col_names.size()>1){
+                auto name = join(col_names,".");
+                if(sub_q.select_list_->exist(Column(name,UNKOWN))){
+                    // exist in select_list.
+                    auto c = sub_q.select_list_->getColumnByname(name);
+                    return std::unique_ptr<BoundColumnRef>( new BoundColumnRef(col_names,c->type_));
+                }
+                return  nullptr;
+            }
+            // col_names == 1;
+            auto name = sub_q.alias_+"."+col_names[0];
+            if(sub_q.select_list_->exist(Column(name,UNKOWN))){
+                 auto c = sub_q.select_list_->getColumnByname(name);
+                return std::unique_ptr<BoundColumnRef>( new BoundColumnRef({sub_q.alias_,col_names[0]},c->type_));
+            }
+            //check if its alias in other clause.
+            if(scope_select_list_){
+                for(auto& expr : *scope_select_list_){
+                    if(*expr->alias_ == col_names[0] ){
+                        auto r = expr->Copy();
+                        r->alias_ = nullptr;
+                        return r;
+                    }
+                }
+            }
+
+            // not alias and not int selet_list.
+            return nullptr;
         }
         default:
             break;

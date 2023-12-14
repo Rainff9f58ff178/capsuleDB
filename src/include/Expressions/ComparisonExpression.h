@@ -16,7 +16,7 @@ public:
 
         }
     
-    LogicalExpressionType GetType(){
+    LogicalExpressionType GetType() override{
         return  LogicalExpressionType::ComparsionExpr;
     }
     virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
@@ -54,6 +54,13 @@ public:
     }
     ColumnType GetReturnType() override{
         return ColumnType::INT;
+    }
+    LogicalExpressionRef Copy() override{
+        auto l = children_[0]->Copy();
+        auto r = children_[1]->Copy();
+        auto _r = std::make_shared<ComparisonExpression>(std::vector<LogicalExpressionRef>{l,r},cp_type_);
+        _r->alias_= alias_;
+        return _r;
     }
 
     std::string toString() override{

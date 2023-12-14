@@ -221,6 +221,5 @@ void StardDataBase::ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt
     auto op_p =optimizer.RegularOptimize(planer.plan_);
     planer.ShowPlanTree(op_p);
     auto context = std::make_shared<ExecuteContext>(cata_log_);
-
     execute_engine_->ExecuteExplain(op_p,context);
 }

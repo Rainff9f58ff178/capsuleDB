@@ -19,4 +19,7 @@ public:
     bool HasAgg() override{
         return false;
     }
+    ColumnType GetReturnType() const override{
+        UNREACHABLE;
+    }
 };

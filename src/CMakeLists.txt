@@ -34,6 +34,8 @@ set(SRC Database.cpp
         Execute/ExecutorNode/LimitPhysicalOperator.cpp 
         Execute/ExecutorNode/SortPhysicalOperator.cpp 
         Execute/ExecutorNode/AggregatePhysicalOperator.cpp
+        Execute/ExecutorNode/FilterPhysicalOperator.cpp
+        Execute/ExecutorNode/SubqueryMaterializePhysicalOperator.cpp
         Execute/Pipeline/Pipeline.cpp 
         Execute/ExecuteContext.cpp 
         Execute/ExecuteEngine.cpp

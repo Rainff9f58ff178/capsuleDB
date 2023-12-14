@@ -26,6 +26,13 @@ public:
         }
         return ValueUnion(0);
     }
+    LogicalExpressionRef Copy() override{
+        auto l = children_[0]->Copy();
+        auto r = children_[0]->Copy();
+        auto _r = std::make_shared<ArithmeticExpression>(std::vector<LogicalExpressionRef>{l,r},a_type_);
+        _r->alias_ = alias_;
+        return _r;
+    }
     virtual ValueUnion EvaluteJoin(ChunkRef* l_chunk,ChunkRef* r_chunk,
         uint32_t l_idx,uint32_t r_idx) override{
             

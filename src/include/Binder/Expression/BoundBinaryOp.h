@@ -36,6 +36,16 @@ public:
             return true;
         return false;
     }
+    ColumnType GetReturnType()const override{
+        auto l = larg_->GetReturnType();
+        auto r = rarg_->GetReturnType();
+        if(l != r){
+            throw Exception("two type mismatch expression can't do binary operation.");
+        }
+        return l;
+    }
+    
+    
 
     std::string operator_name_;
     std::unique_ptr<BoundExpression> larg_;

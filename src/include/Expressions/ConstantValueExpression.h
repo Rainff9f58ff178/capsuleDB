@@ -23,7 +23,11 @@ public:
     LogicalExpressionType GetType() override{
         return LogicalExpressionType::ConstantExpr;
     }
-
+    LogicalExpressionRef Copy() override{
+        auto r = std::make_shared<ConstantValueExpression>(std::move(val_.clone()));
+        r->alias_ = alias_;
+        return r;
+    }
     virtual ColumnType GetReturnType() override{
         return ValueTypeConvertToColumnType(val_.type_);
     }

@@ -8,6 +8,7 @@ enum OperatorType{
     LogicalOperatorNode=0,
     PhysicalOperatorNode,
     MaterilizeOperatorNode,
+    SubqueryMaterializeOperatorNode,
     HashJoinOperatorNode,
     FilterOperatorNode,
     InsertOperatorNode,
@@ -56,7 +57,7 @@ public:
     }
     virtual LogicalOperatorRef 
     CopyWithChildren(std::vector<LogicalOperatorRef> children)=0;
-    
+
     virtual void PrintDebug(){
         if(!show_info)
             return;;

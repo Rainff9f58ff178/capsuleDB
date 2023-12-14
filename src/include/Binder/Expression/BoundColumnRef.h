@@ -30,6 +30,9 @@ public:
     std::unique_ptr<BoundExpression> Copy()override{
         return std::make_unique<BoundColumnRef>(column_,col_type_);
     }
+    ColumnType GetReturnType() const override{
+        return col_type_;
+    }
     std::vector<std::string> column_;
     ColumnType col_type_;
 };

@@ -32,6 +32,9 @@ public:
     virtual std::string toString(){
         UNREACHABLE
     }
+    virtual LogicalExpressionRef Copy(){
+        UNREACHABLE;
+    }
 
     virtual void collect_column(std::vector<Column>& col){
         // collect all column appear in this exprsiion.

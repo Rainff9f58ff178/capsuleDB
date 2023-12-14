@@ -30,7 +30,7 @@ ExecuteContext::ShowPipelines(){
     std::cout<<"==== Pipelines ===="<<std::endl;
     for(auto& pipeline : pipelines_){
         if(pipeline->is_root_pipe_line_){
-            std::cout<<" root pipeline"<<pipeline->identify_<<":"
+            std::cout<<"root pipeline:"<<pipeline->identify_<<":"
             <<"total child has :"<<pipeline->total_children_;
         }else{
             std::cout<<"pipline :"<<pipeline->identify_;
@@ -39,7 +39,7 @@ ExecuteContext::ShowPipelines(){
         PrintOperatorName(pipeline->source_);
         std::cout<<"]---->";
         std::cout<<"[";
-        for(int32_t i=pipeline->operators_.size()-1;i>=0;--i){
+        for(int32_t i=0;i< pipeline->operators_.size();++i){
             PrintOperatorName(pipeline->operators_[i]);
             if(i!= 0){
                 std::cout<<",";
@@ -74,6 +74,10 @@ ExecuteContext::PrintOperatorName(PhysicalOperator* node){
         }
         case MaterilizeOperatorNode:{
             std::cout<<"Materilzie Operator Node";
+            break;
+        }
+        case SubqueryMaterializeOperatorNode:{
+            std::cout<<"Subquery Materialize Operator node";
             break;
         }
         case HashJoinOperatorNode:{

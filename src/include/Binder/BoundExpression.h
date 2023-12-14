@@ -7,7 +7,7 @@
 #include<memory>
 #include<sstream>
 #include "common/Exception.h"
-
+#include"common/type.h"
 enum class ExpressionType : uint8_t {
   INVALID = 0,    /**< Invalid expression type. */
   CONSTANT = 1,   /**< Constant expression type. */
@@ -35,6 +35,9 @@ public:
         UNREACHABLE
     }
     virtual std::string ToString() const{
+        UNREACHABLE;
+    }
+    virtual ColumnType GetReturnType() const{
         UNREACHABLE;
     }
     virtual bool HasAgg(){

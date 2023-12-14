@@ -38,6 +38,9 @@ public:
         ss<<")";
         return ss.str();
     }
+    ColumnType GetReturnType() const override{
+        return ColumnType::INT;
+    }
     bool HasAgg() override{
         return true;
     }

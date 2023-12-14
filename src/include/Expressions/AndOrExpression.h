@@ -27,6 +27,13 @@ public:
         UNREACHABLE;
     }
 
+    LogicalExpressionRef Copy() override{
+        auto l = children_[0]->Copy();
+        auto r = children_[1]->Copy();
+        auto _r = std::make_shared<AndOrExpression>(std::vector<LogicalExpressionRef>{l,r},l_type_);
+        _r->alias_ = alias_;
+        return _r;
+    }
 
     std::string toString() override{
         if(alias_){

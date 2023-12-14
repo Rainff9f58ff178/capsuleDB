@@ -28,6 +28,11 @@ public:
     }
 
 
+    LogicalExpressionRef Copy() override{
+        auto r = std::make_shared<ColumnValueExpression>(col_idx_,column_info_,left_or_right_);
+        r->alias_ = alias_;
+        return r;
+    }
     // select ... where colA <coC = colB+ 1;
     virtual ValueUnion Evalute(ChunkRef* chunk, uint32_t idx) override{
         auto col = chunk->get()->getColumnByname(column_info_.name_);

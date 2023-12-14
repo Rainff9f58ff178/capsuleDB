@@ -7,6 +7,8 @@
 #include <iostream>
 #include <string>
 #include <stack>
+#include<regex>
+#include<random>
 #include "./src/logger/Logger.h"
 
 using namespace std;
@@ -14,6 +16,47 @@ using namespace std;
 Logger g_logger("global.log");
 bool show_info= false;
 //env 
+
+std::string random_string(std::size_t length)
+{
+    const std::string CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    std::random_device random_device;
+    std::mt19937 generator(random_device());
+    std::uniform_int_distribution<> distribution(0, CHARACTERS.size() - 1);
+
+    std::string random_string;
+
+    for (std::size_t i = 0; i < length; ++i)
+    {
+        random_string += CHARACTERS[distribution(generator)];
+    }
+
+    return random_string;
+}
+
+
+void GenRandomTable(StardDataBase& db,int num){
+    std::stringstream table_name ;
+    table_name<<"random"<<num;
+    if(db.hasTable(table_name.str()))
+        return;
+    auto create = std::format( "create table {} (colA int,colB int,colC varchar(50),colD varchar(50),colE varchar(50),colF varchar(50) ) ",table_name.str());
+    db.ExecuteSql(create);
+
+    for(uint32_t i=0;i<num*1000;++i){
+        srand(std::chrono::system_clock::now().time_since_epoch().count());
+        int colA = rand() % (num*1000);
+        srand(std::chrono::system_clock::now().time_since_epoch().count());
+        int colB = rand() % (num*1000);
+        auto colC = random_string(3);
+        auto colD = random_string(3);
+        auto colE = random_string(10);
+        auto colF = random_string(10);
+        auto insert = std::format("insert into {} values({},{},'{}','{}','{}','{}')",table_name.str(),colA,colB,colC,colD,colE,colF);
+        db.ExecuteSql(insert);
+    }
+}
 
 int
 main() {
@@ -27,8 +70,10 @@ main() {
         ss<<std::endl;
         ss<<"-- input \\st to show tables" <<std::endl;
         ss<<"-- input \\q to quit"<<std::endl;
+        ss<<"-- input \\gen[1,2,3,4,5,6,7,8,9,10] to gen random table"<<std::endl;
         ss<<"-- only support varchar and int column"<<std::endl;
         ss<<"-- execute 'select * from database_info;' show more infomation  "<<std::endl;
+
         ss<<std::endl<<std::endl;
         std::cout<<ss.str()<<std::endl;
         
@@ -61,6 +106,21 @@ main() {
                 }
                 if (query == "\\q") {
                     break;
+                }
+                if(strstr(query.c_str(),"\\gen")){
+          
+                    std::string output = std::regex_replace(
+                        query,
+                        std::regex("[^0-9]*([0-9]+).*"),
+                        std::string("$1")
+                    );
+                    int num = stoi(output);
+                    if(num > 1000 ){
+                        throw Exception("too many rows");
+                    }
+                    std::cout<<"gening  "<<num <<" thousands rows table "<<std::endl;
+                    GenRandomTable(db,num);
+                    continue;
                 }
                 db.ExecuteSql(query);
             } catch (Exception e) {

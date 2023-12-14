@@ -32,6 +32,14 @@ public:
     bool HasAgg() override{
         return false;
     }
+    ColumnType GetReturnType() const override{
+        if(value_.type_ == TypeInt){
+            return ColumnType::INT;
+        }else if(value_.type_ == TypeString){
+            return ColumnType::STRING;
+        }
+        UNREACHABLE;
+    }
 
     ValueUnion value_;
 };

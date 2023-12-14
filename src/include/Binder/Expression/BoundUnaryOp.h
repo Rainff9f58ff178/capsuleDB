@@ -28,6 +28,9 @@ public:
     bool HasAgg() override{
         return  args_->HasAgg();
     }
+    ColumnType GetReturnType() const override{
+        return args_->GetReturnType();
+    }
     std::string operator_name_;
     std::unique_ptr<BoundExpression> args_;
 

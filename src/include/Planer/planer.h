@@ -31,6 +31,7 @@
 class AggregateEntry;
 class BoundJoinTable;
 class BoundAgg;
+class BoundSubQueryTable;
 class Planer{
 public:
     
@@ -42,6 +43,8 @@ public:
     LogicalOperatorRef
     PlanSelect(const SelectStatement& stmt);
 
+    LogicalOperatorRef
+    PlanSubSelcet(const BoundSubQueryTable& table);
     LogicalOperatorRef
     PlanInsert(const InsertStatement& stmt);
 
@@ -147,6 +150,10 @@ private:
             }
             case MaterilizeOperatorNode:{
                 std::cout<<"Materilizeoperator";
+                break;
+            }
+            case SubqueryMaterializeOperatorNode:{
+                std::cout<<"SubqueryMaterializeNode";
                 break;
             }
             case HashJoinOperatorNode:{

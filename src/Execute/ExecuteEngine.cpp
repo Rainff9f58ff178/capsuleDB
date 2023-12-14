@@ -9,6 +9,8 @@
 #include "Execute/ExecutorNode/LimitPhysicalOperator.h"
 #include "Execute/ExecutorNode/SortPhyscialOperator.h"
 #include "Execute/ExecutorNode/AggregatePhysicalOperator.h"
+#include "Execute/ExecutorNode/FilterPhysicalOperator.h"
+#include "Execute/ExecutorNode/SubqueryMaterializePhysicalOperator.h"
 #include "common/Exception.h"
 #include<stack>
 ExecuteEngine::ExecuteEngine(){
@@ -185,6 +187,13 @@ LogicalOperatorRef plan,ExecuteContext* context){
                 new MaterializePhysicalOperator(std::move(plan),context,{child})
             );
         }
+        case SubqueryMaterializeOperatorNode:{
+            auto child = CreatePhysicalOperatorTree(plan->children_[0],context);
+            
+            return std::shared_ptr<SubqueryMaterializePhysicalOperator>(
+                new SubqueryMaterializePhysicalOperator(std::move(plan),context,{child})
+            );
+        }
         case AggOperatorNode:{
             auto child =  CreatePhysicalOperatorTree(plan->children_[0],context);
             return std::shared_ptr<AggregatePhysicalOperator>(
@@ -212,7 +221,10 @@ LogicalOperatorRef plan,ExecuteContext* context){
             break;
         }
         case FilterOperatorNode:{
-            UNREACHABLE;
+            auto child = CreatePhysicalOperatorTree(plan->children_[0],context);
+            return std::shared_ptr<FilterPhysicalOperator>(
+                new FilterPhysicalOperator(plan,context,{child})
+            );
             break;
         }
         case InsertOperatorNode:{

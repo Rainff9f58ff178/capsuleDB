@@ -31,7 +31,7 @@ void AggregatePhysicalOperator::source_init(){
         curernt_chunk->insertFrom(ValueUnionView(aggs));
         if(curernt_chunk->rows() == 4096){
             chunks_.push_back(std::move(curernt_chunk));
-            curernt_chunk->cloneEmpty();
+            curernt_chunk = final_chunk->cloneEmpty();
         }
     }
     if(curernt_chunk->rows() > 0 ){
