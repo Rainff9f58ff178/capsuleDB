@@ -87,9 +87,28 @@ public:
         auto left_cols = std::vector<Column>();
         condition->children_[0]->collect_column(left_cols);
         CHEKC_THORW(!left_cols.empty());
-        auto l_table_name = getTableNameFromColName(left_cols[0].name_);
-        for(auto& col : left_cols){
-            if(getTableNameFromColName(col.name_) != l_table_name){
+        // auto l_table_name = getTableNameFromColName(left_cols[0].name_);
+        // for(auto& col : left_cols){
+        //     if(getTableNameFromColName(col.name_) != l_table_name){
+        //         return false;
+        //     }
+        // }
+
+        auto right_cols = std::vector<Column>();
+        condition->children_[1]->collect_column(right_cols);
+        std::set<std::string> left_table;
+        std::set<std::string> right_table;
+
+        for(auto& col :left_cols){
+            auto n = getTableNameFromColName(col.name_);
+            left_table.insert(n);
+        }
+        for(auto& col:right_cols){
+            auto n = getTableNameFromColName(col.name_);
+            right_table.insert(n);
+        }
+        for(auto& n : right_table){
+            if(std::find(left_table.begin(),left_table.end(),n) != left_table.end()){
                 return false;
             }
         }

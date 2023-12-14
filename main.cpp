@@ -57,9 +57,15 @@ void GenRandomTable(StardDataBase& db,int num){
         db.ExecuteSql(insert);
     }
 }
+void test(StardDataBase& db){
+    std::string s  = "select * from ( select sum(a.colA+1),avg(a.colB+1),avg(a.colC),min(b.colA),max(b.colC),sum(b.colD),a.colE,a.colF,b.colA,b.colE from (select colA as colA,colB as colB,colC as colC,colD as colD ,colE as colE,colF as colF from random10 where colA>10 ) as a inner join (select colA as colA ,colB as colB,colC as colC ,colD as colD ,colE as colE from random11 where colA >10 ) as b on a.colA=b.colA group by a.colE,a.colF,b.colA,b.colE having sum(b.colA) > 1 order by sum(a.colA+1)+1 )  final limit 1;";
+    std::cout<<"executing ... "<<s<<std::endl;
+    db.ExecuteSql(s);
+}
 
 int
-main() {
+main(int argc,char** argv) {
+
 
     try {
 
@@ -71,6 +77,7 @@ main() {
         ss<<"-- input \\st to show tables" <<std::endl;
         ss<<"-- input \\q to quit"<<std::endl;
         ss<<"-- input \\gen[1,2,3,4,5,6,7,8,9,10] to gen random table"<<std::endl;
+        ss<<"-- input \\test to  test"<<std::endl;
         ss<<"-- only support varchar and int column"<<std::endl;
         ss<<"-- execute 'select * from database_info;' show more infomation  "<<std::endl;
 
@@ -106,6 +113,10 @@ main() {
                 }
                 if (query == "\\q") {
                     break;
+                }
+                if(query == "\\test"){
+                    test(db);
+                    continue;
                 }
                 if(strstr(query.c_str(),"\\gen")){
           

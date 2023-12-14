@@ -299,26 +299,35 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             // in this situation. 
             // build port on oppsite of probe port . need exchange it .
 
-            auto l_input = node.children_[0]->GetOutPutSchema();
-            auto l_table_name = getTableNameFromColName(l_input->columns_[0].name_);
+
+            // select * from random1 as a inner join random2 as b on a.colA = b.colA inner join random3 as c on a.colA + b.colA = c.coLA;
+            auto l_output = node.children_[0]->GetOutPutSchema();
             std::vector<Column> __cols;
             node.condition_->children_[0]->collect_column(__cols);
-            auto ac_table_name = getTableNameFromColName(__cols[0].name_);
-            if(l_table_name != ac_table_name){
+
+            bool exchange = false;
+            for(auto& cols : __cols){
+                if(!l_output->exist(cols)){
+                    exchange = true;
+                    break;
+                }
+            }
+            if(exchange){
                 auto l_condition = node.condition_->children_[0];
                 auto r_condition = node.condition_->children_[1];
                 node.condition_->children_[0]= r_condition;
                 node.condition_->children_[1]= l_condition;
+                DEBUG("exchange condition ");
             }
             
             if(!CheckHashJoinCondition(node.condition_))
                 throw  Exception("Join Condition build port can't include column that different table,because Hashjoin doesnt support it .NestLoopJoin can,but Not Impl");
-            __cols.clear();
-            node.condition_->children_[0]->collect_column(__cols);
-            ac_table_name = getTableNameFromColName(__cols[0].name_);
-            if(ac_table_name != l_table_name){
-                throw Exception("Build port must exist left table col,because i didn't impl nestloop join");
-            }
+            // __cols.clear();
+            // node.condition_->children_[0]->collect_column(__cols);
+            // ac_table_name = getTableNameFromColName(__cols[0].name_);
+            // if(ac_table_name != l_table_name){
+            //     throw Exception("Build port must exist left table col,because i didn't impl nestloop join");
+            // }
 
             break;
 
