@@ -2,9 +2,10 @@
 This is my database as graduation project.
 
 ## implementing:
-    - 1.c++20 coroutine scheduler
-    - 2.push-base execute. column execute engine.
-    - 3.column store engine. page base.
+    - imp MVVC
+    - intergrete multh thread execute 
+    - improve expression execute performance
+    - imp multi file .
 
 ## implemented:
     - TableScan
@@ -13,6 +14,11 @@ This is my database as graduation project.
     - Sort
     - Filter
     - explain
+    - subquery
+    - aggregate
+    - c++20 coroutine scheduler
+    - push-base execute. column execute engine.
+    - column store engine. page base.
 
 ```sql
 -- input \st to show tables
