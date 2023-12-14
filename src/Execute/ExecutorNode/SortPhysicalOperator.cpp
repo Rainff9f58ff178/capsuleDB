@@ -33,6 +33,9 @@ SourceResult SortPhysicalOperator::Source(ChunkRef& chunk){
 
 
 void SortPhysicalOperator::source_init(){
+    if(!cache_chunk_){
+        return;
+    }
     // sort this chunk.
     std::vector<SortEntry> sorts;
     auto plan = GetPlan()->Cast<SortLogicalOperator>();

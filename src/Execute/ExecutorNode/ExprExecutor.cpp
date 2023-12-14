@@ -1,7 +1,7 @@
 #include "Execute/ExecutorNode/ExprExecutor.h"
 #include "Execute/core/ColumnFactory.h"
 #include "Expressions/ColumnValueExpression.h"
-
+#include "common/Exception.h"
 
 
 
@@ -10,6 +10,7 @@ ColumnRef ExprExecutor::execute(const std::string& col){
     if(expr_->GetType() == LogicalExpressionType::ColumnValueExpr){
         auto col_expr = down_cast<ColumnValueExpression&>(*expr_);
         auto ref  = chunk_->getColumnByname(col_expr.column_info().name_);
+        CHEKC_THORW(ref);
         ref->name_ = col;
         return ref;
     }
