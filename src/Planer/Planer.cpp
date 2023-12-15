@@ -791,6 +791,7 @@ std::vector<LogicalOperatorRef> children){
                 // this expression is group by result.
                 return {UNKNOWNED_NAME,context_.agg_group_by_map_[r->toString()]};
             }
+            // here transport alias is for materlialzie node
             r->alias_ = expr.alias_;
             return {UNKNOWNED_NAME,r};
         }

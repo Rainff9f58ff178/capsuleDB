@@ -34,7 +34,13 @@ namespace std{
         auto operator()(const AggregateKey& agg) const ->std::size_t{
             hash_t current_hash=0;
             for(auto& val : agg.group_by_val_){
-                current_hash = Hashutils::CombineHashes(current_hash,Hashutils::Hash<ValueUnion::__value>(&val.val_));
+                if(val.type_==TypeInt)
+                    current_hash = Hashutils::CombineHashes(current_hash,Hashutils::Hash<ValueUnion::__value>(&val.val_));
+                else if(val.type_==TypeString){
+                    current_hash = Hashutils::CombineHashes(current_hash, Hashutils::HashBytes(val.val_.data_,val.value_len_));
+                }else {
+                    UNREACHABLE;
+                }
             }
             return current_hash;
         }   

@@ -28,7 +28,7 @@ public:
     }
     LogicalExpressionRef Copy() override{
         auto l = children_[0]->Copy();
-        auto r = children_[0]->Copy();
+        auto r = children_[1]->Copy();
         auto _r = std::make_shared<ArithmeticExpression>(std::vector<LogicalExpressionRef>{l,r},a_type_);
         _r->alias_ = alias_;
         return _r;
