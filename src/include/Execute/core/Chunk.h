@@ -2,7 +2,7 @@
 #include<vector>
 #include"Column.h"
 #include<cstring>
-
+#include<unordered_map>
 
 class Chunk;
 
@@ -70,5 +70,6 @@ public:
     
     __metadata metadata;
     ColumnRefs columns_;
+    std::unordered_map<std::string,ColumnRef> map_;
 };
 

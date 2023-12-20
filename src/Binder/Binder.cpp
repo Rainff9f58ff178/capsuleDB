@@ -570,10 +570,10 @@ auto Binder::ResolveColumn(const BoundTabRef &scope,std::vector<std::string> &co
     -> std::unique_ptr<BoundExpression> {
   auto expr = ResolveColumnInternal(scope, col_name);
   //erase alias.
-  expr->alias_ = std::nullopt;
   if (!expr) {
     throw Exception(std::format("column {} not found", join(col_name, ".")));
   }
+  expr->alias_ = std::nullopt;
   return expr;
 }
 

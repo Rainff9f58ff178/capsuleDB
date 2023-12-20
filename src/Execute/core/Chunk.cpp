@@ -16,6 +16,8 @@ void Chunk::appendColumn(ColumnRef&& col){
     if(have != columns_.end())
         return;
     
+
+    map_[col->name_] = col;
     columns_.push_back(std::move(col));
     updateMetadata();
 }
