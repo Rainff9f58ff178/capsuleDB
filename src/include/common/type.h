@@ -2,6 +2,7 @@
 
 
 #include "BufferManager.h"
+#include "static/ScopeTimer.h"
 #include <cstdint>
 using table_oid_t = uint32_t;
 using column_idx_t = uint32_t;

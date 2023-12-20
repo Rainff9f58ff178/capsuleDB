@@ -14,7 +14,9 @@ public:
     }
 
     std::unique_ptr<BoundExpression> Copy() override{
-        return std::make_unique<BoundStar>();
+        auto r =  std::make_unique<BoundStar>();
+        r->alias_ = alias_;
+        return r;
     }
     bool HasAgg() override{
         return false;

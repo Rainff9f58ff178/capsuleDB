@@ -23,7 +23,10 @@ public:
     ~BoundBinaryOp()=default;
 
     std::unique_ptr<BoundExpression> Copy() override{
-        return std::make_unique<BoundBinaryOp>(operator_name_,larg_->Copy(),rarg_->Copy());
+        auto r  = std::make_unique<BoundBinaryOp>(operator_name_,larg_->Copy(),rarg_->Copy());
+        r ->alias_ = alias_;
+        return r;
+
     }
     
     std::string ToString() const override {

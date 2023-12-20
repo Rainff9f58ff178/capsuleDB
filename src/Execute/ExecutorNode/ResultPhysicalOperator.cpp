@@ -1,5 +1,5 @@
 #include "Execute/ExecutorNode/ResultPhysicalOperator.h"
-
+#include "Execute/ExecuteContext.h"
 
 
 
@@ -8,7 +8,7 @@
 ResultPhysicalOperator::ResultPhysicalOperator(LogicalOperatorRef plan,
 ExecuteContext* context,
 std::vector<PhysicalOperatorRef> children):PhysicalOperator(plan,context,std::move(children)){
-
+        profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
 }
 
 

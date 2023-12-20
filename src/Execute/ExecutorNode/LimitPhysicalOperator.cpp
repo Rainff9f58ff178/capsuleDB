@@ -1,6 +1,15 @@
 #include "Execute/ExecutorNode/LimitPhysicalOperator.h"
 #include "Planer/LimitLogicalOperator.h"
+#include "Execute/ExecuteContext.h"
 
+
+LimitPhysicalOperator::LimitPhysicalOperator(LogicalOperatorRef plan,ExecuteContext* context,
+std::vector<PhysicalOperatorRef> children):
+    PhysicalOperator(std::move(plan),context,std::move(children)){
+
+    
+    profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
+}
 
 OperatorResult LimitPhysicalOperator::Execute(ChunkRef& chunk){
     UNREACHABLE;

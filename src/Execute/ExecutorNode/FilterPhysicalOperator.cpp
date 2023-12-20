@@ -1,9 +1,16 @@
 #include "Execute/ExecutorNode/FilterPhysicalOperator.h"
 #include "Planer/FilterLogicalOperator.h"
+#include "Execute/ExecuteContext.h"
 
 
 
 
+FilterPhysicalOperator::FilterPhysicalOperator(LogicalOperatorRef plan,
+ExecuteContext* context,std::vector<PhysicalOperatorRef> child):
+    PhysicalOperator(std::move(plan),context,std::move(child)){
+    profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
+    filter_timer_ = profile_->add_counter("filter time");
+}
 
 SourceResult FilterPhysicalOperator::Source(ChunkRef& chunk){
     UNREACHABLE;
@@ -15,7 +22,7 @@ SinkResult FilterPhysicalOperator::Sink(ChunkRef& chunk){
 
 
 OperatorResult FilterPhysicalOperator::Execute(ChunkRef& chunk){
-
+    SCOPED_TIMER(filter_timer_);
     if(chunk->rows() == 0)
         return OperatorResult::NEED_MORE;
     

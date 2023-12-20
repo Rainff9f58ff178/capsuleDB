@@ -5,11 +5,24 @@
 #include "CataLog/PageIterator/ColumnStringIterator.h"
 #include "common/commonfunc.h"
 
+
+SeqScanPhysicaloperator::SeqScanPhysicaloperator(LogicalOperatorRef plan,
+ExecuteContext* context,
+std::vector<PhysicalOperatorRef> children):
+    PhysicalOperator(std::move(plan),context,
+    std::move(children)){
+        profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
+        load_timer_ = profile_->add_counter("load time");
+        filter_timer = profile_->add_counter("filter time");
+    }
+
 SourceResult
 SeqScanPhysicaloperator::Source(ChunkRef& chunk){
     auto& plan = GetPlan()->Cast<SeqScanLogicalOperator&>();
+    ChunkRef new_chunk = nullptr;
+    {
     
-
+    SCOPED_TIMER(load_timer_);
     if(  ( (*column_iterators_[0]->col_heap_->end()) == *column_iterators_[0])){
 #ifndef  NDEBUG
         for(auto& it : column_iterators_){
@@ -19,7 +32,7 @@ SeqScanPhysicaloperator::Source(ChunkRef& chunk){
         return  SourceResult::FINISHED;
     }
 
-    ChunkRef new_chunk = std::make_shared<Chunk>();
+    new_chunk = std::make_shared<Chunk>();
     DASSERT(column_iterators_.size() == plan.input_schema_->columns_.size());
 
     auto _columns = plan.input_schema_->columns_;
@@ -41,7 +54,10 @@ SeqScanPhysicaloperator::Source(ChunkRef& chunk){
             UNREACHABLE
         }
     }
+
+    }
     // filter new_chunk
+    SCOPED_TIMER(filter_timer);
     if(plan.pridicator_.size()>1)
         throw Exception("Filter pridicator num > 2 ");
 

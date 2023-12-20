@@ -9,6 +9,7 @@ InsertPhysicalOperator::InsertPhysicalOperator(
     ExecuteContext* context,
     PhysicalOperatorRef child
 ):PhysicalOperator(std::move(plan),context,{std::move(child)}){
+            profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
     
 }
 

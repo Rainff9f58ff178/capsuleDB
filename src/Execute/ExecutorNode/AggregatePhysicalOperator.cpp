@@ -5,6 +5,14 @@
 
 
 
+AggregatePhysicalOperator::AggregatePhysicalOperator(LogicalOperatorRef plan,
+    ExecuteContext* context,
+    std::vector<PhysicalOperatorRef> children):PhysicalOperator(std::move(plan),context,std::move(children)){
+        profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
+        ht_build_timer_ = profile_->add_counter("hashtable build time");
+        agg_timer_      = profile_->add_counter("agg calculate time");
+}
+
 
 
 void AggregatePhysicalOperator::source_init(){
@@ -41,6 +49,7 @@ void AggregatePhysicalOperator::source_init(){
 
 std::vector<ValueUnion> 
 AggregatePhysicalOperator::__CalculateBucket(ChunkRef& chunk){
+    SCOPED_TIMER(agg_timer_);
     auto& plan = GetPlan()->Cast<AggregateLogicalOperator>();
     std::vector<ValueUnion> result;
     for(auto& agg : plan.aggs_){
@@ -104,7 +113,8 @@ SinkResult AggregatePhysicalOperator::Sink(ChunkRef& chunk){
     // hash it by 'group by expression'
     if(chunk->rows() == 0)
         return  SinkResult::NEED_MORE;
-
+    
+    SCOPED_TIMER(ht_build_timer_);
     auto& plan = GetPlan()->Cast<AggregateLogicalOperator>();
     for(uint32_t i=0;i<chunk->rows();++i){
         std::vector<ValueUnion> group_bys;

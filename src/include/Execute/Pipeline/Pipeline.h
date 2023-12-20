@@ -2,7 +2,7 @@
 #include "common/type.h"
 #include <memory>
 #include <atomic>
-
+#include "static/RuntimeProfile.h"
 class Pipeline;
 class PhysicalOperator;
 class ExecuteContext;
@@ -37,4 +37,7 @@ public:
 
     uint32_t identify_{0};
     ExecuteContext* context_;
+
+    RuntimeProfile* profile_;
+    RuntimeProfile::Counter* pipeline_execute_time_ = nullptr;
 };

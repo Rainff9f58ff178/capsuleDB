@@ -7,8 +7,7 @@
 #include "Execute/core/ColumnFactory.h"
 #include "Execute/core/ColumnVector.h"
 #include "Execute/core/ColumnString.h"
-
-
+#include "common/commonfunc.h"
 class ExecuteContext;
 class PhysicalOperator;
 using PhysicalOperatorRef = std::shared_ptr<PhysicalOperator>;
@@ -46,7 +45,7 @@ public:
             }
         }
         for(auto& n : d_cols){
-            DEBUG(std::format("erase column {}",n));
+            DEBUG(std::format("{} erase column {}",getOperatorName(GetType()),n));
             chunk->eraseColumn(n);
         }
     }
@@ -57,7 +56,7 @@ public:
     virtual void 
     BuildPipeline(PipelineRef current,ExecuteContext* context);
 
-    virtual OperatorType GetType(){return type_;}
+    virtual OperatorType GetType() = 0;
 
     virtual void sink_init(){
 
@@ -91,5 +90,6 @@ public:
     }
 
     ExecuteContext* context_;
+    RuntimeProfile* profile_ = nullptr;
     std::vector<PhysicalOperatorRef> children_;
 };

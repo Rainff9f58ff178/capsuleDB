@@ -1,8 +1,9 @@
 #include "Execute/Pipeline/Pipeline.h"
 #include <cassert>
+#include "Execute/ExecuteContext.h"
 Pipeline::Pipeline(ExecuteContext* context,uint32_t id):context_(context),
 identify_(id){
-    
+
 }
 std::shared_ptr<Pipeline> 
 Pipeline::Complete(){

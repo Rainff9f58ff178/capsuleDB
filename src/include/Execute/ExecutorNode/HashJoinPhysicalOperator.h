@@ -3,16 +3,12 @@
 
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 #include "Utils/Generator.h"
-
 class HashJoinPhysicalOperator : public PhysicalOperator{
     static constexpr const OperatorType type_ = 
         OperatorType::HashJoinOperatorNode;
 public:
     HashJoinPhysicalOperator(LogicalOperatorRef plan,ExecuteContext* context,
-    std::vector<PhysicalOperatorRef> children):
-        PhysicalOperator(std::move(plan),context,std::move(children)){
-
-    }
+    std::vector<PhysicalOperatorRef> children);
 
     ~HashJoinPhysicalOperator(){}
     void sink_init() override;
@@ -40,4 +36,7 @@ public:
     std::vector<std::vector<BuildEntry>> hash_table_;
     std::vector<ChunkRef> build_chunks_;
     uint32_t hash_table_size_=0;
+
+    RuntimeProfile::Counter* build_timer_ = nullptr;
+    RuntimeProfile::Counter* probe_timer = nullptr;
 };

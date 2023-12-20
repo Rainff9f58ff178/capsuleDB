@@ -22,7 +22,7 @@ public:
 
 
     std::unique_ptr<BoundExpression> Copy() override{
-        return std::make_unique<BoundAlias>(child_expression_->Copy(),alias_);
+        return  std::make_unique<BoundAlias>(child_expression_->Copy(),alias_);
     }
     std::string ToString() const override{
         throw Exception("depricate");

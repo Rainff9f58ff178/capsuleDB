@@ -1,12 +1,11 @@
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 #include "Execute/ExecuteContext.h"
-
+#include "common/commonfunc.h"
 PhysicalOperator::PhysicalOperator(LogicalOperatorRef plan,
     ExecuteContext* context,
     std::vector<PhysicalOperatorRef> children)
 :plan_(std::move(plan)),context_(context),
     children_(std::move(children)){
-
 }
 
 SourceResult
@@ -28,7 +27,7 @@ PhysicalOperator::Execute(ChunkRef& bits){
 void 
 PhysicalOperator::BuildPipeline(PipelineRef current,
 ExecuteContext* context){  
-
+    
     if(IsSink()){
         assert(children_.size()==1);
         current->source_= this;

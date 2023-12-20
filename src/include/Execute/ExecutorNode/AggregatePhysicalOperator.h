@@ -3,7 +3,6 @@
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 #include "common/Hash/HashUtils.h"
 
-
 class AggregateKey{
 public:
     std::vector<ValueUnion> group_by_val_;
@@ -54,10 +53,7 @@ public:
     
     AggregatePhysicalOperator(LogicalOperatorRef plan,
         ExecuteContext* context,
-        std::vector<PhysicalOperatorRef> children):PhysicalOperator(std::move(plan),context,std::move(children)){
-
-    }
-
+        std::vector<PhysicalOperatorRef> children);
     bool IsSink() override{
         return true;
     }                        
@@ -75,4 +71,7 @@ private:
     std::vector<ChunkRef> chunks_;
     uint32_t offset_{0};
     std::vector<ValueUnion> __CalculateBucket(ChunkRef& chunk);
+
+    RuntimeProfile::Counter* ht_build_timer_ = nullptr;
+    RuntimeProfile::Counter* agg_timer_ = nullptr;
 };

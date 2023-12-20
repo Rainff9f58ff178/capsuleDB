@@ -4,6 +4,11 @@
 
 
 
+SubqueryMaterializePhysicalOperator:: SubqueryMaterializePhysicalOperator(LogicalOperatorRef plan,
+    ExecuteContext* context,
+    std::vector<PhysicalOperatorRef> children):
+        MaterializePhysicalOperator(std::move(plan),context,std::move(children)){
+}
 
 SourceResult SubqueryMaterializePhysicalOperator::Source(ChunkRef& chunk){
     UNREACHABLE;

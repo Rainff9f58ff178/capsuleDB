@@ -19,7 +19,9 @@ public:
     ~BoundConstant()=default;
 
     std::unique_ptr<BoundExpression> Copy()override{
-        return std::make_unique<BoundConstant>(std::move(value_.clone()));
+        auto r =  std::make_unique<BoundConstant>(std::move(value_.clone()));
+        r->alias_ = alias_;
+        return r;
     }
     std::string ToString() const override{
         if(value_.type_==ValueType::TypeInt){

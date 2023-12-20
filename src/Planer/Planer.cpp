@@ -272,14 +272,14 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             std::vector<Column> cols_this_node_need;
             CHEKC_THORW(node.condition_);
             
+            // join operator left children tree is deeper tree, right child is build port.
             // if like this
             // " select * from test_1 inner join test_2 on test_1.colA + test_2.colA = test_2.colB+test_1.colA" 
             // is unexecutable,because build port of hash join can't get chunk came form "test_2" 
             // so that can't build hash table. nestLoopJoin is able to deal thsi situation
             // but im not implent it.
 
-            if(!CheckHashJoinCondition(node.condition_))
-                throw  Exception("Join Condition build port can't include column that different table,because Hashjoin doesnt support it .NestLoopJoin can,but Not Impl");
+        
             node.condition_->collect_column(cols_this_node_need);
             for(auto& col : cols_this_node_need){
                 auto l = LoadColumn(col,node.children_[0]);
@@ -300,18 +300,21 @@ void Planer::SetInputOutputSchemaInternal(LogicalOperatorRef op){
             // build port on oppsite of probe port . need exchange it .
 
 
-            // select * from random1 as a inner join random2 as b on a.colA = b.colA inner join random3 as c on a.colA + b.colA = c.coLA;
-            auto l_output = node.children_[0]->GetOutPutSchema();
+            // select * from random1 as a inner join random2 as b on a.colA = b.colA inner join random3 as c on  c.coLA = a.colA + b.colA ;
+            auto build_output = node.children_[1]->GetOutPutSchema();
             std::vector<Column> __cols;
-            node.condition_->children_[0]->collect_column(__cols);
+            node.condition_->children_[1]->collect_column(__cols);
 
-            bool exchange = false;
+            bool diff = false;
+            bool exchange =false;
             for(auto& cols : __cols){
-                if(!l_output->exist(cols)){
-                    exchange = true;
+                if(!build_output->exist(cols)){
+                    diff = true;
                     break;
                 }
             }
+            
+            if(!CheckHashJoinCondition(node.condition_) || diff) exchange = true;
             if(exchange){
                 auto l_condition = node.condition_->children_[0];
                 auto r_condition = node.condition_->children_[1];
@@ -641,6 +644,7 @@ Planer::PlanSelect(const SelectStatement& stmt){
 
     if(!stmt.where_->isInvalid()){
         auto [_1,where_expr] = PlanExpression(*stmt.where_,{plan});
+        where_expr->alias_ = std::nullopt;
         plan = std::shared_ptr<FilterLogicalOperator>(
             new FilterLogicalOperator({plan},std::move(where_expr))
         );

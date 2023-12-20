@@ -5,16 +5,13 @@
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 
 
-
 class FilterPhysicalOperator:public PhysicalOperator{
     static constexpr const OperatorType type_ = 
         OperatorType::FilterOperatorNode;
 public:
     FilterPhysicalOperator(LogicalOperatorRef plan,
-    ExecuteContext* context,std::vector<PhysicalOperatorRef> child):
-        PhysicalOperator(std::move(plan),context,std::move(child)){
+    ExecuteContext* context,std::vector<PhysicalOperatorRef> child);
 
-    }
 
     bool IsSink() override{
         return false;
@@ -28,4 +25,6 @@ public:
     SinkResult Sink(ChunkRef &chunk) override;
     OperatorResult Execute(ChunkRef &chunk) override;
 
+
+    RuntimeProfile::Counter* filter_timer_ = nullptr;
 };

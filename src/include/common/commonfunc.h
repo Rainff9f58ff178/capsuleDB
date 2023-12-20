@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include<ranges>
+#include "Planer/LogicalOperator.h"
 static std::string 
 join(const std::vector<std::string>& arr,std::string s){
     if(arr.size()==1)
@@ -95,3 +96,36 @@ static ValueType ColumnTypeConverToValueType(ColumnType type){
 }
 
 
+static std::string getOperatorName(OperatorType type){
+    switch(type){
+        case LogicalOperatorNode:
+            return "LogicalOperatorNode";
+        case PhysicalOperatorNode:
+            return "PhysicalOperatorNode";
+        case MaterilizeOperatorNode:
+            return "MaterilizeOperatorNode";
+        case SubqueryMaterializeOperatorNode:
+            return "SubqueryMaterializeOperatorNode";
+        case HashJoinOperatorNode:
+            return "HashJoinOperatorNode";
+        case FilterOperatorNode:
+            return "FilterOperatorNode";
+        case InsertOperatorNode:
+            return "InsertOperatorNode";
+        case ValuesOperatorNode:
+            return "ValuesOperatorNode";
+        case AggOperatorNode:
+            return "AggOperatorNode";
+        case LimitOperatorNode:
+            return "LimitOperatorNode";
+        case SortOperatorNode:
+            return "SortOperatorNode";
+        case SeqScanOperatorNode:
+            return "SeqScanOperatorNode";
+        case ResultOperatorNode:
+            return "ResultOperatorNode";
+        default:    
+            NOT_IMP;
+    }
+    UNREACHABLE;
+}

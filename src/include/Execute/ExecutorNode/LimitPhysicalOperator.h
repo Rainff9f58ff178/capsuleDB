@@ -2,16 +2,13 @@
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 
 
-
 class LimitPhysicalOperator:public PhysicalOperator{
     static constexpr const OperatorType type_ 
         = OperatorType::LimitOperatorNode;
 public:
     LimitPhysicalOperator(LogicalOperatorRef plan,ExecuteContext* context,
-    std::vector<PhysicalOperatorRef> children):
-        PhysicalOperator(std::move(plan),context,std::move(children)){
+    std::vector<PhysicalOperatorRef> children);
 
-    }
 
     bool IsSink() override{
         return true;

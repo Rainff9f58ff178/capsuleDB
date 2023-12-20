@@ -28,7 +28,9 @@ public:
         return false;
     }
     std::unique_ptr<BoundExpression> Copy()override{
-        return std::make_unique<BoundColumnRef>(column_,col_type_);
+        auto r =  std::make_unique<BoundColumnRef>(column_,col_type_);
+        r->alias_ = alias_;
+        return r;
     }
     ColumnType GetReturnType() const override{
         return col_type_;

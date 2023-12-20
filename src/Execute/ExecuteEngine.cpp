@@ -12,6 +12,7 @@
 #include "Execute/ExecutorNode/FilterPhysicalOperator.h"
 #include "Execute/ExecutorNode/SubqueryMaterializePhysicalOperator.h"
 #include "common/Exception.h"
+#include "static/ScopeTimer.h"
 #include<stack>
 ExecuteEngine::ExecuteEngine(){
 
@@ -33,11 +34,17 @@ std::shared_ptr<ExecuteContext> context){
 
     context->Build(context->physical_plan_,nullptr);
 
+    for(auto& p : context->pipelines_){
+        p->profile_ = context->profile_->create_child(std::format("pipeline {}",p->identify_));
+        p->pipeline_execute_time_ = p->profile_->add_counter("pipeline_execute_time");
+    }
+
     auto leaf_pipelines = GetAllNoChildPipelines(context);
 
     ExecuteInteranl(context,leaf_pipelines);
 
-    // execute finished.
+    // execute finished.print profile 
+    DEBUG("\n"+context->profile_->toString(0));
 }
 
 void ExecuteEngine::ExecuteExplain(LogicalOperatorRef plan,
@@ -50,6 +57,11 @@ std::shared_ptr<ExecuteContext> context){
     );
     context->Build(context->physical_plan_,nullptr);
 
+    for(auto& p : context->pipelines_){
+        p->profile_ = context->profile_->create_child(std::format("pipeline {}",p->identify_));
+        p->pipeline_execute_time_ = p->profile_->add_counter("pipeline_execute_time");
+    }
+    
     context->ShowPipelines();
     // not execute it.
 }
@@ -100,7 +112,9 @@ ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
         return;
     
     DASSERT(!pipeline->runed_);
-
+    {
+    SCOPED_TIMER(pipeline->pipeline_execute_time_);
+    
     // first execute init function.
     pipeline->source_->source_init();
     for(auto* o:pipeline->operators_){
@@ -132,10 +146,12 @@ ExecuteEngine::ExecutePipeline(PipelineRef pipeline){
         o->execute_uninit();
     }
     if ( pipeline->sink_)  pipeline->sink_ ->sink_uninit();
+    }
 
 
 
     auto parent = pipeline->Complete();
+    
     if(parent!=nullptr)
         ExecutePipeline(parent);
     return;

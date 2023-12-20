@@ -24,7 +24,9 @@ public:
         for(auto& arg : args_){
             args.push_back(std::move(arg->Copy()));
         }
-        return std::make_unique<BoundAgg>(agg_name_,is_distinct_,std::move(args));
+        auto r = std::make_unique<BoundAgg>(agg_name_,is_distinct_,std::move(args));
+        r->alias_ = alias_;
+        return r;
     }
     std::string ToString() const override{
         std::stringstream ss;

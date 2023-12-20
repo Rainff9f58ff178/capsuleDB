@@ -10,10 +10,7 @@ class SubqueryMaterializePhysicalOperator:public MaterializePhysicalOperator{
 public:
     SubqueryMaterializePhysicalOperator(LogicalOperatorRef plan,
         ExecuteContext* context,
-        std::vector<PhysicalOperatorRef> children):
-            MaterializePhysicalOperator(std::move(plan),context,std::move(children)){
-
-    }
+        std::vector<PhysicalOperatorRef> children);
 
     bool IsSink() override{
         return false;

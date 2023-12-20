@@ -569,6 +569,8 @@ Binder::BindColumnRef(duckdb_libpgquery::PGColumnRef* col_ref){
 auto Binder::ResolveColumn(const BoundTabRef &scope,std::vector<std::string> &col_name)
     -> std::unique_ptr<BoundExpression> {
   auto expr = ResolveColumnInternal(scope, col_name);
+  //erase alias.
+  expr->alias_ = std::nullopt;
   if (!expr) {
     throw Exception(std::format("column {} not found", join(col_name, ".")));
   }
@@ -596,8 +598,6 @@ std::vector<std::string>& col_names){
                         for(auto& expr  : *scope_select_list_){
                             if(col_names[0] == expr->alias_){
                                 auto real =  expr->Copy();
-                                //erase alias.
-                                real->alias_ = std::nullopt;
                                 return real;
                             }
                         }
@@ -633,6 +633,11 @@ std::vector<std::string>& col_names){
             auto right_expr = ResolveColumnInternal(*join_table.r_table_,col_names);
 
             if(left_expr && right_expr){
+                if(left_expr->alias_ && right_expr->alias_){
+                    // from select_list alias;
+                    left_expr->alias_ = std::nullopt;
+                    return left_expr;
+                }
                 throw Exception( std::format("{} is ambiguous",join(col_names,".") ));
             }
             if(!left_expr)

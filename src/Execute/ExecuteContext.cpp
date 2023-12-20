@@ -3,7 +3,7 @@
 
 
 ExecuteContext::ExecuteContext(CataLog* cata_log):cata_log_(cata_log){
-    
+    profile_ = std::make_shared<RuntimeProfile>("god_profile");
 }
 
 

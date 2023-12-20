@@ -1,7 +1,6 @@
 #pragma once
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 #include "CataLog/PageIterator/PageIterator.h"
-
 class SeqScanPhysicaloperator:public PhysicalOperator{
     static constexpr const OperatorType type_ =
          OperatorType::SeqScanOperatorNode;
@@ -11,9 +10,7 @@ class SeqScanPhysicaloperator:public PhysicalOperator{
 public:
     SeqScanPhysicaloperator(LogicalOperatorRef plan,
     ExecuteContext* context,
-    std::vector<PhysicalOperatorRef> children):
-        PhysicalOperator(std::move(plan),context,
-        std::move(children)){}
+    std::vector<PhysicalOperatorRef> children);
 
     ~SeqScanPhysicaloperator();
 
@@ -30,6 +27,9 @@ public:
         return false;
     }
 private:
+    RuntimeProfile::Counter* load_timer_ = nullptr;
+    RuntimeProfile::Counter* filter_timer = nullptr;
+
     std::vector<std::unique_ptr<ColumnIterator>> column_iterators_; 
 };
 

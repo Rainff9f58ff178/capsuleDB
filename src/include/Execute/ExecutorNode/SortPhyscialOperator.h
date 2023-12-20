@@ -1,7 +1,6 @@
 #include "Execute/ExecutorNode/PhysicalOperator.h"
 
 
-
 struct SortEntry{
     OrderByType type_;
     std::string col_name_;
@@ -16,9 +15,7 @@ class SortPhysicalOperator:public PhysicalOperator{
 public:
     
     SortPhysicalOperator(LogicalOperatorRef plan,ExecuteContext* context,
-    std::vector<PhysicalOperatorRef> children):PhysicalOperator(std::move(plan),context,std::move(children)){
-
-    }
+    std::vector<PhysicalOperatorRef> children);
 
 
     bool IsSink() override{
@@ -43,5 +40,6 @@ private:
     void SortBlock(ChunkRef& chunk,std::vector<SortEntry> sorts);
 
 
+    RuntimeProfile::Counter* sort_timer_ = nullptr;
 };
 

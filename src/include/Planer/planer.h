@@ -83,36 +83,18 @@ public:
     AggregateEntry GenerateAgg(const BoundAgg& a,LogicalOperatorRef child);
     
     bool CheckHashJoinCondition(LogicalExpressionRef condition){
-        // just need check build type.
-        auto left_cols = std::vector<Column>();
-        condition->children_[0]->collect_column(left_cols);
-        CHEKC_THORW(!left_cols.empty());
-        // auto l_table_name = getTableNameFromColName(left_cols[0].name_);
-        // for(auto& col : left_cols){
-        //     if(getTableNameFromColName(col.name_) != l_table_name){
-        //         return false;
-        //     }
-        // }
-
         auto right_cols = std::vector<Column>();
         condition->children_[1]->collect_column(right_cols);
-        std::set<std::string> left_table;
+        CHEKC_THORW(!right_cols.empty());
         std::set<std::string> right_table;
 
-        for(auto& col :left_cols){
-            auto n = getTableNameFromColName(col.name_);
-            left_table.insert(n);
-        }
+        // if build port have more than one table return false;
         for(auto& col:right_cols){
             auto n = getTableNameFromColName(col.name_);
             right_table.insert(n);
         }
-        for(auto& n : right_table){
-            if(std::find(left_table.begin(),left_table.end(),n) != left_table.end()){
-                return false;
-            }
-        }
-
+        if(right_table.size() > 1)
+            return false;
         return true;
     }
 

@@ -1,9 +1,14 @@
 #include "Execute/ExecutorNode/SortPhyscialOperator.h"
 #include "Execute/ExecutorNode/ExprExecutor.h"
 #include "Planer/SortLogicalOperator.h"
+#include "Execute/ExecuteContext.h"
 
 
-
+SortPhysicalOperator:: SortPhysicalOperator(LogicalOperatorRef plan,ExecuteContext* context,
+std::vector<PhysicalOperatorRef> children):PhysicalOperator(std::move(plan),context,std::move(children)){
+    profile_ = context->profile_->create_child(std::format("{}",getOperatorName(GetType())));
+    sort_timer_ = profile_->add_counter("sort time");
+}
 OperatorResult SortPhysicalOperator::Execute(ChunkRef& chunk){
     UNREACHABLE;
 }
@@ -63,6 +68,7 @@ void SortPhysicalOperator::source_init(){
 
 void SortPhysicalOperator::
 SortBlock(ChunkRef& chunk,std::vector<SortEntry> sorts){
+    SCOPED_TIMER(sort_timer_);
     RowNumbers row_number;
     row_number.resize(chunk->rows());
     for(uint32_t i=0;i<chunk->rows();++i){

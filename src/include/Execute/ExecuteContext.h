@@ -9,6 +9,7 @@
 
 using PipelineRef = std::shared_ptr<Pipeline>;
 
+
 class ExecuteContext{
 public:
 
@@ -25,4 +26,6 @@ public:
     PhysicalOperatorRef physical_plan_;
     //use to identify pipeline
     uint32_t id_{0};
+
+    std::shared_ptr<RuntimeProfile> profile_;
 };
