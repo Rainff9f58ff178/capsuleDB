@@ -355,6 +355,8 @@ Binder::GetAllColumnExpr(BoundTabRef* table){
 std::unique_ptr<BoundTabRef>
 Binder::BindFrom(duckdb_libpgquery::PGList* from){
 
+    if(!from)
+        throw NotImplementedException("Not support ");
     if(from->length>1){
         throw NotImplementedException("Not support cross table");
     }
