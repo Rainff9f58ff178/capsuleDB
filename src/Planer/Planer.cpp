@@ -423,12 +423,12 @@ void Planer::CreatePlan(std::unique_ptr<BoundStatement> stmt){
     }   
 }
 void
-Planer::PreOrderTraverse(LogicalOperatorRef plan,int depth){
-    PrintSpace(8*depth);
-    PrintOperatorName(plan.get());
-    std::cout<<std::endl;
+Planer::PreOrderTraverse(LogicalOperatorRef plan,int depth,std::stringstream& ss){
+    PrintSpace(8*depth,ss);
+    ss << PrintOperatorName(plan.get());
+    ss<<std::endl;
     for(auto& child:plan->children_){
-        PreOrderTraverse(child,depth+1);
+        PreOrderTraverse(child,depth+1,ss);
     }
 }
 

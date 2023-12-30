@@ -14,15 +14,18 @@ public:
     virtual OperatorType GetType() override{
         return type_;
     }   
-    virtual void PrintDebug() override{
-        LogicalOperator::PrintDebug();
+    virtual std::string PrintDebug() override{
+        std::stringstream ss;
+        ss<<LogicalOperator::PrintDebug();
         if(!pridicator_.empty()){
-            std::cout<<" | filter(preorder) : ";
+            ss<<" | filter(preorder) : ";
             for(auto& f : pridicator_){
-                std::cout<<f->toString();
+                ss<<f->toString();
             }
         }else 
-            std::cout<<" | filter(NONE) ";
+            ss<<" | filter(NONE) ";
+        
+        return ss.str();
     }
 
    

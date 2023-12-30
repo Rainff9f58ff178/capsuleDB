@@ -21,7 +21,6 @@ public:
         for(auto& chunk:chunks){
             WriteChunk(chunk);
         }
-        std::cout<<ss.str()<<std::endl;
     }
     void WriteHeader(std::vector<ChunkRef>& chunks){
         // get the max size of a line ,stupid...
@@ -93,7 +92,7 @@ public:
     explicit StardDataBase(const std::string& db_name);
     ~StardDataBase();
 
-    void ExecuteSql(const std::string& query);
+    void ExecuteSql(const std::string& query,std::string& result);
     
     bool hasTable(const std::string& table_name){
         for(auto& it :cata_log_->tables_){
@@ -102,6 +101,7 @@ public:
         }
         return false;
     }
+    std::string ShowTables();
 private:
     bool ExecuteCreateStatement(std::unique_ptr<BoundStatement> stmt);
     bool ExecuteInsertStatement(std::unique_ptr<BoundStatement> stmt,
@@ -111,9 +111,8 @@ private:
         std::vector<ChunkRef>& result_set,
         SchemaRef& schema);
 
-    void ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt);
+    void ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt,std::string& result);
 
-    void ShowTables();
     duckdb::PostgresParser parser_;
     FileManager* file_manager_;
     CataLog* cata_log_;

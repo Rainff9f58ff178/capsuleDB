@@ -116,11 +116,13 @@ public:
     void AddColumnFromExpression(BoundExpression& expr,SchemaRef& schema);
     LogicalOperatorRef plan_{nullptr};
 
-    void ShowPlanTree(LogicalOperatorRef plan){
+    std::string ShowPlanTree(LogicalOperatorRef plan){
+        std::stringstream ss;
         uint32_t depth = 0;
-        PreOrderTraverse(plan,depth);
+        PreOrderTraverse(plan,depth,ss);
+        return ss.str();
     }
-    void PreOrderTraverse(LogicalOperatorRef plan,int depth);
+    void PreOrderTraverse(LogicalOperatorRef plan,int depth,std::stringstream& ss);
         
     // check if op output this column,if not ,load 
     enum class LoadResult:uint8_t{LoadSucc,LoadFailed};
@@ -136,13 +138,12 @@ public:
         return output_schema;
     }
 private:
-    inline void PrintSpace(uint32_t times){
-        if(!show_info) return;
+    inline void PrintSpace(uint32_t times,std::stringstream& ss){
         for(uint32_t i=0;i<times;++i)
-            std::cout<<" ";
+            ss<<" ";
     }
-    inline void PrintOperatorName(LogicalOperator* o){
-        if(!show_info) return;
+    inline std::string PrintOperatorName(LogicalOperator* o){
+        std::stringstream ss;
         auto type = o->GetType();
         switch (type) {
             case LogicalOperatorNode:{
@@ -150,50 +151,51 @@ private:
                 break;
             }
             case MaterilizeOperatorNode:{
-                std::cout<<"Materilizeoperator";
+                ss<<  "Materilizeoperator";
                 break;
             }
             case SubqueryMaterializeOperatorNode:{
-                std::cout<<"SubqueryMaterializeNode";
+                ss<<"SubqueryMaterializeNode";
                 break;
             }
             case HashJoinOperatorNode:{
-                std::cout<<"HashJoinOperator";
+                ss<<"HashJoinOperator";
                 break;
             }
             case FilterOperatorNode:{
-                std::cout<<"FilterOperator";
+                ss<<"FilterOperator";
                 break;
             }
             case InsertOperatorNode:{
-                std::cout<<"InsertOperator";
+                ss<<"InsertOperator";
                 break;
             }
             case ValuesOperatorNode:{
-                std::cout<<"ValueOperator";
+                ss<<"ValueOperator";
                 break;
             }
             
             case AggOperatorNode:{
-                std::cout<<"AggOperator";
+                ss<<"AggOperator";
                 break;  
             }
             case LimitOperatorNode:{
-                std::cout<<"LimitOperator";
+                ss<<"LimitOperator";
                 break;
             }
             case SortOperatorNode:{
-                std::cout<<"SortOperator";
+                ss<<"SortOperator";
                 break;
             }
             case SeqScanOperatorNode:{
-                std::cout<<"SeqScanOperator ";
+                ss<<"SeqScanOperator";
                 break;
             }
             default:
                 break;
         }
-        o->PrintDebug();
+        ss<< o->PrintDebug();
+        return ss.str();
     }
 
 

@@ -17,12 +17,14 @@ public:
     }
 
 
-    void PrintDebug() override{
-        LogicalOperator::PrintDebug();
-        std::cout<<" sort: ";
+    std::string PrintDebug() override{
+        std::stringstream ss;
+        ss<<LogicalOperator::PrintDebug();
+        ss<<" sort: ";
         for(auto& order_by : order_bys_){
-            std::cout<<order_by.second->toString()<<" "<< (order_by.first==OrderByType::ASC ? "ASC" : "DESC");
+            ss<<order_by.second->toString()<<" "<< (order_by.first==OrderByType::ASC ? "ASC" : "DESC");
         }
+        return ss.str();
     }
     std::vector<std::pair<OrderByType,LogicalExpressionRef>> order_bys_;
     COPY_PLAN_WITH_CHILDREN(SortLogicalOperator);

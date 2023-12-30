@@ -30,7 +30,7 @@ StardDataBase::~StardDataBase(){
     delete file_manager_;
 }
 
-void StardDataBase::ShowTables(){
+std::string StardDataBase::ShowTables(){
 
     auto get_type_string=[](ColumnType type){
         switch(type){
@@ -58,20 +58,21 @@ void StardDataBase::ShowTables(){
             <<col_heap->def_.col_length_<<std::endl;
         }
     }
-    std::cout<<ss.str();
+    return ss.str();
 }
-void StardDataBase::ExecuteSql(const std::string& query){
+void StardDataBase::ExecuteSql(const std::string& query, std::string& result){
     DEBUG(std::format("Execute Sql : {}",query));
     if(query == "\\st"){
-        ShowTables();
+        result = ShowTables();
         return;
     }
     parser_.Parse(query);
     if(!parser_.success){
-        throw Exception("SYNTAX WRONG,PARSED FAILED");         
+        throw Exception(std::format("sytax error near in \"{}\" ",std::string(query.data()+ parser_.error_location)));         
     }
     if(parser_.parse_tree==nullptr){
         // emtry statment;
+        return;;
     }
     Binder binder(parser_.parse_tree,cata_log_);
     bool is_success= false;
@@ -87,24 +88,23 @@ void StardDataBase::ExecuteSql(const std::string& query){
         for(auto& c:chunks){
             total_rows+=c->rows();
         }
-
+        writer_.ss.str("");
         if(chunks.empty()){
-            std::cout<<"empty set"<<std::endl;
-            std::cout<<total_rows << " record  in: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second "<<std::endl;
+            writer_.ss<<"empty set"<<std::endl;
+            writer_.ss<<total_rows << " record  in: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second "<<std::endl;
+            result = std::move(writer_.ss.str());
             return ;
         }
         if(chunks[0]->rows()==0){
-            std::cout<<"empty set"<<std::endl;
-            std::cout<<total_rows << " record  in: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second"<<std::endl;
+            writer_.ss<<"empty set"<<std::endl;
+            writer_.ss<<total_rows << " record  in: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second"<<std::endl;
+            result = std::move(writer_.ss.str());
             return;
         }
-        if(!show_info)
-            return;
-        
-        writer_.ss.str("");
         writer_.printAll(std::move(chunks));
         chunks.clear();
-        std::cout<<total_rows << " record  in: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second "<<chunk_num<<" chunk"<<std::endl;
+        writer_.ss<<total_rows << " record  in: "<< (double)((double)second.count() / (double)1000000.00000 )<<" second "<<chunk_num<<" chunk"<<std::endl;
+        result = std::move(writer_.ss.str());
 
     };
     for(auto* stmt : binder.statments_){
@@ -143,7 +143,7 @@ void StardDataBase::ExecuteSql(const std::string& query){
                 break;
             }
             case StatementType::EXPLAIN_STATEMENT:{
-                ExecuteExplainStatement(std::move(bound_statement));
+                ExecuteExplainStatement(std::move(bound_statement),result);
             }
             default:
                 break;
@@ -210,16 +210,18 @@ SchemaRef& schema){
 
     return true;
 }
-void StardDataBase::ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt){
+void StardDataBase::ExecuteExplainStatement(std::unique_ptr<BoundStatement> stmt,std::string& result){
+    std::stringstream ss;
     auto* explain_stmt = down_cast<ExplainStatement*>(stmt.get());
     Planer planer(cata_log_);
     planer.CreatePlan(std::move(explain_stmt->stmt_));
-    std::cout<<"==== Plan   Later ===="<<std::endl;
-    planer.ShowPlanTree(planer.plan_);
-    std::cout<<"==== Optimer Later ===="<<std::endl;
+    ss<<"==== Plan   Later ===="<<std::endl;
+    ss<<planer.ShowPlanTree(planer.plan_);
+    ss<<"==== Optimer Later ===="<<std::endl;
     Optimizer optimizer;
     auto op_p =optimizer.RegularOptimize(planer.plan_);
-    planer.ShowPlanTree(op_p);
+    ss<<planer.ShowPlanTree(op_p);
     auto context = std::make_shared<ExecuteContext>(cata_log_);
-    execute_engine_->ExecuteExplain(op_p,context);
+    execute_engine_->ExecuteExplain(op_p,context,ss);
+    result = std::move(ss.str());
 }

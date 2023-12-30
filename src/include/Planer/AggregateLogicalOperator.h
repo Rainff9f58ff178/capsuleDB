@@ -58,8 +58,8 @@ public:
 
     COPY_PLAN_WITH_CHILDREN(AggregateLogicalOperator)
 
-    void PrintDebug()override{
-        LogicalOperator::PrintDebug();
+    std::string PrintDebug()override{
+        return LogicalOperator::PrintDebug();
     }
     OperatorType GetType() override{
         return  type_;

@@ -27,20 +27,22 @@ public:
     }
 
 
-    void PrintDebug() override{
+    std::string PrintDebug() override{
+        std::stringstream ss;
         if(!show_info)
-            return;;
+            return "";
 
         if(ouput_schema_){
-            std::cout<<" | output_schema: ";
+            ss<<" | output_schema: ";
             for(auto& col :ouput_schema_->columns_){
-                std::cout<<" "<<col.name_<<" ";
+                ss<<" "<<col.name_<<" ";
             }
         }
-        std::cout<<" | intput_schema: ";
+        ss<<" | intput_schema: ";
         for(auto& col:input_schema_->columns_){
-            std::cout<<" "<<col.name_<<" ";
+            ss<<" "<<col.name_<<" ";
         }
+        return ss.str();
     }
     SchemaRef select_list_{nullptr};
 };

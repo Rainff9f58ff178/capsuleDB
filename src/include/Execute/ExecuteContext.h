@@ -20,8 +20,8 @@ public:
     std::vector<PipelineRef> pipelines_;
 
     void Build(PhysicalOperatorRef plan,PipelineRef father);
-    void ShowPipelines();
-    void PrintOperatorName(PhysicalOperator* node);
+    std::string ShowPipelines();
+    std::string PrintOperatorName(PhysicalOperator* node);
     // this is root node
     PhysicalOperatorRef physical_plan_;
     //use to identify pipeline

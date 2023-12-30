@@ -25,43 +25,44 @@ PipelineRef father){
     pipelines_.push_back(std::move(new_pipe_line)); 
     plan->BuildPipeline(pipelines_.back(),this);
 }
-void 
+std::string
 ExecuteContext::ShowPipelines(){
-    std::cout<<"==== Pipelines ===="<<std::endl;
+    std::stringstream ss;
+    ss<<"==== Pipelines ===="<<std::endl;
     for(auto& pipeline : pipelines_){
         if(pipeline->is_root_pipe_line_){
-            std::cout<<"root pipeline:"<<pipeline->identify_<<":"
+            ss<<"root pipeline:"<<pipeline->identify_<<":"
             <<"total child has :"<<pipeline->total_children_;
         }else{
-            std::cout<<"pipline :"<<pipeline->identify_;
+            ss<<"pipline :"<<pipeline->identify_;
         }
-        std::cout<<"[";
-        PrintOperatorName(pipeline->source_);
-        std::cout<<"]---->";
-        std::cout<<"[";
+        ss<<"[";
+        ss<<PrintOperatorName(pipeline->source_);
+        ss<<"]---->";
+        ss<<"[";
         for(int32_t i=0;i< pipeline->operators_.size();++i){
-            PrintOperatorName(pipeline->operators_[i]);
+            ss<<PrintOperatorName(pipeline->operators_[i]);
             if(i!= 0){
-                std::cout<<",";
+                ss<<",";
             }
         }
-        std::cout<<"]----->";
-        std::cout<<"[";
-        PrintOperatorName(pipeline->sink_);
-        std::cout<<"]";
+        ss<<"]----->";
+        ss<<"[";
+        ss<<PrintOperatorName(pipeline->sink_);
+        ss<<"]";
 
-        std::cout<<"child has ";
+        ss<<"child has ";
         for(auto& child : pipeline->children_){
-            std::cout<<child->identify_;
+            ss<<child->identify_;
         }
-        std::cout<<std::endl;
+        ss<<std::endl;
     }
+    return ss.str();
 }
-void 
+std::string 
 ExecuteContext::PrintOperatorName(PhysicalOperator* node){
     if(node==nullptr){
-        std::cout<<"nullptr";
-        return;
+        return "";
     }
     switch(node->GetType()){
         case LogicalOperatorNode:{
@@ -73,49 +74,50 @@ ExecuteContext::PrintOperatorName(PhysicalOperator* node){
             break;
         }
         case MaterilizeOperatorNode:{
-            std::cout<<"Materilzie Operator Node";
+            return "Materilzie Operator Node";
             break;
         }
         case SubqueryMaterializeOperatorNode:{
-            std::cout<<"Subquery Materialize Operator node";
+            return "Subquery Materialize Operator node";
             break;
         }
         case HashJoinOperatorNode:{
-            std::cout<<"hashJoin Operator Node";
+            return "hashJoin Operator Node";
             break;
         }
         case FilterOperatorNode:{
-            std::cout<<"FilterOperator Operator Node";
+            return "FilterOperator Operator Node";
             break;
         }
         case InsertOperatorNode:{
-            std::cout<<"Insert Operator Node";
+            return "Insert Operator Node";
             break;
         }
         case ValuesOperatorNode:{
-            std::cout<<"ValuesOperator Operator Node";
+            return "ValuesOperator Operator Node";
             break;
         }
         case AggOperatorNode:{
-            std::cout<<"AggOperator Operator Node";
+            return "AggOperator Operator Node";
             break;
         }
         case LimitOperatorNode:{
-            std::cout<<"limit Operator Node";
+            return "limit Operator Node";
             break;
         }
         case SortOperatorNode:{
-            std::cout<<"Sort Operator Node";
+            return "Sort Operator Node";
             break;
         }
         case SeqScanOperatorNode:{
-            std::cout<<"SeqScan Operator Node";
+            return "SeqScan Operator Node";
             break;
         }
         case ResultOperatorNode:{
-            std::cout<<"Result Operator Node";
+            return "Result Operator Node";
         }
         default:
             break;
     }
+    return "";
 }

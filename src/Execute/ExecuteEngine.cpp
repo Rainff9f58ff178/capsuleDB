@@ -48,7 +48,7 @@ std::shared_ptr<ExecuteContext> context){
 }
 
 void ExecuteEngine::ExecuteExplain(LogicalOperatorRef plan,
-std::shared_ptr<ExecuteContext> context){
+std::shared_ptr<ExecuteContext> context,std::stringstream& ss){
     context->physical_plan_ = 
         CreatePhysicalOperatorTree(plan,context.get());
 
@@ -62,7 +62,7 @@ std::shared_ptr<ExecuteContext> context){
         p->pipeline_execute_time_ = p->profile_->add_counter("pipeline_execute_time");
     }
     
-    context->ShowPipelines();
+    ss<<context->ShowPipelines();
     // not execute it.
 }
 

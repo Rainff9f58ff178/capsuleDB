@@ -25,9 +25,11 @@ public:
     }
 
 
-    void PrintDebug() override{
-        LogicalOperator::PrintDebug();
-        std::cout<<" condition :"<<condition_->toString();
+    std::string PrintDebug() override{
+        std::stringstream ss;
+        ss<<LogicalOperator::PrintDebug();
+        ss<<" condition :"<<condition_->toString();
+        return ss.str();
     }
 
     LogicalExpressionRef condition_;
