@@ -60,8 +60,6 @@ public:
 
     virtual std::string PrintDebug(){
         std::stringstream ss;
-        if(!show_info)
-            return "";
 
         if(ouput_schema_){
             ss<<" | output_schema: ";
