@@ -3,6 +3,7 @@ This is my database as graduation project.
 
 ## implementing:
     - imp MVVC
+    - imp update,delete
     - intergrete multh thread execute 
     - improve expression execute performance
     - imp multi file .
