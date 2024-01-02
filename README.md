@@ -20,6 +20,20 @@ This is my database as graduation project.
     - push-base execute. column execute engine.
     - column store engine. page base.
 
+
+## compile 
+```shell
+git clone https://github.com/Rainff9f58ff178/capsuleDB && cd capsuleDB && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make -j16 
+
+```
+## boot
+```shell
+./capsule-server 127.0.0.1 8080
+
+./capsule-client 127.0.0.1 8080
+```
+
+
 ```sql
 -- input \st to show tables
 
