@@ -63,4 +63,4 @@ target_include_directories(stard_db
             ${CMAKE_CURRENT_SOURCE_DIR}/logger
             )
 
-target_link_libraries(stard_db ${THIRD_PARTY_LIBS} store log)
+target_link_libraries(stard_db ${THIRD_PARTY_LIBS} store log uring)

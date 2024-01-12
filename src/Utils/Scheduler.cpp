@@ -2,6 +2,8 @@
 
 #include"Utils/Task.h"
 #include<chrono>
+#include <list>
+#include <vector>
 
 void Scheduler::execute(uint32_t thread_num){
     for(uint32_t i=0;i<thread_num;++i){
@@ -30,13 +32,13 @@ void Scheduler::execute(uint32_t thread_num){
                 need_deleted.push_back(it);
         }
         for(auto& it:need_deleted){
-            it->handle_.destroy();
             _t_s_.erase(it);
         }
         _cv.wait_for(lock,std::chrono::seconds(100));
     }
 
 }
+
 void Scheduler::schedule( Task<void>&& job){
     std::unique_lock<std::mutex> lock(internal_mtx_);
     tasks_.push_back(job.handle_);
@@ -46,9 +48,27 @@ void Scheduler::schedule( Task<void>&& job){
 
 void Scheduler::
 add_task(std::list<std::coroutine_handle<>>&& tasks){
+    if(tasks.empty())   return;
     std::unique_lock<std::mutex> lock(internal_mtx_);
     tasks_.splice(tasks_.end(),std::move(tasks));
+    cv_.notify_all();
 }
+
+template<>
+void Scheduler::sync_wait<void>(Task<void> &&task){
+    task.handle_.resume();
+    while(!task.handle_.done()){
+        std::unique_lock<std::mutex> lock(internal_mtx_);
+        if(!tasks_.empty()){
+            auto n_t = tasks_.front();
+            tasks_.pop_front();
+            lock.unlock();
+            n_t.resume();
+        }
+    }
+}
+
+
 
 Scheduler g_scheduler;
 
